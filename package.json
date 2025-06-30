@@ -1,0 +1,23 @@
+{
+  "name": "groundswell",
+  "module": "index.ts",
+  "devDependencies": {
+    "@biomejs/biome": "2.0.5",
+    "@effect/language-service": "^0.23.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "test": "vitest run",
+    "test:dev": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ]
+}

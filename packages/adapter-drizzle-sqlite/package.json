@@ -1,0 +1,17 @@
+{
+	"name": "@groundswell/adapter-drizzle-sqlite",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"drizzle-orm": "^0.44.2",
+		"effect": "^3.16.10",
+		"superjson": "^2.2.2"
+	},
+	"devDependencies": {
+		"@effect/test": "^0.1.0",
+		"@groundswell/zod-helpers": "workspace:*",
+		"@types/better-sqlite3": "^7.6.13",
+		"better-sqlite3": "^12.1.1",
+		"drizzle-kit": "^0.31.4"
+	}
+}

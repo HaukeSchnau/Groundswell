@@ -1,0 +1,13 @@
+{
+	"name": "@groundswell/adapter-hono-sse",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"@groundswell/core": "workspace:*",
+		"effect": "^3.16.10",
+		"eventsource": "^4.0.0",
+		"react-native-sse": "^1.2.1",
+		"superjson": "^2.2.2",
+		"zod": "^3.25.67"
+	}
+}

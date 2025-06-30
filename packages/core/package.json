@@ -1,0 +1,16 @@
+{
+  "name": "@groundswell/core",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+	".": "./src/index.ts",
+	"./errors": "./src/errors.ts"
+  },
+  "dependencies": {
+    "effect": "^3.16.10",
+    "@groundswell/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect/vitest": "^0.23.10"
+  }
+}
