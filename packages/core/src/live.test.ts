@@ -18,7 +18,7 @@ import type {
 	Storage,
 	SyncEngine,
 	Transport,
-} from "./index";
+} from "./interface";
 import { syncEngineLive } from "./live";
 
 // Define a simple event type for testing

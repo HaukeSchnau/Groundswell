@@ -5,7 +5,7 @@ import type {
 	CanonicalStorage,
 	IngestEngine,
 	ServerApplicator,
-} from "./index";
+} from "./interface";
 import { ingestEngineLive } from "./live";
 
 type TestEvent = {
@@ -52,6 +52,8 @@ const mockStorage = (isUniqueRef: Ref.Ref<boolean>) =>
 			isEventUnique: () => Ref.get(isUniqueRef),
 			saveEvent: () => Effect.succeed(void 0),
 			getMissingEventsForUser: () => Effect.succeed([]),
+			getEventsSentToUser: () => Effect.succeed([]),
+			markEventAsSentToUser: () => Effect.succeed(void 0),
 		}),
 	);
 const mockBroadcast = Layer.succeed(

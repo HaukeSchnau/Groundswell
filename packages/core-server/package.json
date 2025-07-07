@@ -6,7 +6,13 @@
 		"typecheck": "tsgo --noEmit"
 	},
 	"exports": {
-		".": "./src/index.ts",
-		"./live": "./src/live.ts"
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@groundswell/core": "workspace:*",
+		"effect": "^3"
+	},
+	"devDependencies": {
+		"@effect/vitest": "^0.23.10"
 	}
 }

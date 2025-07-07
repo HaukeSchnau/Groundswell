@@ -9,7 +9,7 @@ import { type Context, Effect, Layer, pipe } from "effect";
 import type {
 	GenericDatabaseService,
 	genericDatabaseFactory,
-} from "effect-drizzle/generic-sqlite";
+} from "@schnau/effect-drizzle/generic-sqlite";
 import superjson from "superjson";
 import type { z } from "zod";
 import { timestamp, uuid } from "./helpers";
@@ -148,7 +148,10 @@ const getEventsSentToUser = <TSchema extends Schema>(
 	userId: string,
 ) =>
 	db.execute((db) =>
-		db.select({ ...getTableColumns(CanonicalEventsTable) }).from(CanonicalEventsTable).where(eq(CanonicalEventsTable.initiator, userId)),
+		db
+			.select({ ...getTableColumns(CanonicalEventsTable) })
+			.from(CanonicalEventsTable)
+			.where(eq(CanonicalEventsTable.initiator, userId)),
 	);
 
 const parseCanonicalEvent = <TEvent extends UnknownEvent>(

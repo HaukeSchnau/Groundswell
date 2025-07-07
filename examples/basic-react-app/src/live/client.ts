@@ -1,10 +1,13 @@
-import { createDrizzleStorageLayer } from "@groundswell/adapter-drizzle-sqlite";
+import { ClientStorage } from "@groundswell/adapter-drizzle-sqlite";
 import { createSseTransportLayer } from "@groundswell/adapter-sse-client";
-import { BrowserEventSourceServiceLive } from "@groundswell/adapter-sse-client/event-source/browser";
-import { ApplicatorError, ValidationError } from "@groundswell/core/errors";
-import { syncEngineLive } from "@groundswell/core/live";
+import { BrowserEventSourceServiceLive } from "@groundswell/adapter-sse-client/browser";
+import {
+	ApplicatorError,
+	syncEngineLive,
+	ValidationError,
+} from "@groundswell/core";
+import { makeService } from "@schnau/effect-drizzle/libsql-wasm";
 import { Effect, Layer, Redacted } from "effect";
-import { makeService } from "effect-drizzle/libsql-wasm";
 import { queryClient } from "@/App";
 import {
 	DomainApplicator,
@@ -69,7 +72,7 @@ export const WasmDatabaseLive = Layer.scoped(
 	),
 );
 
-const StorageLive = createDrizzleStorageLayer(DomainStorage, {
+const StorageLive = ClientStorage.createDrizzleStorageLayer(DomainStorage, {
 	db: Database,
 	eventSchema: DomainEvent,
 });

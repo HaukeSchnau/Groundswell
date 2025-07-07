@@ -1,11 +1,11 @@
-import { ApplicatorError } from "@groundswell/core/errors";
-import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { ApplicatorError } from "@groundswell/core";
 import type {
 	DatabaseError,
 	GenericDatabaseService,
 	GenericSqliteError,
-} from "effect-drizzle/generic-sqlite";
+} from "@schnau/effect-drizzle/generic-sqlite";
+import { eq } from "drizzle-orm";
+import { Effect } from "effect";
 import type * as Schema from "./db/schema";
 import { notes } from "./db/schema";
 import type { DomainEvent } from "./events";

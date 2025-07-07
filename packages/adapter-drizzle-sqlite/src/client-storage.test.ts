@@ -1,12 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { LocalEvent, Storage } from "@groundswell/core";
 import { createDomainEvent, createEventUnion } from "@groundswell/zod-helpers";
+import { genericDatabaseFactory } from "@schnau/effect-drizzle/generic-sqlite";
+import { makeService } from "@schnau/effect-drizzle/libsql";
 import { eq } from "drizzle-orm";
 import { Chunk, Context, Effect, Layer, pipe, Redacted, Stream } from "effect";
-import { genericDatabaseFactory } from "effect-drizzle/generic-sqlite";
-import { makeService } from "effect-drizzle/libsql";
 import { z } from "zod";
-import { createDrizzleStorageLayer, EventsTable } from "./index";
+import { createDrizzleStorageLayer, EventsTable } from "./client-storage";
 
 // --- Test Setup ---
 

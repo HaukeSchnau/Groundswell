@@ -20,7 +20,7 @@ import type {
 	Storage,
 	SyncEngine,
 	Transport,
-} from "./index";
+} from "./interface";
 
 class RandomUUID extends Context.Tag("RandomUUID")<
 	RandomUUID,

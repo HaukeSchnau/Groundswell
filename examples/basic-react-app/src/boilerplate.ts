@@ -10,7 +10,7 @@ import type {
 	IngestEngine,
 	ServerApplicator,
 } from "@groundswell/core-server";
-import { ingestEngineLive } from "@groundswell/core-server/live";
+import { ingestEngineLive } from "@groundswell/core-server";
 import { syncEngineFactory } from "@groundswell/react";
 import { Context } from "effect";
 import { Database } from "./domain/db/contract";

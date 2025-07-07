@@ -1,5 +1,5 @@
-import { createDrizzleCanonicalStorageLayer } from "@groundswell/adapter-drizzle-sqlite/canonical-storage";
-import { ApplicatorError } from "@groundswell/core/errors";
+import { CanonicalStorage as CanonicalStorageAdapter } from "@groundswell/adapter-drizzle-sqlite";
+import { ApplicatorError } from "@groundswell/core";
 import {
 	BroadcastError,
 	type CanonicalStorage,
@@ -89,12 +89,13 @@ export const memoryBroadcastLive = Layer.effect(
 	}),
 );
 
-export const canonicalStorageLive = createDrizzleCanonicalStorageLayer(
-	DomainCanonicalStorage,
-	{
-		db: Database,
-		eventSchema: DomainEvent,
-	},
-);
+export const canonicalStorageLive =
+	CanonicalStorageAdapter.createDrizzleCanonicalStorageLayer(
+		DomainCanonicalStorage,
+		{
+			db: Database,
+			eventSchema: DomainEvent,
+		},
+	);
 
 export const appServerLayer = Layer.provide(ingestEngine, serverApplicatorLive);

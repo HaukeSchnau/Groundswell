@@ -1,5 +1,5 @@
 import type { Transport } from "@groundswell/core";
-import { DuplicateEventError, TransportError } from "@groundswell/core/errors";
+import { DuplicateEventError, TransportError } from "@groundswell/core";
 import { type Context, Effect, Layer, Stream } from "effect";
 import superjson from "superjson";
 import type z from "zod";

@@ -11,8 +11,8 @@
 	},
 	"dependencies": {
 		"@groundswell/core-server": "workspace:*",
-		"effect": "^3.16.10",
-		"superjson": "^2.2.2",
-		"zod": "^3.25.67"
+		"effect": "^3",
+		"superjson": "^2",
+		"zod": "^3"
 	}
 }

@@ -1,9 +1,7 @@
-import { EventsTable } from "@groundswell/adapter-drizzle-sqlite";
 import {
-	CanonicalEventsSentToUsersTable,
-	CanonicalEventsTable,
-	CanonicalEventTopicsTable,
-} from "@groundswell/adapter-drizzle-sqlite/canonical-storage";
+	CanonicalStorage,
+	ClientStorage,
+} from "@groundswell/adapter-drizzle-sqlite";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // A single schema for both client (SQLite) and server (can also use SQLite for simplicity)
@@ -16,8 +14,9 @@ export const notes = sqliteTable("notes", {
 });
 
 // The events table schema required by the Drizzle storage adapter
-export const eventLog = EventsTable;
+export const eventLog = ClientStorage.EventsTable;
 
-export const canonicalEvents = CanonicalEventsTable;
-export const canonicalEventTopics = CanonicalEventTopicsTable;
-export const canonicalEventsSentToUsers = CanonicalEventsSentToUsersTable;
+export const canonicalEvents = CanonicalStorage.CanonicalEventsTable;
+export const canonicalEventTopics = CanonicalStorage.CanonicalEventTopicsTable;
+export const canonicalEventsSentToUsers =
+	CanonicalStorage.CanonicalEventsSentToUsersTable;

@@ -4,21 +4,23 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts",
-		"./canonical-storage": "./src/canonical-storage.ts"
+		".": "./src/index.ts"
 	},
 	"scripts": {
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"drizzle-orm": "^0.44.2",
-		"effect": "^3.16.10",
-		"effect-drizzle": "github:HaukeSchnau/effect-drizzle",
-		"superjson": "^2.2.2"
+		"@groundswell/core": "workspace:*",
+		"@groundswell/core-server": "workspace:*",
+		"@groundswell/zod-helpers": "workspace:*",
+		"@schnau/effect-drizzle": "^0.1.0",
+		"drizzle-orm": "^0.44",
+		"effect": "^3",
+		"superjson": "^2",
+		"zod": "^3"
 	},
 	"devDependencies": {
 		"@effect/test": "^0.1.0",
-		"@groundswell/zod-helpers": "workspace:*",
 		"@types/better-sqlite3": "^7.6.13",
 		"better-sqlite3": "^12.1.1",
 		"drizzle-kit": "^0.31.4"

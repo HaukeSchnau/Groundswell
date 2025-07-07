@@ -1,9 +1,9 @@
 import { DevTools } from "@effect/experimental";
 import { BunRuntime, BunSocket } from "@effect/platform-bun";
 import { syncServer } from "@groundswell/adapter-bun-server";
+import { makeService } from "@schnau/effect-drizzle/bun-sqlite";
 import { serve } from "bun";
 import { Effect, Layer, Redacted } from "effect";
-import { makeService } from "effect-drizzle/bun-sqlite";
 import { DomainBroadcast, DomainIngestEngine } from "./boilerplate";
 import { Database, TransactionContext } from "./domain/db/contract";
 import * as Schema from "./domain/db/schema";

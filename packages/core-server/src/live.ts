@@ -1,11 +1,11 @@
-import { DuplicateEventError } from "@groundswell/core/errors";
+import { DuplicateEventError } from "@groundswell/core";
 import { type Context, Effect, Layer } from "effect";
 import type {
 	Broadcast,
 	CanonicalStorage,
 	IngestEngine,
 	ServerApplicator,
-} from "./index";
+} from "./interface";
 
 export const ingestEngineLive = <
 	TEvent extends { id: string },

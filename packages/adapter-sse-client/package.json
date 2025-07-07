@@ -5,17 +5,32 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
-		"./event-source/browser": "./src/event-source/browser.ts"
+		"./browser": "./src/event-source/browser.ts",
+		"./react-native": "./src/event-source/react-native.ts"
 	},
 	"scripts": {
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
 		"@groundswell/core": "workspace:*",
-		"effect": "^3.16.10",
-		"eventsource": "^4.0.0",
-		"react-native-sse": "^1.2.1",
-		"superjson": "^2.2.2",
-		"zod": "^3.25.67"
+		"effect": "^3",
+		"superjson": "^2",
+		"zod": "^3"
+	},
+	"devDependencies": {
+		"eventsource": "^4",
+		"react-native-sse": "^1"
+	},
+	"peerDependencies": {
+		"eventsource": "^4",
+		"react-native-sse": "^1"
+	},
+	"peerDependenciesMeta": {
+		"eventsource": {
+			"optional": true
+		},
+		"react-native-sse": {
+			"optional": true
+		}
 	}
 }

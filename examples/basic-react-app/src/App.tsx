@@ -3,11 +3,10 @@ import {
 	QueryClientProvider,
 	type QueryKey,
 	useQuery,
-	useQuery,
 } from "@tanstack/react-query";
 import { type Effect, Layer, ManagedRuntime } from "effect";
 import type React from "react";
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useState } from "react";
 import { clientSyncEngine, type DomainSyncEngine } from "./boilerplate";
 import type { Database } from "./domain/db/contract";
 import { getNotes } from "./domain/queries";
@@ -25,18 +24,6 @@ const StatusBar = () => {
 		</div>
 	);
 };
-
-// const usePromiseEffect = <A, E>(
-// 	effect: Effect.Effect<A, E, DomainSyncEngine | Database>,
-// 	deps: React.DependencyList,
-// ) => {
-// 	const [data, setData] = useState<A | null>(null);
-// 	const runtime = useRuntime();
-// 	useEffect(() => {
-// 		runtime.runPromise(effect).then(setData);
-// 	}, [effect, runtime.runPromise, ...deps]);
-// 	return data;
-// };
 
 const useEffectQuery = <A, E>(
 	effect: Effect.Effect<A, E, DomainSyncEngine | Database>,
@@ -94,6 +81,19 @@ const NoteInput = () => {
 
 const AllNotes = () => {
 	const notes = useEffectQuery(getNotes, ["notes"]);
+	const ingest = useIngest();
+
+	const handleArchive = async (noteId: string) => {
+		const result = await ingest({
+			type: "note.archived",
+			data: { noteId },
+		});
+
+		if (result._tag === "Failure") {
+			console.error("Failed to archive note:", result.cause);
+		}
+	};
+
 	if (notes.isPending) {
 		return <div>Loading...</div>;
 	}
@@ -115,7 +115,16 @@ const AllNotes = () => {
 						key={note.id}
 						className="bg-white p-4 mb-3 rounded-lg shadow-sm border border-gray-200"
 					>
-						<p className="text-gray-800">{note.content}</p>
+						<div className="flex justify-between items-start">
+							<p className="text-gray-800 flex-1">{note.content}</p>
+							<button
+								type="button"
+								onClick={() => handleArchive(note.id)}
+								className="ml-3 bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+							>
+								Archive
+							</button>
+						</div>
 					</div>
 				))}
 		</div>
