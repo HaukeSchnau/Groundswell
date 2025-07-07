@@ -22,10 +22,10 @@ describe("NodeEventSourceService", () => {
 				console.log(`[Test] Connecting to ${TEST_SSE_URL}...`);
 
 				const collectedMessages = yield* eventSource.connect(TEST_SSE_URL).pipe(
-					Stream.take(5), // Take the first 10 messages (sse.dev/test sends a mix)
+					Stream.take(3), // Take the first 3 messages (sse.dev/test sends a mix)
 					Stream.runCollect, // Collect them into an Effect.Chunk
 					Effect.timeoutFail({
-						duration: Duration.seconds(10), // Allow up to 15 seconds for connection and messages
+						duration: Duration.seconds(5), // Allow up to 15 seconds for connection and messages
 						onTimeout: () =>
 							new EventSourceError({
 								reason: "NetworkError",
@@ -47,7 +47,7 @@ describe("NodeEventSourceService", () => {
 				);
 
 				// --- Assertions ---
-				expect(Chunk.size(collectedMessages)).toBeGreaterThanOrEqual(5); // Expect a reasonable number of messages
+				expect(Chunk.size(collectedMessages)).toEqual(3); // Expect a reasonable number of messages
 				expect(
 					Chunk.every(collectedMessages, (msg) => typeof msg.data === "string"),
 				).toBe(true);

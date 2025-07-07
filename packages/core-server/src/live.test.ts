@@ -41,7 +41,8 @@ const mockApplicator = Layer.succeed(
 	DomainServerApplicator.of({
 		verify: () => Effect.succeed(void 0),
 		apply: () => Effect.succeed(void 0),
-		getTopics: () => Effect.succeed(["topic1"]),
+		getEventTopics: () => Effect.succeed(["topic1"]),
+		getUserTopics: () => Effect.succeed(["topic1"]),
 	}),
 );
 const mockStorage = (isUniqueRef: Ref.Ref<boolean>) =>
@@ -50,13 +51,14 @@ const mockStorage = (isUniqueRef: Ref.Ref<boolean>) =>
 		DomainCanonicalStorage.of({
 			isEventUnique: () => Ref.get(isUniqueRef),
 			saveEvent: () => Effect.succeed(void 0),
-			transactionally: (self) => self, // Passthrough for tests
+			getMissingEventsForUser: () => Effect.succeed([]),
 		}),
 	);
 const mockBroadcast = Layer.succeed(
 	DomainBroadcast,
 	DomainBroadcast.of({
-		publish: () => Effect.succeed(void 0),
+		publishToTopics: () => Effect.succeed(void 0),
+		publishToUser: () => Effect.succeed(void 0),
 		subscribe: () => Stream.empty,
 	}),
 );
@@ -125,7 +127,7 @@ describe("IngestEngine", () => {
 				Effect.flip,
 			);
 
-			expect(result._tag).toBe("ServerValidationError");
+			expect(result._tag).toBe("DuplicateEventError");
 		}).pipe(Effect.provide(testLayer));
 	});
 });

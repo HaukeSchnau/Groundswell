@@ -1,7 +1,15 @@
 {
-	"name": "@groundswell/adapter-hono-sse",
+	"name": "@groundswell/adapter-sse-client",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./event-source/browser": "./src/event-source/browser.ts"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
 	"dependencies": {
 		"@groundswell/core": "workspace:*",
 		"effect": "^3.16.10",

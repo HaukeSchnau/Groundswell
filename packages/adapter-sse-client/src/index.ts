@@ -1,5 +1,5 @@
 import type { Transport } from "@groundswell/core";
-import { TransportError } from "@groundswell/core/errors";
+import { DuplicateEventError, TransportError } from "@groundswell/core/errors";
 import { type Context, Effect, Layer, Stream } from "effect";
 import superjson from "superjson";
 import type z from "zod";
@@ -22,7 +22,7 @@ export interface HonoTransportConfig<TEvent> {
  * @param config The configuration object.
  * @returns A Layer that provides the Transport service.
  */
-export const createHonoTransportLayer = <TEvent, TagId>(
+export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
 	TransportTag: Context.Tag<TagId, Transport<TEvent>>,
 	config: HonoTransportConfig<TEvent>,
 ) =>
@@ -43,23 +43,33 @@ export const createHonoTransportLayer = <TEvent, TagId>(
 								},
 								body: superjson.stringify(event),
 							}),
-						catch: (reason) =>
-							new TransportError({ reason, isRetryable: true }),
+						catch: (cause) => new TransportError({ cause, isRetryable: true }),
 					}).pipe(
-						Effect.flatMap((response) => {
-							if (response.ok) {
-								return Effect.succeed(undefined);
-							}
-							// 4xx errors are client errors and not retryable.
-							// 5xx errors are server errors and are retryable.
-							const isRetryable = response.status >= 500;
-							return Effect.fail(
-								new TransportError({
-									reason: `Request failed with status ${response.status}`,
-									isRetryable,
-								}),
-							);
-						}),
+						Effect.flatMap((response) =>
+							Effect.gen(function* () {
+								if (response.ok) {
+									return yield* Effect.succeed(undefined);
+								}
+
+								if (response.status === 409) {
+									return yield* Effect.fail(
+										new DuplicateEventError({
+											eventId: event.id,
+										}),
+									);
+								}
+
+								// 4xx errors are client errors and not retryable.
+								// 5xx errors are server errors and are retryable.
+								const isRetryable = response.status >= 500;
+								return yield* Effect.fail(
+									new TransportError({
+										cause: `Request failed with status ${response.status}`,
+										isRetryable,
+									}),
+								);
+							}),
+						),
 					),
 
 				listen: Effect.gen(function* () {
@@ -71,19 +81,24 @@ export const createHonoTransportLayer = <TEvent, TagId>(
 					);
 
 					return stream.pipe(
-						Stream.map((message) => {
-							const parsedData = superjson.parse(message.data);
-							const parsedEvent = config.eventSchema.parse(parsedData);
-							return parsedEvent;
-						}),
+						Stream.mapEffect((message) =>
+							Effect.try({
+								try: () => {
+									const parsedData = superjson.parse(message.data);
+									return config.eventSchema.parse(parsedData);
+								},
+								catch: (cause) =>
+									new TransportError({ cause, isRetryable: false }),
+							}),
+						),
 						Stream.catchTag("EventSourceError", (error) => {
 							if (error.reason === "NetworkError") {
 								return Stream.fail(
-									new TransportError({ reason: error, isRetryable: true }),
+									new TransportError({ cause: error, isRetryable: true }),
 								);
 							}
 							return Stream.fail(
-								new TransportError({ reason: error, isRetryable: false }),
+								new TransportError({ cause: error, isRetryable: false }),
 							);
 						}),
 					);

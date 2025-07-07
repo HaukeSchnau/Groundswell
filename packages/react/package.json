@@ -2,8 +2,15 @@
 	"name": "@groundswell/react",
 	"version": "0.0.1",
 	"private": true,
-	"dependencies": {
-		"react": "^19.1.0"
+	"type": "module",
+	"exports": {
+		".": "./src/index.tsx"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
+	"peerDependencies": {
+		"react": "*"
 	},
 	"devDependencies": {
 		"@types/react": "^19.1.8"

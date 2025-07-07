@@ -3,13 +3,16 @@ import { Data } from "effect";
 export class ServerValidationError extends Data.TaggedError(
 	"ServerValidationError",
 )<{
-	readonly reason: unknown;
+	readonly cause: unknown;
 }> {}
 export class CanonicalStorageError extends Data.TaggedError(
 	"CanonicalStorageError",
 )<{
-	readonly reason: unknown;
+	readonly cause: unknown;
 }> {}
 export class BroadcastError extends Data.TaggedError("BroadcastError")<{
-	readonly reason: unknown;
+	readonly cause: unknown;
+}> {}
+export class UserNotFoundError extends Data.TaggedError("UserNotFoundError")<{
+	readonly userId: string;
 }> {}

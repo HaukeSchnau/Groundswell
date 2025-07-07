@@ -1,5 +1,5 @@
+import { DuplicateEventError } from "@groundswell/core/errors";
 import { type Context, Effect, Layer } from "effect";
-import { ServerValidationError } from "./errors";
 import type {
 	Broadcast,
 	CanonicalStorage,
@@ -26,27 +26,34 @@ export const ingestEngineLive = <
 			const storage = yield* canonicalStorageTag;
 			const broadcast = yield* broadcastTag;
 
-			const ingestLogic = (event: TEvent, meta: { initiatorId: string }) =>
-				Effect.gen(function* () {
-					// 1. Verify business rules and event uniqueness
-					yield* applicator.verify(event, meta);
-					const isUnique = yield* storage.isEventUnique(event.id);
-					if (!isUnique) {
-						return yield* Effect.fail(
-							new ServerValidationError({ reason: "Event already exists" }),
-						);
-					}
-
-					// 2. Apply, Save, and Broadcast within a single transaction
-					const topics = yield* applicator.getTopics(event);
-					yield* storage.transactionally(
-						Effect.gen(function* () {
-							yield* applicator.apply(event);
-							yield* storage.saveEvent(event, { ...meta, topics });
-						}),
+			const ingestLogic = Effect.fn("ingest")(function* (
+				event: TEvent,
+				meta: { initiatorId: string },
+			) {
+				// 1. Verify business rules and event uniqueness
+				const isUnique = yield* storage.isEventUnique(event.id);
+				if (!isUnique) {
+					return yield* Effect.fail(
+						new DuplicateEventError({ eventId: event.id }),
 					);
-					yield* broadcast.publish(topics, event);
-				});
+				}
+				yield* applicator.verify(event);
+
+				// 2. Apply, Save, and Broadcast
+				const topics = yield* applicator.getEventTopics(event);
+				yield* storage.saveEvent(event, { ...meta, topics });
+				yield* applicator.apply(event);
+
+				const userTopics = yield* applicator.getUserTopics(meta.initiatorId);
+				const missingEvents = yield* storage.getMissingEventsForUser(
+					meta.initiatorId,
+					userTopics,
+				);
+
+				yield* broadcast.publishToUser(meta.initiatorId, missingEvents);
+				yield* broadcast.publishToUser(meta.initiatorId, [event]);
+				yield* broadcast.publishToTopics(topics, event);
+			});
 
 			return tag.of({
 				ingest: (event, meta) => ingestLogic(event, meta),

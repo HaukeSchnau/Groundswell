@@ -1,0 +1,53 @@
+diff --git a/Users/haukeschnau/urbs/Projects/Studienbuch/Groundswell/node_modules/drizzle-orm/.bun-tag-8c1657cc8386fe5b b/.bun-tag-8c1657cc8386fe5b
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/libsql/migrator.cjs b/libsql/migrator.cjs
+index f5235b0c821ee1253f147874e24be849f93d2ca5..5901e5a49a752a9240d90d7bdf7479343d940e9a 100644
+--- a/libsql/migrator.cjs
++++ b/libsql/migrator.cjs
+@@ -21,10 +21,13 @@ __export(migrator_exports, {
+   migrate: () => migrate
+ });
+ module.exports = __toCommonJS(migrator_exports);
+-var import_migrator = require("../migrator.cjs");
+ var import_sql = require("../sql/sql.cjs");
++async function readMigrations(config) {
++  const import_migrator = require("../migrator.cjs");
++  return import_migrator.readMigrationFiles(config);
++}
+ async function migrate(db, config) {
+-  const migrations = (0, import_migrator.readMigrationFiles)(config);
++  const migrations = config.migrations ?? await readMigrations(config);
+   const migrationsTable = config.migrationsTable ?? "__drizzle_migrations";
+   const migrationTableCreate = import_sql.sql`
+ 		CREATE TABLE IF NOT EXISTS ${import_sql.sql.identifier(migrationsTable)} (
+diff --git a/libsql/migrator.js b/libsql/migrator.js
+index 3fb860242be2c1a70739873bb11b41d8ab7a7843..7f2bd47c6e28b5041ead7562c9d95b31e855ab80 100644
+--- a/libsql/migrator.js
++++ b/libsql/migrator.js
+@@ -1,7 +1,10 @@
+-import { readMigrationFiles } from "../migrator.js";
+ import { sql } from "../sql/sql.js";
++async function readMigrations(config) {
++  const { readMigrationFiles } = await import("../migrator.js");
++  return readMigrationFiles(config);
++}
+ async function migrate(db, config) {
+-  const migrations = readMigrationFiles(config);
++  const migrations = config.migrations ?? await readMigrations(config);
+   const migrationsTable = config.migrationsTable ?? "__drizzle_migrations";
+   const migrationTableCreate = sql`
+ 		CREATE TABLE IF NOT EXISTS ${sql.identifier(migrationsTable)} (
+diff --git a/migrator.d.ts b/migrator.d.ts
+index 48f0796d567761d7ded732d84bb4d14a7968c254..37a7f3d7537c0127181612ebc2f31917492a4ba5 100644
+--- a/migrator.d.ts
++++ b/migrator.d.ts
+@@ -3,7 +3,7 @@ export interface KitConfig {
+     schema: string;
+ }
+ export interface MigrationConfig {
+-    migrationsFolder: string;
++    migrations: MigrationMeta[];
+     migrationsTable?: string;
+     migrationsSchema?: string;
+ }

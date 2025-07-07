@@ -1,19 +1,28 @@
-import { Context, type Effect, type Stream } from "effect";
+import type {
+	ApplicatorError,
+	DuplicateEventError,
+} from "@groundswell/core/errors";
+import type { Effect, Stream } from "effect";
 import type {
 	BroadcastError,
 	CanonicalStorageError,
 	ServerValidationError,
+	UserNotFoundError,
 } from "./errors";
+
+export * from "./errors";
 
 // --- Service Interfaces (Tags) ---
 
 export interface ServerApplicator<TEvent> {
 	readonly verify: (
 		event: TEvent,
-		meta: { initiatorId: string },
 	) => Effect.Effect<void, ServerValidationError>;
-	readonly apply: (event: TEvent) => Effect.Effect<void, never>;
-	readonly getTopics: (event: TEvent) => Effect.Effect<string[], never>;
+	readonly apply: (event: TEvent) => Effect.Effect<void, ApplicatorError>;
+	readonly getEventTopics: (event: TEvent) => Effect.Effect<string[], never>;
+	readonly getUserTopics: (
+		userId: string,
+	) => Effect.Effect<string[], UserNotFoundError>;
 }
 
 export interface CanonicalStorage<TEvent> {
@@ -24,16 +33,27 @@ export interface CanonicalStorage<TEvent> {
 		event: TEvent,
 		meta: { initiatorId: string; topics: string[] },
 	) => Effect.Effect<void, CanonicalStorageError>;
-	/** Executes an Effect within a database transaction. */
-	readonly transactionally: <A, E, R>(
-		self: Effect.Effect<A, E, R>,
-	) => Effect.Effect<A, E | CanonicalStorageError, R>;
+	readonly getMissingEventsForUser: (
+		userId: string,
+		topics: string[],
+	) => Effect.Effect<TEvent[], CanonicalStorageError>;
+	readonly getEventsSentToUser: (
+		userId: string,
+	) => Effect.Effect<TEvent[], CanonicalStorageError>;
+	readonly markEventAsSentToUser: (
+		eventId: string,
+		userId: string,
+	) => Effect.Effect<void, CanonicalStorageError>;
 }
 
 export interface Broadcast<TEvent> {
-	readonly publish: (
+	readonly publishToTopics: (
 		topics: string[],
 		event: TEvent,
+	) => Effect.Effect<void, BroadcastError>;
+	readonly publishToUser: (
+		userId: string,
+		events: TEvent[],
 	) => Effect.Effect<void, BroadcastError>;
 	readonly subscribe: (userId: string) => Stream.Stream<TEvent, BroadcastError>;
 }
@@ -42,5 +62,13 @@ export interface IngestEngine<TEvent> {
 	readonly ingest: (
 		event: TEvent,
 		meta: { initiatorId: string },
-	) => Effect.Effect<void, ServerValidationError | CanonicalStorageError | BroadcastError>;
+	) => Effect.Effect<
+		void,
+		| ServerValidationError
+		| CanonicalStorageError
+		| BroadcastError
+		| ApplicatorError
+		| DuplicateEventError
+		| UserNotFoundError
+	>;
 }

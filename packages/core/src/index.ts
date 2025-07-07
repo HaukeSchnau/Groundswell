@@ -1,6 +1,7 @@
 import type { Effect, PubSub, Stream } from "effect";
 import type {
 	ApplicatorError,
+	DuplicateEventError,
 	StorageError,
 	TransportError,
 	ValidationError,
@@ -42,7 +43,7 @@ export interface Storage<TEvent> {
 	readonly saveEvent: (
 		event: TEvent,
 		status: LocalEventStatus,
-	) => Effect.Effect<void, StorageError>;
+	) => Effect.Effect<void, StorageError | DuplicateEventError>;
 	readonly updateEventStatus: (
 		eventId: string,
 		status: Partial<LocalEventStatus>,
@@ -53,10 +54,12 @@ export interface Storage<TEvent> {
  * The Transport service defines the contract for network communication:
  * publishing local events and listening for remote events.
  *
- * Provided by: An adapter package (e.g., @stu-sync/adapter-hono-sse).
+ * Provided by: An adapter package (e.g., @groundswell/adapter-sse-client).
  */
-export interface Transport<TEvent> {
-	readonly publish: (event: TEvent) => Effect.Effect<void, TransportError>;
+export interface Transport<TEvent extends { id: string }> {
+	readonly publish: (
+		event: TEvent,
+	) => Effect.Effect<void, TransportError | DuplicateEventError>;
 	readonly listen: Effect.Effect<Stream.Stream<TEvent, TransportError>>;
 }
 

@@ -9,7 +9,11 @@ import {
 	Schedule,
 	Stream,
 } from "effect";
-import type { ApplicatorError, StorageError, ValidationError } from "./errors";
+import {
+	type ApplicatorError,
+	StorageError,
+	type ValidationError,
+} from "./errors";
 import type {
 	Applicator,
 	LocalEvent,
@@ -71,6 +75,18 @@ export const syncEngineLive = <
 
 			// 2. Create state management primitives
 			const queue = yield* Queue.unbounded<LocalEvent<TEvent>>();
+			const enqueue = (event: LocalEvent<TEvent>) =>
+				Effect.gen(function* () {
+					yield* queue.offer(event);
+					yield* statusPubSub.publish({ queueSize: yield* queue.size });
+					console.log("Enqueued event", event, yield* queue.size);
+				});
+			const dequeue = Effect.gen(function* () {
+				const event = yield* queue.take;
+				yield* statusPubSub.publish({ queueSize: yield* queue.size });
+				console.log("Dequeued event", event, yield* queue.size);
+				return event;
+			});
 			const eventsPubSub = yield* PubSub.unbounded<LocalEvent<TEvent>>();
 			const statusPubSub = yield* PubSub.unbounded<{ queueSize: number }>();
 
@@ -83,6 +99,11 @@ export const syncEngineLive = <
 							}),
 						),
 					);
+
+					// TODO: try to publish the event to the remote transport
+					// if it fails, we fail finally
+					// if it succeeds, we probably need to receive more events from the remote transport
+					// and then try to apply the event again
 
 					yield* applicator.apply(localEvent.event);
 					yield* storage.updateEventStatus(localEvent.event.id, {
@@ -108,20 +129,23 @@ export const syncEngineLive = <
 					const published = yield* pipe(
 						transport.publish(localEvent.event),
 						// Retry on retryable network errors with a backoff schedule
-						Effect.retry(
-							Schedule.exponential("1 second").pipe(
-								Schedule.whileInput(
-									// @ts-expect-error -- TODO fix
-									(e) => e.isRetryable && e._tag === "TransportError",
-								),
+						Effect.retry({
+							schedule: Schedule.exponential("1 second").pipe(
 								Schedule.jittered,
 							),
-						),
+							while: (e) => e._tag === "TransportError" && e.isRetryable,
+						}),
 						Effect.as({ ...localEvent.status, remote: "success" } as const),
 						Effect.catchTag("TransportError", () =>
 							Effect.succeed({
 								...localEvent.status,
 								remote: "error",
+							} as const),
+						),
+						Effect.catchTag("DuplicateEventError", () =>
+							Effect.succeed({
+								...localEvent.status,
+								remote: "success", // it's already applied on remote, so we can safely mark it as success
 							} as const),
 						),
 					);
@@ -147,6 +171,8 @@ export const syncEngineLive = <
 				StorageError | ApplicatorError | ValidationError
 			> =>
 				Effect.gen(function* () {
+					yield* Effect.log("Processing event", localEvent);
+
 					// --- Step A: Local Application. Aborts if local application fails ---
 					if (localEvent.status.local === "pending")
 						yield* applyEventLocally(localEvent);
@@ -159,47 +185,51 @@ export const syncEngineLive = <
 			// 4. Fork all background fibers, their lifecycle is tied to the Layer's scope
 			//    - Main worker processing events from the queue
 			yield* pipe(
-				queue.take,
+				dequeue,
 				Effect.flatMap((event) =>
 					processEvent(event).pipe(
-						Effect.catchAll((error) => Effect.logError(error)),
+						Effect.catchAll((error) =>
+							Effect.logError("Error processing event", error),
+						),
 					),
 				),
+				Effect.tap((event) => Effect.log("Processed event", event)),
 				Effect.forever,
 				Effect.forkScoped,
 			);
 
+			yield* Effect.log("Starting queue processor...");
+
 			//    - Load pending events from storage on startup
 			yield* pipe(
 				storage.getPendingEvents,
-				Stream.runForEach((localEvent) => queue.offer(localEvent)),
+				Stream.runForEach((localEvent) => enqueue(localEvent)),
 				Effect.forkScoped,
 			);
+
+			yield* Effect.log("Starting transport listener...");
 
 			//    - Listen for remote events and add them to the queue
 			yield* pipe(
 				transport.listen,
 				Effect.andThen((stream) =>
 					stream.pipe(
+						Stream.tap((event) =>
+							Effect.log("Received event from server", event),
+						),
 						Stream.mapEffect((event) =>
 							Effect.succeed({
 								event,
-								status: { local: "pending", remote: "success" },
-							} as LocalEvent<TEvent>),
+								status: { local: "pending", remote: "success" } as const,
+							}),
 						),
-						Stream.runForEach((localEvent) => queue.offer(localEvent)),
+						Stream.runForEach((localEvent) => enqueue(localEvent)),
 					),
 				),
 				Effect.forkScoped,
 			);
 
-			//    - Periodically broadcast the queue size
-			yield* pipe(
-				queue.size,
-				Effect.flatMap((size) => statusPubSub.publish({ queueSize: size })),
-				Effect.repeat(Schedule.spaced("1 second")),
-				Effect.forkScoped,
-			);
+			yield* Effect.log("SyncEngine live layer initialized! 🚀");
 
 			// 5. Implement and provide the SyncEngine service interface
 			return tag.of({
@@ -215,10 +245,15 @@ export const syncEngineLive = <
 							event,
 							status: { local: "pending", remote: "pending" },
 						};
-						yield* storage.saveEvent(event, localEvent.status);
+						yield* storage
+							.saveEvent(event, localEvent.status)
+							.pipe(
+								Effect.catchTag("DuplicateEventError", (cause) =>
+									Effect.fail(new StorageError({ cause })),
+								),
+							);
 						const applied = yield* applyEventLocally(localEvent);
-
-						yield* queue.offer(applied);
+						yield* enqueue(applied);
 					}).pipe(
 						Effect.tapError((error) =>
 							Effect.logError("Error ingesting event", error),

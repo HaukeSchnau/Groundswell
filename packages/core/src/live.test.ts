@@ -200,7 +200,7 @@ describe("SyncEngine", () => {
 			DomainApplicator,
 			DomainApplicator.of({
 				verify: () =>
-					Effect.fail(new ValidationError({ reason: "Invalid value" })),
+					Effect.fail(new ValidationError({ cause: "Invalid value" })),
 				apply: () => Effect.succeed(undefined),
 			}),
 		);
@@ -222,7 +222,7 @@ describe("SyncEngine", () => {
 			// // --- Assertions ---
 			expect(err._tag).toBe("ValidationError");
 			if (err._tag === "ValidationError") {
-				expect(err.reason).toBe("Invalid value");
+				expect(err.cause).toBe("Invalid value");
 			}
 
 			const saved = yield* Ref.get(storageSaveCalls);
@@ -292,7 +292,7 @@ describe("SyncEngine", () => {
 								attempts === 0
 									? Effect.fail(
 											new TransportError({
-												reason: "Network down",
+												cause: new Error("Network down"),
 												isRetryable: true,
 											}),
 										)

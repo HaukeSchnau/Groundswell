@@ -2,9 +2,18 @@
 	"name": "@groundswell/adapter-drizzle-sqlite",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./canonical-storage": "./src/canonical-storage.ts"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
 	"dependencies": {
 		"drizzle-orm": "^0.44.2",
 		"effect": "^3.16.10",
+		"effect-drizzle": "github:HaukeSchnau/effect-drizzle",
 		"superjson": "^2.2.2"
 	},
 	"devDependencies": {

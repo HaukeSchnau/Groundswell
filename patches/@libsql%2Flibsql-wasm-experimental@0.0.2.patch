@@ -1,0 +1,13 @@
+diff --git a/sqlite-wasm/jswasm/sqlite3-bundler-friendly.mjs b/sqlite-wasm/jswasm/sqlite3-bundler-friendly.mjs
+index 8d1be4dc67b7906fd77c92ffb4bcae10d9dbc419..d98e57c17673c48e157f8db7ed26aa305b42e522 100644
+--- a/sqlite-wasm/jswasm/sqlite3-bundler-friendly.mjs
++++ b/sqlite-wasm/jswasm/sqlite3-bundler-friendly.mjs
+@@ -801,7 +801,7 @@ function instantiateAsync(binary, binaryFile, imports, callback) {
+       typeof WebAssembly.instantiateStreaming == 'function' &&
+       !isDataURI(binaryFile) &&
+       typeof fetch == 'function') {
+-    return fetch(binaryFile, { credentials: 'same-origin' }).then((response) => {
++    return fetch('/sqlite3.wasm', { credentials: 'same-origin' }).then((response) => {
+       
+       
+       

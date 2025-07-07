@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export type UnknownEvent = {
+	id: string;
+	timestamp: Date;
+	type: string;
+	data: unknown;
+};
+
 /**
  * The foundational schema for any event in the system.
  * It ensures that every event has a unique ID, a timestamp, and a type identifier.

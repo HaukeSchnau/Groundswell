@@ -1,12 +1,13 @@
-import type { LocalEvent, Storage } from "@groundswell/core";
-import { StorageError } from "@groundswell/core/errors";
+import type { LocalEventStatus, Storage } from "@groundswell/core";
+import { DuplicateEventError, StorageError } from "@groundswell/core/errors";
+import type { UnknownEvent } from "@groundswell/zod-helpers";
 import { asc, eq, or } from "drizzle-orm";
-import {
-	type BaseSQLiteDatabase,
-	sqliteTable,
-	text,
-} from "drizzle-orm/sqlite-core";
-import { type Context, Effect, Layer, Stream } from "effect";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { type Context, Effect, Layer, pipe, Stream } from "effect";
+import type {
+	GenericDatabaseService,
+	genericDatabaseFactory,
+} from "effect-drizzle/generic-sqlite";
 import superjson from "superjson";
 import type { z } from "zod";
 import { sqliteEnum, timestamp, uuid } from "./helpers";
@@ -24,21 +25,90 @@ export const EventsTable = sqliteTable("event_log", {
 
 export type EventsTable = typeof EventsTable;
 
-export type DB = BaseSQLiteDatabase<
-	"sync" | "async",
-	any,
-	{
-		eventLog: EventsTable;
-	}
->;
+type Schema = {
+	eventLog: EventsTable;
+};
+
+type DbTag<TSchema extends Schema> = ReturnType<
+	typeof genericDatabaseFactory<TSchema>
+>["Database"];
 
 // Define the configuration for creating the storage layer.
-export interface DrizzleStorageConfig<TEvent> {
+export interface DrizzleStorageConfig<TEvent, TSchema extends Schema> {
 	/** The Drizzle database client instance. */
-	db: DB;
+	db: DbTag<TSchema>;
 	/** The Zod schema for parsing events, to ensure type safety on retrieval. */
 	eventSchema: z.ZodSchema<TEvent>;
 }
+
+const getPendingEvents = <TSchema extends Schema>(
+	db: GenericDatabaseService<TSchema>,
+) =>
+	db.execute((client) =>
+		client
+			.select()
+			.from(EventsTable)
+			.where(
+				or(
+					eq(EventsTable.localStatus, "pending"),
+					eq(EventsTable.remoteStatus, "pending"),
+				),
+			)
+			.orderBy(asc(EventsTable.timestamp)),
+	);
+
+const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
+	db: GenericDatabaseService<TSchema>,
+	event: TEvent,
+	status: LocalEventStatus,
+) =>
+	db.execute((client) =>
+		client.insert(EventsTable).values({
+			id: event.id,
+			timestamp: event.timestamp,
+			type: event.type,
+			data: superjson.stringify(event.data),
+			localStatus: status.local,
+			remoteStatus: status.remote,
+		}),
+	);
+
+const updateEventStatus = <TSchema extends Schema>(
+	db: GenericDatabaseService<TSchema>,
+	eventId: string,
+	status: Partial<LocalEventStatus>,
+) =>
+	db.execute((client) =>
+		client
+			.update(EventsTable)
+			.set({
+				localStatus: status.local,
+				remoteStatus: status.remote,
+			})
+			.where(eq(EventsTable.id, eventId)),
+	);
+
+const parseLocalEvent = <TEvent extends UnknownEvent>(
+	row: typeof EventsTable.$inferSelect,
+	eventSchema: z.ZodSchema<TEvent>,
+) =>
+	Effect.try({
+		try: () => {
+			const parsedEvent = eventSchema.parse({
+				...row,
+				data: superjson.parse(row.data),
+				timestamp: row.timestamp,
+			});
+			return {
+				event: parsedEvent,
+				status: {
+					local: row.localStatus,
+					remote: row.remoteStatus,
+				},
+			};
+		},
+		catch: (cause) => new StorageError({ cause }),
+	}).pipe(Effect.catchTag("StorageError", () => Effect.succeed(null)));
 
 /**
  * Creates a Layer that provides a live implementation of the Storage service
@@ -50,76 +120,44 @@ export interface DrizzleStorageConfig<TEvent> {
 export const createDrizzleStorageLayer = <
 	TEvent extends { id: string; timestamp: Date; type: string; data: unknown },
 	TagId,
+	TSchema extends Schema,
 >(
 	StorageTag: Context.Tag<TagId, Storage<TEvent>>,
-	config: DrizzleStorageConfig<TEvent>,
+	config: DrizzleStorageConfig<TEvent, TSchema>,
 ) =>
-	Layer.succeed(
+	Layer.effect(
 		StorageTag,
-		StorageTag.of({
-			getPendingEvents: Stream.fromIterableEffect(
-				Effect.tryPromise({
-					try: () =>
-						config.db
-							.select()
-							.from(EventsTable)
-							.where(
-								or(
-									eq(EventsTable.localStatus, "pending"),
-									eq(EventsTable.remoteStatus, "pending"),
-								),
-							)
-							.orderBy(asc(EventsTable.timestamp)),
-					catch: (reason) => new StorageError({ reason }),
-				}),
-			).pipe(
-				// Attempt to parse each row back into a LocalEvent
-				Stream.mapEffect((row) =>
-					Effect.try({
-						try: () => {
-							const parsedEvent = config.eventSchema.parse({
-								...row,
-								data: superjson.parse(row.data),
-								timestamp: row.timestamp,
-							});
-							return {
-								event: parsedEvent,
-								status: {
-									local: row.localStatus,
-									remote: row.remoteStatus,
-								},
-							} as LocalEvent<TEvent>;
-						},
-						catch: (reason) => new StorageError({ reason }),
-					}),
+		Effect.gen(function* () {
+			const db = yield* config.db;
+
+			return StorageTag.of({
+				getPendingEvents: Stream.fromIterableEffect(getPendingEvents(db)).pipe(
+					Stream.catchTag("DatabaseError", (error) =>
+						Stream.fail(new StorageError({ cause: error })),
+					),
+					Stream.mapEffect((row) => parseLocalEvent(row, config.eventSchema)),
+					Stream.filter((row) => row !== null),
 				),
-			),
 
-			saveEvent: (event, status) =>
-				Effect.tryPromise({
-					try: () =>
-						config.db.insert(EventsTable).values({
-							id: event.id,
-							timestamp: event.timestamp,
-							type: event.type,
-							data: superjson.stringify(event.data),
-							localStatus: status.local,
-							remoteStatus: status.remote,
-						}),
-					catch: (reason) => new StorageError({ reason }),
-				}),
+				saveEvent: (event, status) =>
+					pipe(
+						saveEvent(db, event, status),
+						Effect.catchTag("DatabaseError", (error) =>
+							Effect.fail(
+								error.type === "unique_violation"
+									? new DuplicateEventError({ eventId: event.id })
+									: new StorageError({ cause: error }),
+							),
+						),
+					),
 
-			updateEventStatus: (eventId, status) =>
-				Effect.tryPromise({
-					try: () =>
-						config.db
-							.update(EventsTable)
-							.set({
-								localStatus: status.local,
-								remoteStatus: status.remote,
-							})
-							.where(eq(EventsTable.id, eventId)),
-					catch: (reason) => new StorageError({ reason }),
-				}),
+				updateEventStatus: (eventId, status) =>
+					pipe(
+						updateEventStatus(db, eventId, status),
+						Effect.catchTag("DatabaseError", (error) =>
+							Effect.fail(new StorageError({ cause: error })),
+						),
+					),
+			});
 		}),
 	);

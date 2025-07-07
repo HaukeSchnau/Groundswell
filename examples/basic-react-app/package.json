@@ -1,0 +1,36 @@
+{
+	"name": "basic-react-app",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"main": "src/index.ts",
+	"module": "src/index.ts",
+	"scripts": {
+		"dev": "bun --hot src/index.ts",
+		"start": "NODE_ENV=production bun src/index.ts",
+		"build": "bun run build.ts",
+		"typecheck": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"@effect/platform-bun": "^0.72.3",
+		"@groundswell/adapter-bun-server": "workspace:*",
+		"@groundswell/adapter-drizzle-sqlite": "workspace:*",
+		"@groundswell/react": "workspace:*",
+		"@libsql/client-wasm": "^0.15.9",
+		"@tanstack/react-query": "^5.81.5",
+		"bun-plugin-tailwind": "^0.0.14",
+		"effect": "^3.16.10",
+		"effect-drizzle": "github:HaukeSchnau/effect-drizzle",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"tailwindcss": "^4.1.11"
+	},
+	"devDependencies": {
+		"@types/react": "^19.1.8",
+		"@types/react-dom": "^19.1.6",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.8.3"
+	}
+}
