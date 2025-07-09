@@ -9,7 +9,8 @@
 		"./react-native": "./src/event-source/react-native.ts"
 	},
 	"scripts": {
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"dependencies": {
 		"@groundswell/core": "workspace:*",
