@@ -27,10 +27,11 @@ const clientApplicatorsLive = Layer.effect(
 		return DomainApplicator.of({
 			verify: (event: DomainEvent) =>
 				applicator
-					.verify(event, db, {
+					.verify(event, {
 						initiatorId: "1",
 					})
 					.pipe(
+						Effect.provideService(Database, db),
 						Effect.catchTags({
 							DatabaseError: (error) =>
 								Effect.fail(new ValidationError({ cause: error })),
@@ -40,10 +41,11 @@ const clientApplicatorsLive = Layer.effect(
 					),
 			apply: (event: DomainEvent) =>
 				applicator
-					.apply(event, db, {
+					.apply(event, {
 						initiatorId: "1",
 					})
 					.pipe(
+						Effect.provideService(Database, db),
 						Effect.tap((result) => {
 							if (result.invalidatedQueries) {
 								result.invalidatedQueries.forEach((queryKey) => {

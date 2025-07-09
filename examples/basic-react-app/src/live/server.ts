@@ -22,32 +22,34 @@ const serverApplicatorLive = Layer.effect(
 		const db = yield* Database;
 		return DomainServerApplicator.of({
 			verify: (event: DomainEvent) =>
-				applicator
-					.verify(event, db, {
+				pipe(
+					applicator.verify(event, {
 						initiatorId: "1",
-					})
-					.pipe(
-						Effect.catchTags({
-							DatabaseError: (error) =>
-								Effect.fail(new ServerValidationError({ cause: error })),
-							ApplicatorError: (error) =>
-								Effect.fail(new ServerValidationError({ cause: error })),
-						}),
-					),
+					}),
+					Effect.provideService(Database, db),
+					Effect.catchTags({
+						DatabaseError: (error) =>
+							Effect.fail(new ServerValidationError({ cause: error })),
+						ApplicatorError: (error) =>
+							Effect.fail(new ServerValidationError({ cause: error })),
+						ValidationError: (error) =>
+							Effect.fail(new ServerValidationError({ cause: error })),
+					}),
+				),
 			apply: (event: DomainEvent) =>
-				applicator
-					.apply(event, db, {
+				pipe(
+					applicator.apply(event, {
 						initiatorId: "1",
-					})
-					.pipe(
-						Effect.catchTag("DatabaseError", (error) =>
-							Effect.fail(
-								new ApplicatorError({
-									cause: error,
-								}),
-							),
+					}),
+					Effect.provideService(Database, db),
+					Effect.catchTag("DatabaseError", (error) =>
+						Effect.fail(
+							new ApplicatorError({
+								cause: error,
+							}),
 						),
 					),
+				),
 			getEventTopics: () => Effect.succeed(["all_notes"]), // Static topic
 			getUserTopics: () => Effect.succeed(["all_notes"]), // Static topic
 		});
