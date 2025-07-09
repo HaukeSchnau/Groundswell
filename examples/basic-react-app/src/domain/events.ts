@@ -16,5 +16,13 @@ export const noteArchived = createDomainEvent(
 	}),
 );
 
-export const DomainEvent = createEventUnion([noteCreated, noteArchived]);
+export const todoCreated = createDomainEvent(
+	"todo.created",
+	z.object({
+		id: z.string().uuid(),
+		content: z.string().min(1),
+	}),
+);
+
+export const DomainEvent = createEventUnion([noteCreated, noteArchived, todoCreated]);
 export type DomainEvent = z.infer<typeof DomainEvent>;

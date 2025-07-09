@@ -1,4 +1,8 @@
-import { type ApplicatorMap, applicatorFactory } from "@groundswell/core";
+import {
+	applicatorTreeFactory,
+	type NamespaceApplicatorMap,
+	type NamespaceApplicatorTree,
+} from "@groundswell/core";
 import type {
 	DatabaseError,
 	GenericSqliteError,
@@ -7,22 +11,23 @@ import { eq } from "drizzle-orm";
 import { type Cause, Effect, pipe } from "effect";
 import { queryClient } from "@/query-client";
 import { Database } from "./db/contract";
-import { notes } from "./db/schema";
+import * as t from "./db/schema";
 import type { DomainEvent } from "./events";
 
-export const applicatorMap: ApplicatorMap<
+const note: NamespaceApplicatorMap<
 	DomainEvent,
+	"note",
 	DatabaseError<GenericSqliteError> | Cause.UnknownException,
 	Database
 > = {
-	"note.created": {
+	created: {
 		apply: (event) => {
 			return pipe(
 				Database,
 				Effect.flatMap((db) =>
 					db.execute((client) =>
 						client
-							.insert(notes)
+							.insert(t.notes)
 							.values({ id: event.data.id, content: event.data.content })
 							.onConflictDoNothing(),
 					),
@@ -34,16 +39,16 @@ export const applicatorMap: ApplicatorMap<
 		},
 		verify: () => Effect.void,
 	},
-	"note.archived": {
+	archived: {
 		apply: (event) => {
 			return pipe(
 				Database,
 				Effect.flatMap((db) =>
 					db.execute((client) =>
 						client
-							.update(notes)
+							.update(t.notes)
 							.set({ isArchived: true })
-							.where(eq(notes.id, event.data.noteId)),
+							.where(eq(t.notes.id, event.data.noteId)),
 					),
 				),
 				Effect.tap(() =>
@@ -54,5 +59,25 @@ export const applicatorMap: ApplicatorMap<
 		verify: () => Effect.void,
 	},
 };
+const todo: NamespaceApplicatorMap<
+	DomainEvent,
+	"todo",
+	DatabaseError<GenericSqliteError> | Cause.UnknownException,
+	Database
+> = {
+	created: {
+		apply: () => Effect.void,
+		verify: () => Effect.void,
+	},
+};
 
-export const applicator = applicatorFactory(applicatorMap);
+const tree: NamespaceApplicatorTree<
+	DomainEvent,
+	DatabaseError<GenericSqliteError> | Cause.UnknownException,
+	Database
+> = {
+	note,
+	todo,
+};
+
+export const applicator = applicatorTreeFactory(tree);
