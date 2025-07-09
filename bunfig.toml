@@ -1,2 +1,2 @@
 [install]
-registry = { url = "https://npm.schnau.dev/", token = $NPM_TOKEN }
+registry = { url = "https://npm.schnau.dev/", token = "$npm_token" }

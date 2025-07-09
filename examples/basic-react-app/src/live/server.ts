@@ -12,7 +12,7 @@ import {
 	DomainServerApplicator,
 	ingestEngine,
 } from "@/boilerplate";
-import { apply, verify } from "@/domain/applicators";
+import { applicator } from "@/domain/applicators";
 import { Database } from "@/domain/db/contract";
 import { DomainEvent } from "@/domain/events";
 
@@ -22,28 +22,32 @@ const serverApplicatorLive = Layer.effect(
 		const db = yield* Database;
 		return DomainServerApplicator.of({
 			verify: (event: DomainEvent) =>
-				verify(event, db, {
-					initiatorId: "1",
-				}).pipe(
-					Effect.catchTags({
-						DatabaseError: (error) =>
-							Effect.fail(new ServerValidationError({ cause: error })),
-						ApplicatorError: (error) =>
-							Effect.fail(new ServerValidationError({ cause: error })),
-					}),
-				),
+				applicator
+					.verify(event, db, {
+						initiatorId: "1",
+					})
+					.pipe(
+						Effect.catchTags({
+							DatabaseError: (error) =>
+								Effect.fail(new ServerValidationError({ cause: error })),
+							ApplicatorError: (error) =>
+								Effect.fail(new ServerValidationError({ cause: error })),
+						}),
+					),
 			apply: (event: DomainEvent) =>
-				apply(event, db, {
-					initiatorId: "1",
-				}).pipe(
-					Effect.catchTag("DatabaseError", (error) =>
-						Effect.fail(
-							new ApplicatorError({
-								cause: error,
-							}),
+				applicator
+					.apply(event, db, {
+						initiatorId: "1",
+					})
+					.pipe(
+						Effect.catchTag("DatabaseError", (error) =>
+							Effect.fail(
+								new ApplicatorError({
+									cause: error,
+								}),
+							),
 						),
 					),
-				),
 			getEventTopics: () => Effect.succeed(["all_notes"]), // Static topic
 			getUserTopics: () => Effect.succeed(["all_notes"]), // Static topic
 		});

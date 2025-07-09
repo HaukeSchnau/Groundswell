@@ -13,7 +13,7 @@
 		"@groundswell/core": "workspace:*",
 		"@groundswell/core-server": "workspace:*",
 		"@groundswell/zod-helpers": "workspace:*",
-		"@schnau/effect-drizzle": "^0.1.0",
+		"@schnau/effect-drizzle": "^0.2.3",
 		"drizzle-orm": "^0.44",
 		"effect": "^3",
 		"superjson": "^2",

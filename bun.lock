@@ -5,9 +5,9 @@
       "name": "groundswell",
       "devDependencies": {
         "@biomejs/biome": "2.0.5",
-        "@effect/language-service": "^0.23.4",
+        "@effect/language-service": "^0.23.5",
         "@libsql/client": "^0.15.9",
-        "@typescript/native-preview": "^7.0.0-dev.20250701.1",
+        "@typescript/native-preview": "^7.0.0-dev.20250709.1",
         "vitest": "^3.2.4",
       },
       "peerDependencies": {
@@ -23,7 +23,7 @@
         "@groundswell/adapter-drizzle-sqlite": "workspace:*",
         "@groundswell/react": "workspace:*",
         "@libsql/client-wasm": "^0.15.9",
-        "@schnau/effect-drizzle": "^0.1.0",
+        "@schnau/effect-drizzle": "^0.2.3",
         "@tanstack/react-query": "^5.81.5",
         "bun-plugin-tailwind": "^0.0.14",
         "effect": "^3.16.10",
@@ -50,6 +50,26 @@
         "zod": "^3",
       },
     },
+    "packages/adapter-drizzle-postgres": {
+      "name": "@groundswell/adapter-drizzle-postgres",
+      "version": "0.0.1",
+      "dependencies": {
+        "@groundswell/core": "workspace:*",
+        "@groundswell/core-server": "workspace:*",
+        "@groundswell/zod-helpers": "workspace:*",
+        "@schnau/effect-drizzle": "^0.2.3",
+        "@types/pg": "^8.15.4",
+        "drizzle-orm": "^0.44",
+        "effect": "^3",
+        "pg": "^8.16.3",
+        "superjson": "^2",
+        "zod": "^3",
+      },
+      "devDependencies": {
+        "@effect/test": "^0.1.0",
+        "drizzle-kit": "^0.31.4",
+      },
+    },
     "packages/adapter-drizzle-sqlite": {
       "name": "@groundswell/adapter-drizzle-sqlite",
       "version": "0.0.1",
@@ -57,7 +77,7 @@
         "@groundswell/core": "workspace:*",
         "@groundswell/core-server": "workspace:*",
         "@groundswell/zod-helpers": "workspace:*",
-        "@schnau/effect-drizzle": "^0.1.0",
+        "@schnau/effect-drizzle": "^0.2.3",
         "drizzle-orm": "^0.44",
         "effect": "^3",
         "superjson": "^2",
@@ -178,7 +198,7 @@
 
     "@effect/io": ["@effect/io@0.3.1", "", { "dependencies": { "@effect/data": "~0.2.0" } }, "sha512-mcUWfA0eVNGklL9rx7pOAiRxd5TOmjJMxvBapb7fPiarYJCPJgvCPRxOi2mWb31buDN0Z9v3C8DE9KKLE8Yv3w=="],
 
-    "@effect/language-service": ["@effect/language-service@0.23.4", "", {}, "sha512-ublaVipRjmGvV5yxKNZoeJiCNkpS8JDxKhWfifjvXwFsrc+QCOY5jTAaNkDLNvQZsyNzWL5/6vzeFWd7jbZxow=="],
+    "@effect/language-service": ["@effect/language-service@0.23.5", "https://npm.schnau.dev/@effect/language-service/-/language-service-0.23.5.tgz", {}, "sha512-aQN24eziWuqK/EdFhhZ2Jr/CZgYxNfsP9r7DT7jCYgJWhZ8HPO39hyHcij14cMv41ZM8j0p8lmBnHYZwYN1Wyg=="],
 
     "@effect/platform": ["@effect/platform@0.87.1", "", { "dependencies": { "find-my-way-ts": "^0.1.5", "msgpackr": "^1.11.4", "multipasta": "^0.2.5" }, "peerDependencies": { "effect": "^3.16.10" } }, "sha512-OJmdAOle5ZYExJIppBh2+N3RHCAdn3WdtxvLgkECI0aJLjpEy/O88XdkkLmRKrVPFByxsShfVUEhZyKtVdHA8A=="],
 
@@ -253,6 +273,8 @@
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.5", "", { "os": "win32", "cpu": "x64" }, "sha512-TXv6YnJ8ZMVdX+SXWVBo/0p8LTcrUYngpWjvm91TMjjBQii7Oz11Lw5lbDV5Y0TzuhSJHwiH4hEtC1I42mMS0g=="],
 
     "@groundswell/adapter-bun-server": ["@groundswell/adapter-bun-server@workspace:packages/adapter-bun-server"],
+
+    "@groundswell/adapter-drizzle-postgres": ["@groundswell/adapter-drizzle-postgres@workspace:packages/adapter-drizzle-postgres"],
 
     "@groundswell/adapter-drizzle-sqlite": ["@groundswell/adapter-drizzle-sqlite@workspace:packages/adapter-drizzle-sqlite"],
 
@@ -384,7 +406,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.44.1", "", { "os": "win32", "cpu": "x64" }, "sha512-J8o22LuF0kTe7m+8PvW9wk3/bRq5+mRo5Dqo6+vXb7otCm3TPhYOJqOaQtGU9YMWQSL3krMnoOxMr0+9E6F3Ug=="],
 
-    "@schnau/effect-drizzle": ["@schnau/effect-drizzle@0.1.0", "https://npm.schnau.dev/@schnau/effect-drizzle/-/effect-drizzle-0.1.0.tgz", { "dependencies": { "drizzle-orm": "^0.44.2", "effect": "^3.16.10" }, "peerDependencies": { "typescript": "^5" } }, "sha512-yRSIgOHdwwE8MVe6IbwsH85+5IiB1tg2XujfDJ9vuMjJRldPjuL/jAfRfJtgI34fkSfMMH2KWhga9jGlHQX4Kg=="],
+    "@schnau/effect-drizzle": ["@schnau/effect-drizzle@0.2.3", "https://npm.schnau.dev/@schnau/effect-drizzle/-/effect-drizzle-0.2.3.tgz", { "dependencies": { "drizzle-orm": "^0.44.2", "effect": "^3.16.10" }, "peerDependencies": { "typescript": "^5" } }, "sha512-U10WXBK9tWPUPkjg8NZeK4vwJDbji5xhxryO6w8WnvBil/klwjpJYaRmcAuEwYFwA4RIsQRURKMQbRR8upHEBA=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
 
@@ -404,27 +426,29 @@
 
     "@types/node": ["@types/node@24.0.4", "", { "dependencies": { "undici-types": "~7.8.0" } }, "sha512-ulyqAkrhnuNq9pB76DRBTkcS6YsmDALy6Ua63V8OhrOBgbcYt6IOdzpw5P1+dyRIyMerzLkeYWBeOXPpA9GMAA=="],
 
+    "@types/pg": ["@types/pg@8.15.4", "https://npm.schnau.dev/@types/pg/-/pg-8.15.4.tgz", { "dependencies": { "@types/node": "*", "pg-protocol": "*", "pg-types": "^2.2.0" } }, "sha512-I6UNVBAoYbvuWkkU3oosC8yxqH21f4/Jc4DK71JLG3dT2mdlGe1z+ep/LQGXaKaOgcvUrsQoPRqfgtMcvZiJhg=="],
+
     "@types/react": ["@types/react@19.1.8", "", { "dependencies": { "csstype": "^3.0.2" } }, "sha512-AwAfQ2Wa5bCx9WP8nZL2uMZWod7J7/JSplxbTmBQ5ms6QpqNYm672H0Vu9ZVKVngQ+ii4R/byguVEUZQyeg44g=="],
 
     "@types/react-dom": ["@types/react-dom@19.1.6", "", { "peerDependencies": { "@types/react": "^19.0.0" } }, "sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw=="],
 
     "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg=="],
 
-    "@typescript/native-preview": ["@typescript/native-preview@7.0.0-dev.20250701.1", "", { "optionalDependencies": { "@typescript/native-preview-darwin-arm64": "7.0.0-dev.20250701.1", "@typescript/native-preview-darwin-x64": "7.0.0-dev.20250701.1", "@typescript/native-preview-linux-arm": "7.0.0-dev.20250701.1", "@typescript/native-preview-linux-arm64": "7.0.0-dev.20250701.1", "@typescript/native-preview-linux-x64": "7.0.0-dev.20250701.1", "@typescript/native-preview-win32-arm64": "7.0.0-dev.20250701.1", "@typescript/native-preview-win32-x64": "7.0.0-dev.20250701.1" }, "bin": { "tsgo": "bin/tsgo.js" } }, "sha512-xHKk617xApGj/4HkYYv8Qd8FJKU0PXCb7IFZIpLuglbPJia8T2fIUtvCXjanH08G6xnxOWjDZDqWwZO7mhfdGQ=="],
+    "@typescript/native-preview": ["@typescript/native-preview@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview/-/native-preview-7.0.0-dev.20250709.1.tgz", { "optionalDependencies": { "@typescript/native-preview-darwin-arm64": "7.0.0-dev.20250709.1", "@typescript/native-preview-darwin-x64": "7.0.0-dev.20250709.1", "@typescript/native-preview-linux-arm": "7.0.0-dev.20250709.1", "@typescript/native-preview-linux-arm64": "7.0.0-dev.20250709.1", "@typescript/native-preview-linux-x64": "7.0.0-dev.20250709.1", "@typescript/native-preview-win32-arm64": "7.0.0-dev.20250709.1", "@typescript/native-preview-win32-x64": "7.0.0-dev.20250709.1" }, "bin": { "tsgo": "bin/tsgo.js" } }, "sha512-EM5u/BLK3A7KAOPPLdlMmlZywtQpQp64Srwec5fWnKROKLiGeSct4O3LAjM7tDDbGdwJcLLcyJPzBmyRMSqRkQ=="],
 
-    "@typescript/native-preview-darwin-arm64": ["@typescript/native-preview-darwin-arm64@7.0.0-dev.20250701.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-1+CeuaEwzvFDRWQcNYeoQ9F+CxI/C3tJy/yGG0vYpBSftcYTM0XrI9Erh5whm7wn9XwprmL5/fAcO12+FYuwkw=="],
+    "@typescript/native-preview-darwin-arm64": ["@typescript/native-preview-darwin-arm64@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-darwin-arm64/-/native-preview-darwin-arm64-7.0.0-dev.20250709.1.tgz", { "os": "darwin", "cpu": "arm64" }, "sha512-4BNMXUKYmx7ECcQgff0i4yJXJVVNq6GfFC/8lvXv5GT/l8SzBUE0cm7rbCF2CNEk1mnVB31jEPFaGlsHIk4buA=="],
 
-    "@typescript/native-preview-darwin-x64": ["@typescript/native-preview-darwin-x64@7.0.0-dev.20250701.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-MMAL2616kfP/JQRedk9qyCWy02x9oX1yBvHUonsmMJuLMmEQEkDhN5fa+rEJJfmO6XrNpz2G2OuvtXumPEXqNA=="],
+    "@typescript/native-preview-darwin-x64": ["@typescript/native-preview-darwin-x64@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-darwin-x64/-/native-preview-darwin-x64-7.0.0-dev.20250709.1.tgz", { "os": "darwin", "cpu": "x64" }, "sha512-xN1T3WjfZkf49X+iHat3UB0sHR8BJfYT0IpOwMPV5NkjBH9SnX1DpWW6sXU6rkwelcu9FM6edGkzaVbWZ55jvw=="],
 
-    "@typescript/native-preview-linux-arm": ["@typescript/native-preview-linux-arm@7.0.0-dev.20250701.1", "", { "os": "linux", "cpu": "arm" }, "sha512-TpA1j+ejJUFXDVMwqYM/gPuiHjb8r/K50gZ+/6mmF2XQp5ZA8lHg/q6qwWtJDxNCCsskoCbB6dmUFRT26auU3g=="],
+    "@typescript/native-preview-linux-arm": ["@typescript/native-preview-linux-arm@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-linux-arm/-/native-preview-linux-arm-7.0.0-dev.20250709.1.tgz", { "os": "linux", "cpu": "arm" }, "sha512-s4iPbI+a3SsrcuO3BBljmQlSI8Q+SLDuqoOKmRwXWtXMa8jFxdFz/E5Oj6L3QfEApV6RZGlB4M1M79VlYfNhuQ=="],
 
-    "@typescript/native-preview-linux-arm64": ["@typescript/native-preview-linux-arm64@7.0.0-dev.20250701.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-WV2vKSbuGV3yDIlIMtjVzrrnweBr2u15bDds3QOBL6VzwhsYlNMrhUa7VD1o0Nlgk4OFUiaU/iNNKYxKL1FJdg=="],
+    "@typescript/native-preview-linux-arm64": ["@typescript/native-preview-linux-arm64@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-linux-arm64/-/native-preview-linux-arm64-7.0.0-dev.20250709.1.tgz", { "os": "linux", "cpu": "arm64" }, "sha512-dKB0OIIkeUl4M10Yw8VwjvHG+RIAUIOv16+3tgVQpcxH9pKlJJ6I0ZXdfuvw7xJ1NfcrPXpbB75aE4+Mfv0Ofw=="],
 
-    "@typescript/native-preview-linux-x64": ["@typescript/native-preview-linux-x64@7.0.0-dev.20250701.1", "", { "os": "linux", "cpu": "x64" }, "sha512-Ui1UdQemaDu5ZvpFqlIUaPB4g9uLxJYQwTSjx/hzTpwYwRXY6naNoRzmXK8EWdw9OhO5hPx3qRd15nqlgpqJDg=="],
+    "@typescript/native-preview-linux-x64": ["@typescript/native-preview-linux-x64@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-linux-x64/-/native-preview-linux-x64-7.0.0-dev.20250709.1.tgz", { "os": "linux", "cpu": "x64" }, "sha512-iQqqEHl1FJqgARJTZu2HR+3/IS20gimFK6Yw/P0wT/Mgy8hqIVJfxuywI6qO08LTIrU/QlbvUbMPebG1NLv8Og=="],
 
-    "@typescript/native-preview-win32-arm64": ["@typescript/native-preview-win32-arm64@7.0.0-dev.20250701.1", "", { "os": "win32", "cpu": "arm64" }, "sha512-HtfvtJARDzsM5ArDWWWOGcquEbWnl3S9Q6qG6UBTAoV0MOAH4EN6oo57LWZE4f7b2euzqrvp3hfLxqI00NwIog=="],
+    "@typescript/native-preview-win32-arm64": ["@typescript/native-preview-win32-arm64@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-win32-arm64/-/native-preview-win32-arm64-7.0.0-dev.20250709.1.tgz", { "os": "win32", "cpu": "arm64" }, "sha512-oDLav/1eCOivx14cVidbMXh2KXhSL9sGJFC6xa8G8RAQdxLiokDe9ZeUew4k4QNMiG1TSuSO9uRAPM5EHr6zuw=="],
 
-    "@typescript/native-preview-win32-x64": ["@typescript/native-preview-win32-x64@7.0.0-dev.20250701.1", "", { "os": "win32", "cpu": "x64" }, "sha512-/iLiQRx543bTUXPSQonhDDkgXjseRwiR0mXf2cTN3SrNRJCgfSotXyT58z58DEe/d7LO6gAVZbC1RaTgHZFtzA=="],
+    "@typescript/native-preview-win32-x64": ["@typescript/native-preview-win32-x64@7.0.0-dev.20250709.1", "https://npm.schnau.dev/@typescript/native-preview-win32-x64/-/native-preview-win32-x64-7.0.0-dev.20250709.1.tgz", { "os": "win32", "cpu": "x64" }, "sha512-XG5mUFMVzdtrBhat9wBOPZ4lWy+8GbhtvySx5nxINhZGFyUUhgx9wY87ZIJZBrDRVHfYIYN0JPVdfaZ3Trk1nw=="],
 
     "@vitest/expect": ["@vitest/expect@3.2.4", "", { "dependencies": { "@types/chai": "^5.2.2", "@vitest/spy": "3.2.4", "@vitest/utils": "3.2.4", "chai": "^5.2.0", "tinyrainbow": "^2.0.0" } }, "sha512-Io0yyORnB6sikFlt8QW5K7slY4OjqNX9jmJQ02QDda8lyM6B5oNgVWoSoKPac8/kgnCUzuHQKrSLtu/uOqqrig=="],
 
@@ -594,11 +618,35 @@
 
     "pathval": ["pathval@2.0.1", "", {}, "sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ=="],
 
+    "pg": ["pg@8.16.3", "https://npm.schnau.dev/pg/-/pg-8.16.3.tgz", { "dependencies": { "pg-connection-string": "^2.9.1", "pg-pool": "^3.10.1", "pg-protocol": "^1.10.3", "pg-types": "2.2.0", "pgpass": "1.0.5" }, "optionalDependencies": { "pg-cloudflare": "^1.2.7" }, "peerDependencies": { "pg-native": ">=3.0.1" }, "optionalPeers": ["pg-native"] }, "sha512-enxc1h0jA/aq5oSDMvqyW3q89ra6XIIDZgCX9vkMrnz5DFTw/Ny3Li2lFQ+pt3L6MCgm/5o2o8HW9hiJji+xvw=="],
+
+    "pg-cloudflare": ["pg-cloudflare@1.2.7", "https://npm.schnau.dev/pg-cloudflare/-/pg-cloudflare-1.2.7.tgz", {}, "sha512-YgCtzMH0ptvZJslLM1ffsY4EuGaU0cx4XSdXLRFae8bPP4dS5xL1tNB3k2o/N64cHJpwU7dxKli/nZ2lUa5fLg=="],
+
+    "pg-connection-string": ["pg-connection-string@2.9.1", "https://npm.schnau.dev/pg-connection-string/-/pg-connection-string-2.9.1.tgz", {}, "sha512-nkc6NpDcvPVpZXxrreI/FOtX3XemeLl8E0qFr6F2Lrm/I8WOnaWNhIPK2Z7OHpw7gh5XJThi6j6ppgNoaT1w4w=="],
+
+    "pg-int8": ["pg-int8@1.0.1", "https://npm.schnau.dev/pg-int8/-/pg-int8-1.0.1.tgz", {}, "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw=="],
+
+    "pg-pool": ["pg-pool@3.10.1", "https://npm.schnau.dev/pg-pool/-/pg-pool-3.10.1.tgz", { "peerDependencies": { "pg": ">=8.0" } }, "sha512-Tu8jMlcX+9d8+QVzKIvM/uJtp07PKr82IUOYEphaWcoBhIYkoHpLXN3qO59nAI11ripznDsEzEv8nUxBVWajGg=="],
+
+    "pg-protocol": ["pg-protocol@1.10.3", "https://npm.schnau.dev/pg-protocol/-/pg-protocol-1.10.3.tgz", {}, "sha512-6DIBgBQaTKDJyxnXaLiLR8wBpQQcGWuAESkRBX/t6OwA8YsqP+iVSiond2EDy6Y/dsGk8rh/jtax3js5NeV7JQ=="],
+
+    "pg-types": ["pg-types@2.2.0", "https://npm.schnau.dev/pg-types/-/pg-types-2.2.0.tgz", { "dependencies": { "pg-int8": "1.0.1", "postgres-array": "~2.0.0", "postgres-bytea": "~1.0.0", "postgres-date": "~1.0.4", "postgres-interval": "^1.1.0" } }, "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA=="],
+
+    "pgpass": ["pgpass@1.0.5", "https://npm.schnau.dev/pgpass/-/pgpass-1.0.5.tgz", { "dependencies": { "split2": "^4.1.0" } }, "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug=="],
+
     "picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
 
     "picomatch": ["picomatch@4.0.2", "", {}, "sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg=="],
 
     "postcss": ["postcss@8.5.6", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg=="],
+
+    "postgres-array": ["postgres-array@2.0.0", "https://npm.schnau.dev/postgres-array/-/postgres-array-2.0.0.tgz", {}, "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA=="],
+
+    "postgres-bytea": ["postgres-bytea@1.0.0", "https://npm.schnau.dev/postgres-bytea/-/postgres-bytea-1.0.0.tgz", {}, "sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w=="],
+
+    "postgres-date": ["postgres-date@1.0.7", "https://npm.schnau.dev/postgres-date/-/postgres-date-1.0.7.tgz", {}, "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q=="],
+
+    "postgres-interval": ["postgres-interval@1.2.0", "https://npm.schnau.dev/postgres-interval/-/postgres-interval-1.2.0.tgz", { "dependencies": { "xtend": "^4.0.0" } }, "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ=="],
 
     "prebuild-install": ["prebuild-install@7.1.3", "", { "dependencies": { "detect-libc": "^2.0.0", "expand-template": "^2.0.3", "github-from-package": "0.0.0", "minimist": "^1.2.3", "mkdirp-classic": "^0.5.3", "napi-build-utils": "^2.0.0", "node-abi": "^3.3.0", "pump": "^3.0.0", "rc": "^1.2.7", "simple-get": "^4.0.0", "tar-fs": "^2.0.0", "tunnel-agent": "^0.6.0" }, "bin": { "prebuild-install": "bin.js" } }, "sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug=="],
 
@@ -639,6 +687,8 @@
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 
     "source-map-support": ["source-map-support@0.5.21", "", { "dependencies": { "buffer-from": "^1.0.0", "source-map": "^0.6.0" } }, "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="],
+
+    "split2": ["split2@4.2.0", "https://npm.schnau.dev/split2/-/split2-4.2.0.tgz", {}, "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg=="],
 
     "stackback": ["stackback@0.0.2", "", {}, "sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw=="],
 
@@ -695,6 +745,8 @@
     "wrappy": ["wrappy@1.0.2", "", {}, "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="],
 
     "ws": ["ws@8.18.3", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="],
+
+    "xtend": ["xtend@4.0.2", "https://npm.schnau.dev/xtend/-/xtend-4.0.2.tgz", {}, "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="],
 
     "zod": ["zod@3.25.67", "", {}, "sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw=="],
 

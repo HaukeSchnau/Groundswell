@@ -15,7 +15,7 @@ import {
 	DomainSyncEngine,
 	DomainTransport,
 } from "@/boilerplate";
-import { apply, verify } from "@/domain/applicators";
+import { applicator } from "@/domain/applicators";
 import { Database, TransactionContext } from "@/domain/db/contract";
 import * as Schema from "@/domain/db/schema";
 import { DomainEvent } from "@/domain/events";
@@ -26,37 +26,41 @@ const clientApplicatorsLive = Layer.effect(
 		const db = yield* Database;
 		return DomainApplicator.of({
 			verify: (event: DomainEvent) =>
-				verify(event, db, {
-					initiatorId: "1",
-				}).pipe(
-					Effect.catchTags({
-						DatabaseError: (error) =>
-							Effect.fail(new ValidationError({ cause: error })),
-						ApplicatorError: (error) =>
-							Effect.fail(new ValidationError({ cause: error })),
-					}),
-				),
+				applicator
+					.verify(event, db, {
+						initiatorId: "1",
+					})
+					.pipe(
+						Effect.catchTags({
+							DatabaseError: (error) =>
+								Effect.fail(new ValidationError({ cause: error })),
+							ApplicatorError: (error) =>
+								Effect.fail(new ValidationError({ cause: error })),
+						}),
+					),
 			apply: (event: DomainEvent) =>
-				apply(event, db, {
-					initiatorId: "1",
-				}).pipe(
-					Effect.tap((result) => {
-						if (result.invalidatedQueries) {
-							result.invalidatedQueries.forEach((queryKey) => {
-								queryClient.invalidateQueries({
-									queryKey,
+				applicator
+					.apply(event, db, {
+						initiatorId: "1",
+					})
+					.pipe(
+						Effect.tap((result) => {
+							if (result.invalidatedQueries) {
+								result.invalidatedQueries.forEach((queryKey) => {
+									queryClient.invalidateQueries({
+										queryKey,
+									});
 								});
-							});
-						}
-					}),
-					Effect.catchTag("DatabaseError", (error) =>
-						Effect.fail(
-							new ApplicatorError({
-								cause: error,
-							}),
+							}
+						}),
+						Effect.catchTag("DatabaseError", (error) =>
+							Effect.fail(
+								new ApplicatorError({
+									cause: error,
+								}),
+							),
 						),
 					),
-				),
 		});
 	}),
 );

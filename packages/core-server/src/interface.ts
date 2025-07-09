@@ -1,7 +1,4 @@
-import type {
-	ApplicatorError,
-	DuplicateEventError,
-} from "@groundswell/core";
+import type { ApplicatorError, DuplicateEventError } from "@groundswell/core";
 import type { Effect, Stream } from "effect";
 import type {
 	BroadcastError,
