@@ -8,7 +8,6 @@ import {
 } from "@groundswell/core";
 import { makeService } from "@schnau/effect-drizzle/libsql-wasm";
 import { Effect, Layer, Redacted } from "effect";
-import { queryClient } from "@/App";
 import {
 	DomainApplicator,
 	DomainStorage,
@@ -35,7 +34,7 @@ const clientApplicatorsLive = Layer.effect(
 						Effect.catchTags({
 							DatabaseError: (error) =>
 								Effect.fail(new ValidationError({ cause: error })),
-							ApplicatorError: (error) =>
+							UnknownException: (error) =>
 								Effect.fail(new ValidationError({ cause: error })),
 						}),
 					),
@@ -46,22 +45,12 @@ const clientApplicatorsLive = Layer.effect(
 					})
 					.pipe(
 						Effect.provideService(Database, db),
-						Effect.tap((result) => {
-							if (result.invalidatedQueries) {
-								result.invalidatedQueries.forEach((queryKey) => {
-									queryClient.invalidateQueries({
-										queryKey,
-									});
-								});
-							}
+						Effect.catchTags({
+							DatabaseError: (error) =>
+								Effect.fail(new ApplicatorError({ cause: error })),
+							UnknownException: (error) =>
+								Effect.fail(new ApplicatorError({ cause: error })),
 						}),
-						Effect.catchTag("DatabaseError", (error) =>
-							Effect.fail(
-								new ApplicatorError({
-									cause: error,
-								}),
-							),
-						),
 					),
 		});
 	}),
@@ -69,6 +58,7 @@ const clientApplicatorsLive = Layer.effect(
 
 export const WasmDatabaseLive = Layer.scoped(
 	Database,
+	// @ts-ignore -- weird: only on cli
 	makeService(
 		{
 			url: Redacted.make("file:./db.sqlite"),

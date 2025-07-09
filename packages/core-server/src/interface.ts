@@ -1,4 +1,5 @@
 import type { ApplicatorError, DuplicateEventError } from "@groundswell/core";
+import type { EventMeta } from "@groundswell/zod-helpers";
 import type { Effect, Stream } from "effect";
 import type {
 	BroadcastError,
@@ -12,8 +13,12 @@ import type {
 export interface ServerApplicator<TEvent> {
 	readonly verify: (
 		event: TEvent,
+		meta: EventMeta,
 	) => Effect.Effect<void, ServerValidationError>;
-	readonly apply: (event: TEvent) => Effect.Effect<void, ApplicatorError>;
+	readonly apply: (
+		event: TEvent,
+		meta: EventMeta,
+	) => Effect.Effect<void, ApplicatorError>;
 	readonly getEventTopics: (event: TEvent) => Effect.Effect<string[], never>;
 	readonly getUserTopics: (
 		userId: string,
@@ -26,7 +31,7 @@ export interface CanonicalStorage<TEvent> {
 	) => Effect.Effect<boolean, CanonicalStorageError>;
 	readonly saveEvent: (
 		event: TEvent,
-		meta: { initiatorId: string; topics: string[] },
+		meta: EventMeta & { topics: string[] },
 	) => Effect.Effect<void, CanonicalStorageError>;
 	readonly getMissingEventsForUser: (
 		userId: string,
@@ -56,7 +61,7 @@ export interface Broadcast<TEvent> {
 export interface IngestEngine<TEvent> {
 	readonly ingest: (
 		event: TEvent,
-		meta: { initiatorId: string },
+		meta: EventMeta,
 	) => Effect.Effect<
 		void,
 		| ServerValidationError

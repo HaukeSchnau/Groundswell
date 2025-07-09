@@ -4,14 +4,15 @@ import type {
 	GenericSqliteError,
 } from "@schnau/effect-drizzle/generic-sqlite";
 import { eq } from "drizzle-orm";
-import { Effect, pipe } from "effect";
+import { type Cause, Effect, pipe } from "effect";
+import { queryClient } from "@/query-client";
 import { Database } from "./db/contract";
 import { notes } from "./db/schema";
 import type { DomainEvent } from "./events";
 
 export const applicatorMap: ApplicatorMap<
 	DomainEvent,
-	DatabaseError<GenericSqliteError>,
+	DatabaseError<GenericSqliteError> | Cause.UnknownException,
 	Database
 > = {
 	"note.created": {
@@ -26,9 +27,9 @@ export const applicatorMap: ApplicatorMap<
 							.onConflictDoNothing(),
 					),
 				),
-				Effect.as({
-					invalidatedQueries: [["notes"]],
-				}),
+				Effect.tap(() =>
+					queryClient.invalidateQueries({ queryKey: ["notes"] }),
+				),
 			);
 		},
 		verify: () => Effect.void,
@@ -45,9 +46,9 @@ export const applicatorMap: ApplicatorMap<
 							.where(eq(notes.id, event.data.noteId)),
 					),
 				),
-				Effect.as({
-					invalidatedQueries: [["notes"]],
-				}),
+				Effect.tap(() =>
+					queryClient.invalidateQueries({ queryKey: ["notes"] }),
+				),
 			);
 		},
 		verify: () => Effect.void,

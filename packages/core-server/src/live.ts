@@ -1,4 +1,5 @@
 import { DuplicateEventError } from "@groundswell/core";
+import type { EventMeta } from "@groundswell/zod-helpers";
 import { type Context, Effect, Layer } from "effect";
 import type {
 	Broadcast,
@@ -28,7 +29,7 @@ export const ingestEngineLive = <
 
 			const ingestLogic = Effect.fn("ingest")(function* (
 				event: TEvent,
-				meta: { initiatorId: string },
+				meta: EventMeta,
 			) {
 				// 1. Verify business rules and event uniqueness
 				const isUnique = yield* storage.isEventUnique(event.id);
@@ -37,12 +38,12 @@ export const ingestEngineLive = <
 						new DuplicateEventError({ eventId: event.id }),
 					);
 				}
-				yield* applicator.verify(event);
+				yield* applicator.verify(event, meta);
 
 				// 2. Apply, Save, and Broadcast
 				const topics = yield* applicator.getEventTopics(event);
 				yield* storage.saveEvent(event, { ...meta, topics });
-				yield* applicator.apply(event);
+				yield* applicator.apply(event, meta);
 
 				const userTopics = yield* applicator.getUserTopics(meta.initiatorId);
 				const missingEvents = yield* storage.getMissingEventsForUser(

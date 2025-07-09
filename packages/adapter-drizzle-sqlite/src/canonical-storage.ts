@@ -2,7 +2,7 @@ import {
 	type CanonicalStorage,
 	CanonicalStorageError,
 } from "@groundswell/core-server";
-import type { UnknownEvent } from "@groundswell/zod-helpers";
+import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import type {
 	GenericDatabaseService,
 	genericDatabaseFactory,
@@ -83,7 +83,7 @@ const isEventUnique = <TSchema extends Schema>(
 const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	db: GenericDatabaseService<TSchema>,
 	event: TEvent,
-	meta: { initiatorId: string; topics: string[] },
+	meta: EventMeta & { topics: string[] },
 ) =>
 	Effect.gen(function* () {
 		yield* db.transaction(

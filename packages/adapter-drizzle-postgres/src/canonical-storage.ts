@@ -2,7 +2,7 @@ import {
 	type CanonicalStorage,
 	CanonicalStorageError,
 } from "@groundswell/core-server";
-import type { UnknownEvent } from "@groundswell/zod-helpers";
+import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import type {
 	factory,
 	PostgresDatabaseService,
@@ -88,7 +88,7 @@ const isEventUnique = <TSchema extends Schema>(
 const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	db: PostgresDatabaseService<TSchema>,
 	event: TEvent,
-	meta: { initiatorId: string; topics: string[] },
+	meta: EventMeta & { topics: string[] },
 ) =>
 	Effect.gen(function* () {
 		yield* db.transaction(

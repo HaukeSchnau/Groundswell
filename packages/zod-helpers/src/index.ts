@@ -7,6 +7,10 @@ export type UnknownEvent = {
 	data: unknown;
 };
 
+export type EventMeta = {
+	initiatorId: string;
+};
+
 /**
  * The foundational schema for any event in the system.
  * It ensures that every event has a unique ID, a timestamp, and a type identifier.

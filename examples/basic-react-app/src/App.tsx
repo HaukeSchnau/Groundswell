@@ -1,5 +1,4 @@
 import {
-	QueryClient,
 	QueryClientProvider,
 	type QueryKey,
 	useQuery,
@@ -12,6 +11,7 @@ import type { Database } from "./domain/db/contract";
 import { getNotes } from "./domain/queries";
 import { SyncEngineLive, WasmDatabaseLive } from "./live/client";
 import { runMigrations } from "./migrate";
+import { queryClient } from "./query-client";
 
 const { SyncEngineProvider, useIngest, useSyncStatus, useRuntime } =
 	clientSyncEngine;
@@ -35,8 +35,6 @@ const useEffectQuery = <A, E>(
 		queryFn: () => runtime.runPromise(effect),
 	});
 };
-
-export const queryClient = new QueryClient();
 
 const NoteInput = () => {
 	const [content, setContent] = useState("");
