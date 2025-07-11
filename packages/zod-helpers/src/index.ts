@@ -38,10 +38,10 @@ export const BaseEventSchema = z.object({
  */
 export const createDomainEvent = <
 	TName extends string,
-	TDataSchema extends z.ZodType,
+	TDataShape extends z.ZodRawShape,
 >(
 	name: TName,
-	dataSchema: TDataSchema,
+	dataShape: TDataShape,
 ) => {
 	return BaseEventSchema.extend({
 		/**
@@ -51,7 +51,7 @@ export const createDomainEvent = <
 		/**
 		 * The payload of the event, containing all relevant data for the state change.
 		 */
-		data: dataSchema,
+		data: z.object(dataShape),
 	});
 };
 

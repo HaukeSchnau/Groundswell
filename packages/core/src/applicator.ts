@@ -76,7 +76,11 @@ export const applicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 };
 
 const getApplicator = (event: UnknownEvent, applicatorTree: any) => {
-	const [namespace, eventName] = event.type.split(".") as [string, string];
+	const [namespace, ...eventNameParts] = event.type.split(".") as [
+		string,
+		string,
+	];
+	const eventName = eventNameParts.join(".");
 	return applicatorTree[namespace][eventName];
 };
 
@@ -136,6 +140,28 @@ export type ServerApplicatorMap<DomainEvent extends UnknownEvent, E, R> = {
 		R
 	>;
 };
+export type NamespaceServerApplicatorMap<
+	DomainEvent extends UnknownEvent,
+	Namespace extends Namespaces<DomainEvent>,
+	E,
+	R,
+> = {
+	[EventName in SplitNamespace<
+		NamespaceEvents<DomainEvent, Namespace>["type"]
+	>[1]]: ServerApplicator<DomainEvent, `${Namespace}.${EventName}`, E, R>;
+};
+export type NamespaceServerApplicatorTree<
+	DomainEvent extends UnknownEvent,
+	E,
+	R,
+> = {
+	[Namespace in Namespaces<DomainEvent>]: NamespaceServerApplicatorMap<
+		DomainEvent,
+		Namespace,
+		E,
+		R
+	>;
+};
 
 export const serverApplicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 	applicatorMap: ServerApplicatorMap<DomainEvent, E, R>,
@@ -166,7 +192,7 @@ export const serverApplicatorTreeFactory = <
 	E,
 	R,
 >(
-	applicatorTree: NamespaceApplicatorTree<DomainEvent, E, R>,
+	applicatorTree: NamespaceServerApplicatorTree<DomainEvent, E, R>,
 ) => {
 	const getEventTopics = <T extends DomainEvent["type"]>(
 		event: Extract<DomainEvent, { type: T }>,
