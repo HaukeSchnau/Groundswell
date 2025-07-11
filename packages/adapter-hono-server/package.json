@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/adapter-hono-server",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"scripts": {
 		"typecheck": "tsgo --noEmit",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "

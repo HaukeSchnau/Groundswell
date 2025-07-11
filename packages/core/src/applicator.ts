@@ -128,9 +128,6 @@ type ServerApplicator<
 	getEventTopics: (
 		event: Extract<DomainEvent, { type: EventName }>,
 	) => Effect.Effect<string[], E, R>;
-	getUserTopics: (
-		event: Extract<DomainEvent, { type: EventName }>,
-	) => Effect.Effect<string[], E, R>;
 };
 export type ServerApplicatorMap<DomainEvent extends UnknownEvent, E, R> = {
 	[EventName in DomainEvent["type"]]: ServerApplicator<
@@ -173,17 +170,9 @@ export const serverApplicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 		return applicator.getEventTopics(event);
 	};
 
-	const getUserTopics = <T extends DomainEvent["type"]>(
-		event: Extract<DomainEvent, { type: T }>,
-	) => {
-		const applicator = applicatorMap[event.type];
-		return applicator.getUserTopics(event);
-	};
-
 	return {
 		...applicatorFactory(applicatorMap),
 		getEventTopics,
-		getUserTopics,
 	};
 };
 
@@ -206,21 +195,8 @@ export const serverApplicatorTreeFactory = <
 		return applicator.getEventTopics(event);
 	};
 
-	const getUserTopics = <T extends DomainEvent["type"]>(
-		event: Extract<DomainEvent, { type: T }>,
-	) => {
-		const applicator = getApplicator(event, applicatorTree) as ServerApplicator<
-			Extract<DomainEvent, { type: T }>,
-			T,
-			E,
-			R
-		>;
-		return applicator.getUserTopics(event);
-	};
-
 	return {
 		...applicatorTreeFactory(applicatorTree),
 		getEventTopics,
-		getUserTopics,
 	};
 };
