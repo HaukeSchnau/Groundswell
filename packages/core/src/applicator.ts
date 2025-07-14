@@ -1,5 +1,5 @@
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
-import type { Effect } from "effect";
+import { Effect } from "effect";
 import type { ValidationError } from "./errors";
 
 type SplitNamespace<T> = T extends `${infer Prefix}.${infer Suffix}`
@@ -81,22 +81,23 @@ const getApplicator = (event: UnknownEvent, applicatorTree: any) => {
 		string,
 	];
 	const eventName = eventNameParts.join(".");
-	return applicatorTree[namespace][eventName];
+	return applicatorTree[namespace]?.[eventName];
 };
 
 export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
-	applicatorTree: NamespaceApplicatorTree<DomainEvent, E, R>,
+	applicatorTree: Partial<NamespaceApplicatorTree<DomainEvent, E, R>>,
 ) => {
 	const apply = <T extends DomainEvent["type"]>(
 		event: Extract<DomainEvent, { type: T }>,
 		meta: EventMeta,
 	) => {
-		const applicator = getApplicator(event, applicatorTree) as Applicator<
-			Extract<DomainEvent, { type: T }>,
-			T,
-			E,
-			R
-		>;
+		const applicator = getApplicator(event, applicatorTree) as
+			| Applicator<Extract<DomainEvent, { type: T }>, T, E, R>
+			| undefined;
+		if (!applicator) {
+			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
+			return Effect.void;
+		}
 		return applicator.apply(event, meta);
 	};
 
@@ -110,6 +111,10 @@ export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 			E,
 			R
 		>;
+		if (!applicator) {
+			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
+			return Effect.void;
+		}
 		return applicator.verify(event, meta);
 	};
 
@@ -181,17 +186,18 @@ export const serverApplicatorTreeFactory = <
 	E,
 	R,
 >(
-	applicatorTree: NamespaceServerApplicatorTree<DomainEvent, E, R>,
+	applicatorTree: Partial<NamespaceServerApplicatorTree<DomainEvent, E, R>>,
 ) => {
 	const getEventTopics = <T extends DomainEvent["type"]>(
 		event: Extract<DomainEvent, { type: T }>,
 	) => {
-		const applicator = getApplicator(event, applicatorTree) as ServerApplicator<
-			Extract<DomainEvent, { type: T }>,
-			T,
-			E,
-			R
-		>;
+		const applicator = getApplicator(event, applicatorTree) as
+			| ServerApplicator<Extract<DomainEvent, { type: T }>, T, E, R>
+			| undefined;
+		if (!applicator) {
+			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
+			return Effect.succeed([]);
+		}
 		return applicator.getEventTopics(event);
 	};
 
