@@ -1,12 +1,12 @@
 {
 	"name": "@groundswell/adapter-hono-server",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"scripts": {
 		"typecheck": "tsgo --noEmit",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"peerDependencies": {
-		"@groundswell/core-server": "workspace:*",
+		"@groundswell/core-server": "*",
 		"effect": "^3",
 		"hono": "^4",
 		"superjson": "^2",

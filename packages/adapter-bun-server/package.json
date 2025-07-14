@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/adapter-bun-server",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts"
@@ -10,7 +10,7 @@
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"peerDependencies": {
-		"@groundswell/core-server": "workspace:*",
+		"@groundswell/core-server": "*",
 		"effect": "^3",
 		"superjson": "^2",
 		"zod": "^3"

@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/adapter-drizzle-postgres",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts"
@@ -10,9 +10,9 @@
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"peerDependencies": {
-		"@groundswell/core": "workspace:*",
-		"@groundswell/core-server": "workspace:*",
-		"@groundswell/zod-helpers": "workspace:*",
+		"@groundswell/core": "*",
+		"@groundswell/core-server": "*",
+		"@groundswell/zod-helpers": "*",
 		"@schnau/effect-drizzle": "^0.2.3",
 		"@types/pg": "^8.15.4",
 		"drizzle-orm": "^0.44",

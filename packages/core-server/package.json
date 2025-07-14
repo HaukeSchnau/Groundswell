@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/core-server",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"scripts": {
 		"typecheck": "tsgo --noEmit",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
@@ -9,7 +9,7 @@
 		".": "./src/index.ts"
 	},
 	"peerDependencies": {
-		"@groundswell/core": "workspace:*",
+		"@groundswell/core": "*",
 		"effect": "^3"
 	},
 	"devDependencies": {
