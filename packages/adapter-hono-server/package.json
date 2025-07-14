@@ -1,11 +1,11 @@
 {
 	"name": "@groundswell/adapter-hono-server",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"scripts": {
 		"typecheck": "tsgo --noEmit",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
-	"dependencies": {
+	"peerDependencies": {
 		"@groundswell/core-server": "workspace:*",
 		"effect": "^3",
 		"hono": "^4",

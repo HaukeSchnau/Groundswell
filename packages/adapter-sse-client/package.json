@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/adapter-sse-client",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
@@ -11,19 +11,17 @@
 		"typecheck": "tsgo --noEmit",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
-	"dependencies": {
-		"@groundswell/core": "workspace:*",
-		"effect": "^3",
-		"superjson": "^2",
-		"zod": "^3"
-	},
 	"devDependencies": {
 		"eventsource": "^4",
 		"react-native-sse": "^1"
 	},
 	"peerDependencies": {
 		"eventsource": "^4",
-		"react-native-sse": "^1"
+		"react-native-sse": "^1",
+		"@groundswell/core": "workspace:*",
+		"effect": "^3",
+		"superjson": "^2",
+		"zod": "^3"
 	},
 	"peerDependenciesMeta": {
 		"eventsource": {
