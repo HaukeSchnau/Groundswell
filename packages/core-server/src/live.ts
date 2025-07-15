@@ -6,7 +6,7 @@ import type {
 	CanonicalStorage,
 	IngestEngine,
 	ServerApplicator,
-} from "./interface";
+} from "./interface.js";
 
 export const ingestEngineLive = <
 	TEvent extends { id: string },

@@ -4,15 +4,16 @@ import {
 } from "@groundswell/core-server";
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import type {
+	DatabaseError,
 	GenericDatabaseService,
-	genericDatabaseFactory,
+	GenericSqliteError,
 } from "@schnau/effect-drizzle/generic-sqlite";
 import { and, asc, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { type Context, Effect, Layer, pipe } from "effect";
 import superjson from "superjson";
 import type { z } from "zod";
-import { timestamp, uuid } from "./helpers";
+import { timestamp, uuid } from "./helpers.js";
 
 export const CanonicalEventsTable = sqliteTable("canonical_events", {
 	id: uuid("id").primaryKey(),
@@ -57,12 +58,12 @@ type Schema = {
 	canonicalEventsSentToUsers: CanonicalEventsSentToUsersTable;
 };
 
-type DbTag<TSchema extends Schema> = ReturnType<
-	typeof genericDatabaseFactory<TSchema>
->["Database"];
-
-export interface DrizzleCanonicalStorageConfig<TEvent, TSchema extends Schema> {
-	db: DbTag<TSchema>;
+export interface DrizzleCanonicalStorageConfig<
+	TEvent,
+	TSchema extends Schema,
+	TagId,
+> {
+	db: Context.Tag<TagId, GenericDatabaseService<TSchema>>;
 	eventSchema: z.ZodSchema<TEvent>;
 }
 
@@ -84,10 +85,10 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	db: GenericDatabaseService<TSchema>,
 	event: TEvent,
 	meta: EventMeta & { topics: string[] },
-) =>
+): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
 	Effect.gen(function* () {
 		yield* db.transaction(
-			Effect.fn(function* (tx) {
+			Effect.fn(function* ({ execute: tx }) {
 				yield* tx((db) =>
 					db.insert(CanonicalEventsTable).values({
 						id: event.id,
@@ -116,7 +117,17 @@ const getMissingEventsForUser = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	userId: string,
 	topics: string[],
-) =>
+): Effect.Effect<
+	{
+		id: string;
+		timestamp: Date;
+		type: string;
+		data: string;
+		initiator: string;
+	}[],
+	DatabaseError<GenericSqliteError>,
+	never
+> =>
 	db.execute((db) =>
 		db
 			.select({
@@ -146,7 +157,17 @@ const getMissingEventsForUser = <TSchema extends Schema>(
 const getEventsSentToUser = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	userId: string,
-) =>
+): Effect.Effect<
+	{
+		id: string;
+		timestamp: Date;
+		type: string;
+		data: string;
+		initiator: string;
+	}[],
+	DatabaseError<GenericSqliteError>,
+	never
+> =>
 	db.execute((db) =>
 		db
 			.select({ ...getTableColumns(CanonicalEventsTable) })
@@ -157,7 +178,7 @@ const getEventsSentToUser = <TSchema extends Schema>(
 const parseCanonicalEvent = <TEvent extends UnknownEvent>(
 	row: typeof CanonicalEventsTable.$inferSelect,
 	eventSchema: z.ZodSchema<TEvent>,
-) =>
+): Effect.Effect<TEvent, CanonicalStorageError> =>
 	Effect.try({
 		try: () => {
 			return eventSchema.parse({
@@ -173,7 +194,7 @@ const markEventAsSentToUser = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	eventId: string,
 	userId: string,
-) =>
+): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
 	db.execute((db) =>
 		db
 			.insert(CanonicalEventsSentToUsersTable)
@@ -184,10 +205,11 @@ export const createDrizzleCanonicalStorageLayer = <
 	TEvent extends UnknownEvent,
 	TagId,
 	TSchema extends Schema,
+	DbTagId,
 >(
 	CanonicalStorageTag: Context.Tag<TagId, CanonicalStorage<TEvent>>,
-	config: DrizzleCanonicalStorageConfig<TEvent, TSchema>,
-) =>
+	config: DrizzleCanonicalStorageConfig<TEvent, TSchema, DbTagId>,
+): Layer.Layer<TagId, never, DbTagId> =>
 	Layer.effect(
 		CanonicalStorageTag,
 		Effect.gen(function* () {

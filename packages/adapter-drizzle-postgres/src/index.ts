@@ -1,1 +1,1 @@
-export * as CanonicalStorage from "./canonical-storage";
+export * as CanonicalStorage from "./canonical-storage.js";

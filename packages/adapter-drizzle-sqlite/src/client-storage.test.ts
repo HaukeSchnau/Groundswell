@@ -1,20 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { LocalEvent, Storage } from "@groundswell/core";
 import { createDomainEvent, createEventUnion } from "@groundswell/zod-helpers";
-import { genericDatabaseFactory } from "@schnau/effect-drizzle/generic-sqlite";
+import type { GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
 import { makeService } from "@schnau/effect-drizzle/libsql";
 import { eq } from "drizzle-orm";
 import { Chunk, Context, Effect, Layer, pipe, Redacted, Stream } from "effect";
 import { z } from "zod";
-import { createDrizzleStorageLayer, EventsTable } from "./client-storage";
+import { createDrizzleStorageLayer, EventsTable } from "./client-storage.js";
 
 // --- Test Setup ---
 
 // 1. Define a test event schema
-const testEvent = createDomainEvent(
-	"test.event",
-	z.object({ value: z.number() }),
-);
+const testEvent = createDomainEvent("test.event", { value: z.number() });
 const TestEventUnion = createEventUnion([testEvent]);
 type TestEvent = z.infer<typeof TestEventUnion>;
 
@@ -32,17 +29,21 @@ describe("DrizzleStorageAdapter", () => {
 	const Schema = {
 		eventLog: EventsTable,
 	};
-	const Database = genericDatabaseFactory<typeof Schema>();
+	// const Database = genericDatabaseFactory<typeof Schema>();
+	class Database extends Context.Tag("Database")<
+		Database,
+		GenericDatabaseService<typeof Schema>
+	>() {}
 
 	const bunDatabaseLive = Layer.scoped(
-		Database.Database,
+		Database,
 		Effect.gen(function* () {
-			const service = yield* makeService(
+			const service: GenericDatabaseService<typeof Schema> = makeService(
 				{
 					url: Redacted.make(":memory:"),
 					schema: Schema,
 				},
-				Database.TransactionContext,
+				Database,
 			);
 			yield* service.execute((db) =>
 				ensurePromise(
@@ -66,7 +67,7 @@ describe("DrizzleStorageAdapter", () => {
 			};
 			const status = { local: "pending", remote: "pending" } as const;
 			yield* storage.saveEvent(event, status);
-			const db = yield* Database.Database;
+			const db = yield* Database;
 			const result = yield* db.execute((db) => db.select().from(EventsTable));
 			expect(result).toHaveLength(1);
 			expect(result[0]?.id).toBe("uuid-1");
@@ -74,7 +75,7 @@ describe("DrizzleStorageAdapter", () => {
 		}).pipe(
 			Effect.provide(
 				createDrizzleStorageLayer(DomainStorage, {
-					db: Database.Database,
+					db: Database,
 					eventSchema: TestEventUnion,
 				}),
 			),
@@ -95,7 +96,7 @@ describe("DrizzleStorageAdapter", () => {
 
 			yield* storage.updateEventStatus("uuid-2", { local: "success" });
 
-			const db = yield* Database.Database;
+			const db = yield* Database;
 			const results = yield* db.execute((db) =>
 				db.select().from(EventsTable).where(eq(EventsTable.id, "uuid-2")),
 			);
@@ -105,7 +106,7 @@ describe("DrizzleStorageAdapter", () => {
 		}).pipe(
 			Effect.provide(
 				createDrizzleStorageLayer(DomainStorage, {
-					db: Database.Database,
+					db: Database,
 					eventSchema: TestEventUnion,
 				}),
 			),
@@ -166,7 +167,7 @@ describe("DrizzleStorageAdapter", () => {
 		}).pipe(
 			Effect.provide(
 				createDrizzleStorageLayer(DomainStorage, {
-					db: Database.Database,
+					db: Database,
 					eventSchema: TestEventUnion,
 				}),
 			),

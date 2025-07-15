@@ -2,15 +2,16 @@ import type { LocalEventStatus, Storage } from "@groundswell/core";
 import { DuplicateEventError, StorageError } from "@groundswell/core";
 import type { UnknownEvent } from "@groundswell/zod-helpers";
 import type {
+	DatabaseError,
 	GenericDatabaseService,
-	genericDatabaseFactory,
+	GenericSqliteError,
 } from "@schnau/effect-drizzle/generic-sqlite";
 import { asc, eq, or } from "drizzle-orm";
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { type Context, Effect, Layer, pipe, Stream } from "effect";
 import superjson from "superjson";
 import type { z } from "zod";
-import { sqliteEnum, timestamp, uuid } from "./helpers";
+import { sqliteEnum, timestamp, uuid } from "./helpers.js";
 
 const eventStatus = sqliteEnum(["pending", "error", "success"]);
 
@@ -29,14 +30,10 @@ type Schema = {
 	eventLog: EventsTable;
 };
 
-type DbTag<TSchema extends Schema> = ReturnType<
-	typeof genericDatabaseFactory<TSchema>
->["Database"];
-
 // Define the configuration for creating the storage layer.
-export interface DrizzleStorageConfig<TEvent, TSchema extends Schema> {
+export interface DrizzleStorageConfig<TEvent, TSchema extends Schema, TagId> {
 	/** The Drizzle database client instance. */
-	db: DbTag<TSchema>;
+	db: Context.Tag<TagId, GenericDatabaseService<TSchema>>;
 	/** The Zod schema for parsing events, to ensure type safety on retrieval. */
 	eventSchema: z.ZodSchema<TEvent>;
 }
@@ -61,7 +58,7 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	db: GenericDatabaseService<TSchema>,
 	event: TEvent,
 	status: LocalEventStatus,
-) =>
+): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
 	db.execute((client) =>
 		client.insert(EventsTable).values({
 			id: event.id,
@@ -77,7 +74,7 @@ const updateEventStatus = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	eventId: string,
 	status: Partial<LocalEventStatus>,
-) =>
+): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
 	db.execute((client) =>
 		client
 			.update(EventsTable)
@@ -121,10 +118,11 @@ export const createDrizzleStorageLayer = <
 	TEvent extends { id: string; timestamp: Date; type: string; data: unknown },
 	TagId,
 	TSchema extends Schema,
+	DbTagId,
 >(
 	StorageTag: Context.Tag<TagId, Storage<TEvent>>,
-	config: DrizzleStorageConfig<TEvent, TSchema>,
-) =>
+	config: DrizzleStorageConfig<TEvent, TSchema, DbTagId>,
+): Layer.Layer<TagId, never, DbTagId> =>
 	Layer.effect(
 		StorageTag,
 		Effect.gen(function* () {

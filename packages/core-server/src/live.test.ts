@@ -5,8 +5,8 @@ import type {
 	CanonicalStorage,
 	IngestEngine,
 	ServerApplicator,
-} from "./interface";
-import { ingestEngineLive } from "./live";
+} from "./interface.js";
+import { ingestEngineLive } from "./live.js";
 
 type TestEvent = {
 	id: string;

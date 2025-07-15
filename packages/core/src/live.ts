@@ -13,14 +13,14 @@ import {
 	type ApplicatorError,
 	StorageError,
 	type ValidationError,
-} from "./errors";
+} from "./errors.js";
 import type {
 	Applicator,
 	LocalEvent,
 	Storage,
 	SyncEngine,
 	Transport,
-} from "./interface";
+} from "./interface.js";
 
 class RandomUUID extends Context.Tag("RandomUUID")<
 	RandomUUID,

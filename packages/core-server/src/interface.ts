@@ -6,7 +6,7 @@ import type {
 	CanonicalStorageError,
 	ServerValidationError,
 	UserNotFoundError,
-} from "./errors";
+} from "./errors.js";
 
 // --- Service Interfaces (Tags) ---
 

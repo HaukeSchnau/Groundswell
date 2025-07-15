@@ -3,7 +3,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 import { EventSource } from "eventsource";
-import { EventSourceError, EventSourceService } from ".";
+import { EventSourceError, EventSourceService } from "./index.js";
 
 /**
  * Live Layer for EventSourceService using the browser's native EventSource API.

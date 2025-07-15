@@ -5,7 +5,7 @@ import type {
 	StorageError,
 	TransportError,
 	ValidationError,
-} from "./errors";
+} from "./errors.js";
 
 // --- Data Structures ---
 

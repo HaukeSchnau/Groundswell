@@ -6,8 +6,8 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 // Import the service interface and the Node.js implementation
-import { EventSourceError, EventSourceService } from ".";
-import { BrowserEventSourceServiceLive } from "./browser";
+import { EventSourceError, EventSourceService } from "./index.js";
+import { BrowserEventSourceServiceLive } from "./browser.js";
 
 // URL for the sse.dev/test server
 const TEST_SSE_URL = "https://sse.dev/test";

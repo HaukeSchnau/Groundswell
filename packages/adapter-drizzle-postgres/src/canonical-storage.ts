@@ -3,10 +3,7 @@ import {
 	CanonicalStorageError,
 } from "@groundswell/core-server";
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
-import type {
-	factory,
-	PostgresDatabaseService,
-} from "@schnau/effect-drizzle/postgres";
+import type { DatabaseService } from "@schnau/effect-drizzle/postgres";
 import { and, asc, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import {
 	pgTable,
@@ -62,17 +59,17 @@ type Schema = {
 	canonicalEventsSentToUsers: CanonicalEventsSentToUsersTable;
 };
 
-type DbTag<TSchema extends Schema> = ReturnType<
-	typeof factory<TSchema>
->["Database"];
-
-export interface DrizzleCanonicalStorageConfig<TEvent, TSchema extends Schema> {
-	db: DbTag<TSchema>;
+export interface DrizzleCanonicalStorageConfig<
+	TEvent,
+	TSchema extends Schema,
+	TagId,
+> {
+	db: Context.Tag<TagId, DatabaseService<TSchema>>;
 	eventSchema: z.ZodSchema<TEvent>;
 }
 
 const isEventUnique = <TSchema extends Schema>(
-	db: PostgresDatabaseService<TSchema>,
+	db: DatabaseService<TSchema>,
 	eventId: string,
 ) =>
 	db
@@ -86,13 +83,13 @@ const isEventUnique = <TSchema extends Schema>(
 		.pipe(Effect.map((result) => result.length === 0));
 
 const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
-	db: PostgresDatabaseService<TSchema>,
+	db: DatabaseService<TSchema>,
 	event: TEvent,
 	meta: EventMeta & { topics: string[] },
 ) =>
 	Effect.gen(function* () {
 		yield* db.transaction(
-			Effect.fn(function* (tx) {
+			Effect.fn(function* ({ execute: tx }) {
 				yield* tx((db) =>
 					db.insert(CanonicalEventsTable).values({
 						id: event.id,
@@ -118,7 +115,7 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	});
 
 const getMissingEventsForUser = <TSchema extends Schema>(
-	db: PostgresDatabaseService<TSchema>,
+	db: DatabaseService<TSchema>,
 	userId: string,
 	topics: string[],
 ) =>
@@ -149,7 +146,7 @@ const getMissingEventsForUser = <TSchema extends Schema>(
 	);
 
 const getEventsSentToUser = <TSchema extends Schema>(
-	db: PostgresDatabaseService<TSchema>,
+	db: DatabaseService<TSchema>,
 	userId: string,
 ) =>
 	db.execute((db) =>
@@ -175,7 +172,7 @@ const parseCanonicalEvent = <TEvent extends UnknownEvent>(
 	});
 
 const markEventAsSentToUser = <TSchema extends Schema>(
-	db: PostgresDatabaseService<TSchema>,
+	db: DatabaseService<TSchema>,
 	eventId: string,
 	userId: string,
 ) =>
@@ -189,9 +186,10 @@ export const createDrizzleCanonicalStorageLayer = <
 	TEvent extends UnknownEvent,
 	TagId,
 	TSchema extends Schema,
+	DbTagId,
 >(
 	CanonicalStorageTag: Context.Tag<TagId, CanonicalStorage<TEvent>>,
-	config: DrizzleCanonicalStorageConfig<TEvent, TSchema>,
+	config: DrizzleCanonicalStorageConfig<TEvent, TSchema, DbTagId>,
 ) =>
 	Layer.effect(
 		CanonicalStorageTag,

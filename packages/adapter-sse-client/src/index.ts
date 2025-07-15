@@ -3,7 +3,7 @@ import { DuplicateEventError, TransportError } from "@groundswell/core";
 import { type Context, Effect, Layer, Stream } from "effect";
 import superjson from "superjson";
 import type z from "zod";
-import { EventSourceService } from "./event-source";
+import { EventSourceService } from "./event-source/index.js";
 
 // Define the configuration for creating the transport layer.
 export interface HonoTransportConfig<TEvent> {

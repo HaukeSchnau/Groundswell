@@ -3,7 +3,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 import EventSource from "react-native-sse";
-import { EventSourceError, EventSourceService } from ".";
+import { EventSourceError, EventSourceService } from "./index.js";
 
 /**
  * Live Layer for EventSourceService using the React Native EventSource API.
@@ -14,7 +14,7 @@ export const ReactNativeEventSourceServiceLive = Layer.succeed(
 		connect: (url, options) =>
 			Stream.asyncEffect((emit) =>
 				Effect.gen(function* () {
-					const es = new EventSource(url, {
+					const es = new EventSource.default(url, {
 						headers: options?.headers,
 					});
 

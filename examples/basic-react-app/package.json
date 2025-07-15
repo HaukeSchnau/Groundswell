@@ -1,6 +1,6 @@
 {
 	"name": "basic-react-app",
-	"version": "0.1.0",
+	"version": "0.0.8",
 	"private": true,
 	"type": "module",
 	"main": "src/index.ts",
@@ -8,7 +8,6 @@
 	"scripts": {
 		"dev": "bun --hot src/index.ts",
 		"start": "NODE_ENV=production bun src/index.ts",
-		"build": "bun run build.ts",
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
@@ -17,7 +16,7 @@
 		"@groundswell/adapter-drizzle-sqlite": "workspace:*",
 		"@groundswell/react": "workspace:*",
 		"@libsql/client-wasm": "^0.15.9",
-		"@schnau/effect-drizzle": "^0.2.3",
+		"@schnau/effect-drizzle": "^0.5.1",
 		"@tanstack/react-query": "^5.81.5",
 		"bun-plugin-tailwind": "^0.0.14",
 		"effect": "^3.16.10",

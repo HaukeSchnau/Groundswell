@@ -1,3 +1,38 @@
 {
-	"extends": "../../tsconfig.json"
+	"compilerOptions": {
+		// Environment setup & latest features
+		"lib": ["ESNext"],
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleDetection": "force",
+		"jsx": "react-jsx",
+		"composite": true,
+		"allowJs": true,
+
+		// Bundler mode
+		"moduleResolution": "nodenext",
+		"verbatimModuleSyntax": true,
+
+		// Best practices
+		"strict": true,
+		"skipLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+
+		"stripInternal": true,
+		"declaration": true,
+		"outDir": "./dist",
+
+		// Some stricter flags (disabled by default)
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noPropertyAccessFromIndexSignature": false,
+	},
+
+	"references": [
+		{
+			"path": "../../packages/core"
+		}
+	],
 }

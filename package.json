@@ -12,6 +12,7 @@
 		"typescript": "^5.8.3"
 	},
 	"scripts": {
+		"build": "bun run --filter '*' build",
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"pub": "bun run --filter '*' pub",

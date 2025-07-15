@@ -11,15 +11,15 @@ import {
 	Stream,
 	TestClock,
 } from "effect";
-import { TransportError, ValidationError } from "./errors";
+import { TransportError, ValidationError } from "./errors.js";
 import type {
 	Applicator,
 	LocalEvent,
 	Storage,
 	SyncEngine,
 	Transport,
-} from "./interface";
-import { syncEngineLive } from "./live";
+} from "./interface.js";
+import { syncEngineLive } from "./live.js";
 
 // Define a simple event type for testing
 type TestEvent = {

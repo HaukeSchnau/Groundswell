@@ -1,12 +1,23 @@
 {
 	"name": "@groundswell/core-server",
 	"version": "0.0.8",
+	"type": "module",
+	"main": "./dist/src/index.js",
+	"module": "./dist/src/index.js",
+	"types": "./dist/src/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"import": "./dist/src/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
 	"scripts": {
+		"build": "tsc --build",
 		"typecheck": "tsgo --noEmit",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
-	},
-	"exports": {
-		".": "./src/index.ts"
 	},
 	"peerDependencies": {
 		"@groundswell/core": "*",

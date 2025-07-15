@@ -16,14 +16,14 @@
     },
     "examples/basic-react-app": {
       "name": "basic-react-app",
-      "version": "0.1.0",
+      "version": "0.0.8",
       "dependencies": {
         "@effect/platform-bun": "^0.72.3",
         "@groundswell/adapter-bun-server": "workspace:*",
         "@groundswell/adapter-drizzle-sqlite": "workspace:*",
         "@groundswell/react": "workspace:*",
         "@libsql/client-wasm": "^0.15.9",
-        "@schnau/effect-drizzle": "^0.2.3",
+        "@schnau/effect-drizzle": "^0.5.1",
         "@tanstack/react-query": "^5.81.5",
         "bun-plugin-tailwind": "^0.0.14",
         "effect": "^3.16.10",
@@ -43,9 +43,9 @@
     },
     "packages/adapter-bun-server": {
       "name": "@groundswell/adapter-bun-server",
-      "version": "0.0.1",
-      "dependencies": {
-        "@groundswell/core-server": "workspace:*",
+      "version": "0.0.8",
+      "peerDependencies": {
+        "@groundswell/core-server": "*",
         "effect": "^3",
         "superjson": "^2",
         "zod": "^3",
@@ -53,12 +53,16 @@
     },
     "packages/adapter-drizzle-postgres": {
       "name": "@groundswell/adapter-drizzle-postgres",
-      "version": "0.0.1",
-      "dependencies": {
-        "@groundswell/core": "workspace:*",
-        "@groundswell/core-server": "workspace:*",
-        "@groundswell/zod-helpers": "workspace:*",
-        "@schnau/effect-drizzle": "^0.2.3",
+      "version": "0.0.8",
+      "devDependencies": {
+        "@effect/test": "^0.1.0",
+        "drizzle-kit": "^0.31.4",
+      },
+      "peerDependencies": {
+        "@groundswell/core": "*",
+        "@groundswell/core-server": "*",
+        "@groundswell/zod-helpers": "*",
+        "@schnau/effect-drizzle": "^0.5.1",
         "@types/pg": "^8.15.4",
         "drizzle-orm": "^0.44",
         "effect": "^3",
@@ -66,36 +70,39 @@
         "superjson": "^2",
         "zod": "^3",
       },
-      "devDependencies": {
-        "@effect/test": "^0.1.0",
-        "drizzle-kit": "^0.31.4",
-      },
     },
     "packages/adapter-drizzle-sqlite": {
       "name": "@groundswell/adapter-drizzle-sqlite",
-      "version": "0.0.1",
-      "dependencies": {
-        "@groundswell/core": "workspace:*",
-        "@groundswell/core-server": "workspace:*",
-        "@groundswell/zod-helpers": "workspace:*",
-        "@schnau/effect-drizzle": "^0.2.3",
-        "drizzle-orm": "^0.44",
-        "effect": "^3",
-        "superjson": "^2",
-        "zod": "^3",
-      },
+      "version": "0.0.8",
       "devDependencies": {
         "@effect/test": "^0.1.0",
         "@types/better-sqlite3": "^7.6.13",
         "better-sqlite3": "^12.1.1",
         "drizzle-kit": "^0.31.4",
       },
+      "peerDependencies": {
+        "@groundswell/core": "*",
+        "@groundswell/core-server": "*",
+        "@groundswell/zod-helpers": "*",
+        "@schnau/effect-drizzle": "^0.5.1",
+        "drizzle-orm": "^0.44",
+        "effect": "^3",
+        "superjson": "^2",
+        "zod": "^3",
+      },
     },
     "packages/adapter-hono-server": {
       "name": "@groundswell/adapter-hono-server",
-      "version": "0.0.1",
-      "dependencies": {
-        "@groundswell/core-server": "workspace:*",
+      "version": "0.0.9",
+      "devDependencies": {
+        "@groundswell/core-server": "*",
+        "effect": "^3",
+        "hono": "^4",
+        "superjson": "^2",
+        "zod": "^3",
+      },
+      "peerDependencies": {
+        "@groundswell/core-server": "*",
         "effect": "^3",
         "hono": "^4",
         "superjson": "^2",
@@ -104,7 +111,7 @@
     },
     "packages/adapter-sse-client": {
       "name": "@groundswell/adapter-sse-client",
-      "version": "0.0.1",
+      "version": "0.0.8",
       "dependencies": {
         "@groundswell/core": "workspace:*",
         "effect": "^3",
@@ -126,41 +133,39 @@
     },
     "packages/core": {
       "name": "@groundswell/core",
-      "version": "0.0.1",
-      "dependencies": {
-        "effect": "^3",
-      },
+      "version": "0.0.8",
       "devDependencies": {
         "@effect/vitest": "^0.23.10",
+      },
+      "peerDependencies": {
+        "effect": "^3",
       },
     },
     "packages/core-server": {
       "name": "@groundswell/core-server",
-      "version": "0.0.1",
-      "dependencies": {
-        "@groundswell/core": "workspace:*",
-        "effect": "^3",
-      },
+      "version": "0.0.8",
       "devDependencies": {
         "@effect/vitest": "^0.23.10",
+      },
+      "peerDependencies": {
+        "@groundswell/core": "*",
+        "effect": "^3",
       },
     },
     "packages/react": {
       "name": "@groundswell/react",
-      "version": "0.0.1",
-      "dependencies": {
-        "@groundswell/core": "workspace:*",
-      },
+      "version": "0.0.8",
       "devDependencies": {
         "@types/react": "^19.1.8",
       },
       "peerDependencies": {
+        "@groundswell/core": "*",
         "react": "*",
       },
     },
     "packages/zod-helpers": {
       "name": "@groundswell/zod-helpers",
-      "version": "0.0.1",
+      "version": "0.0.9",
       "dependencies": {
         "zod": "^3.25.67",
       },
@@ -407,7 +412,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.44.1", "", { "os": "win32", "cpu": "x64" }, "sha512-J8o22LuF0kTe7m+8PvW9wk3/bRq5+mRo5Dqo6+vXb7otCm3TPhYOJqOaQtGU9YMWQSL3krMnoOxMr0+9E6F3Ug=="],
 
-    "@schnau/effect-drizzle": ["@schnau/effect-drizzle@0.2.3", "https://npm.schnau.dev/@schnau/effect-drizzle/-/effect-drizzle-0.2.3.tgz", { "dependencies": { "drizzle-orm": "^0.44.2", "effect": "^3.16.10" }, "peerDependencies": { "typescript": "^5" } }, "sha512-U10WXBK9tWPUPkjg8NZeK4vwJDbji5xhxryO6w8WnvBil/klwjpJYaRmcAuEwYFwA4RIsQRURKMQbRR8upHEBA=="],
+    "@schnau/effect-drizzle": ["@schnau/effect-drizzle@0.5.1", "https://npm.schnau.dev/@schnau/effect-drizzle/-/effect-drizzle-0.5.1.tgz", { "peerDependencies": { "drizzle-orm": "^0.44", "effect": "^3", "typescript": "^5" } }, "sha512-u7IkCa2QxLHFfwpG3bjydM85gICXXMBkkfDeLpfxmNCarEZQzYeLrxZ2ZSOAnQ0bk89TvHDzRfUq+fbWWPElnA=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
 

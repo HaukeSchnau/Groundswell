@@ -1,6 +1,6 @@
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import { Effect } from "effect";
-import type { ValidationError } from "./errors";
+import type { ValidationError } from "./errors.js";
 
 type SplitNamespace<T> = T extends `${infer Prefix}.${infer Suffix}`
 	? [Prefix, Suffix]
