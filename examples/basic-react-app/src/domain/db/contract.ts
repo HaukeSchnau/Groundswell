@@ -1,6 +1,8 @@
-import { genericDatabaseFactory } from "@schnau/effect-drizzle/generic-sqlite";
+import type { GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
+import { Context } from "effect";
 import type * as Schema from "./schema";
 
-const DatabaseService = genericDatabaseFactory<typeof Schema>();
-export class Database extends DatabaseService.Database {}
-export const TransactionContext = DatabaseService.TransactionContext;
+export class Database extends Context.Tag("Database")<
+	Database,
+	GenericDatabaseService<typeof Schema>
+>() {}

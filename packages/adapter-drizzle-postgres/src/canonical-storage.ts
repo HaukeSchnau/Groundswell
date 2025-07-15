@@ -6,6 +6,7 @@ import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import type { DatabaseService } from "@schnau/effect-drizzle/postgres";
 import { and, asc, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import {
+	index,
 	pgTable,
 	primaryKey,
 	text,
@@ -35,6 +36,7 @@ export const CanonicalEventTopicsTable = pgTable(
 	},
 	(table) => ({
 		pk: primaryKey({ columns: [table.event, table.topic] }),
+		idx_event_topics: index().on(table.event, table.topic),
 	}),
 );
 type CanonicalEventTopicsTable = typeof CanonicalEventTopicsTable;
@@ -49,6 +51,7 @@ export const CanonicalEventsSentToUsersTable = pgTable(
 	},
 	(table) => ({
 		pk: primaryKey({ columns: [table.event, table.user] }),
+		idx_event_user: index().on(table.event, table.user),
 	}),
 );
 type CanonicalEventsSentToUsersTable = typeof CanonicalEventsSentToUsersTable;

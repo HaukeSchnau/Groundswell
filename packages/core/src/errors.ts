@@ -11,6 +11,12 @@ export class TransportError extends Data.TaggedError("TransportError")<{
 
 export class ValidationError extends Data.TaggedError("ValidationError")<{
 	readonly cause: unknown;
+	readonly reason:
+		| "DUPLICATE"
+		| "NOT_FOUND"
+		| "NOT_ALLOWED"
+		| "INVALID"
+		| "UNKNOWN";
 }> {}
 
 export class ApplicatorError extends Data.TaggedError("ApplicatorError")<{
