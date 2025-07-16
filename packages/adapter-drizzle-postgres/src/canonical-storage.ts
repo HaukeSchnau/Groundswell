@@ -22,14 +22,14 @@ export const CanonicalEventsTable = pgTable("canonical_events", {
 	timestamp: timestamp("timestamp").notNull(),
 	type: text("type").notNull(),
 	data: text("data").notNull(),
-	initiator: text("initiator").notNull(),
+	initiator: uuid("initiator").notNull(),
 });
 type CanonicalEventsTable = typeof CanonicalEventsTable;
 
 export const CanonicalEventTopicsTable = pgTable(
 	"canonical_event_topics",
 	{
-		event: text("event")
+		event: uuid("event")
 			.notNull()
 			.references(() => CanonicalEventsTable.id),
 		topic: text("topic").notNull(),
@@ -44,10 +44,10 @@ type CanonicalEventTopicsTable = typeof CanonicalEventTopicsTable;
 export const CanonicalEventsSentToUsersTable = pgTable(
 	"canonical_events_sent_to_users",
 	{
-		event: text("event")
+		event: uuid("event")
 			.notNull()
 			.references(() => CanonicalEventsTable.id),
-		user: text("user").notNull(),
+		user: uuid("user").notNull(),
 		sentAt: timestamp("sent_at").notNull().defaultNow(),
 	},
 	(table) => ({

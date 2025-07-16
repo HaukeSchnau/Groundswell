@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/adapter-sse-client",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"type": "module",
 	"main": "./dist/src/index.js",
 	"module": "./dist/src/index.js",
@@ -8,15 +8,18 @@
 	"exports": {
 		".": {
 			"types": "./dist/src/index.d.ts",
-			"import": "./dist/src/index.js"
+			"import": "./dist/src/index.js",
+			"default": "./dist/src/index.js"
 		},
 		"./browser": {
 			"types": "./dist/src/event-source/browser.d.ts",
-			"import": "./dist/src/event-source/browser.js"
+			"import": "./dist/src/event-source/browser.js",
+			"default": "./dist/src/event-source/browser.js"
 		},
 		"./react-native": {
 			"types": "./dist/src/event-source/react-native.d.ts",
-			"import": "./dist/src/event-source/react-native.js"
+			"import": "./dist/src/event-source/react-native.js",
+			"default": "./dist/src/event-source/react-native.js"
 		}
 	},
 	"files": [
