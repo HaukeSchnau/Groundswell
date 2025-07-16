@@ -172,7 +172,14 @@ const getEventsSentToUser = <TSchema extends Schema>(
 		db
 			.select({ ...getTableColumns(CanonicalEventsTable) })
 			.from(CanonicalEventsTable)
-			.where(eq(CanonicalEventsTable.initiator, userId)),
+			.innerJoin(
+				CanonicalEventsSentToUsersTable,
+				and(
+					eq(CanonicalEventsSentToUsersTable.event, CanonicalEventsTable.id),
+					eq(CanonicalEventsSentToUsersTable.user, userId),
+				),
+			)
+			.orderBy(asc(CanonicalEventsTable.timestamp)),
 	);
 
 const parseCanonicalEvent = <TEvent extends UnknownEvent>(

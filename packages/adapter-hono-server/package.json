@@ -1,6 +1,6 @@
 {
 	"name": "@groundswell/adapter-hono-server",
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"type": "module",
 	"main": "./dist/src/index.js",
 	"module": "./dist/src/index.js",
@@ -28,7 +28,7 @@
 		"zod": "^3"
 	},
 	"peerDependencies": {
-		"@groundswell/core-server": "workspace:",
+		"@groundswell/core-server": "*",
 		"effect": "^3",
 		"hono": "^4",
 		"superjson": "^2",
