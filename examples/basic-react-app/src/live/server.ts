@@ -1,9 +1,8 @@
 import { CanonicalStorage as CanonicalStorageAdapter } from "@groundswell/adapter-drizzle-sqlite";
-import { ApplicatorError } from "@groundswell/core";
+import { ApplicatorError, ValidationError } from "@groundswell/core";
 import {
 	BroadcastError,
 	type CanonicalStorage,
-	ServerValidationError,
 } from "@groundswell/core-server";
 import { Effect, Layer, PubSub, pipe, Stream } from "effect";
 import {
@@ -27,11 +26,11 @@ const serverApplicatorLive = Layer.effect(
 					Effect.provideService(Database, db),
 					Effect.catchTags({
 						DatabaseError: (error) =>
-							Effect.fail(new ServerValidationError({ cause: error })),
+							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
 						ValidationError: (error) =>
-							Effect.fail(new ServerValidationError({ cause: error })),
+							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
 						UnknownException: (error) =>
-							Effect.fail(new ServerValidationError({ cause: error })),
+							Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
 					}),
 				),
 			apply: (event, meta) =>

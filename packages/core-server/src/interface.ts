@@ -1,10 +1,9 @@
-import type { ApplicatorError, DuplicateEventError } from "@groundswell/core";
+import type { ApplicatorError, DuplicateEventError, ValidationError } from "@groundswell/core";
 import type { EventMeta } from "@groundswell/zod-helpers";
 import type { Effect, Stream } from "effect";
 import type {
 	BroadcastError,
 	CanonicalStorageError,
-	ServerValidationError,
 	UserNotFoundError,
 } from "./errors.js";
 
@@ -14,7 +13,7 @@ export interface ServerApplicator<TEvent> {
 	readonly verify: (
 		event: TEvent,
 		meta: EventMeta,
-	) => Effect.Effect<void, ServerValidationError>;
+	) => Effect.Effect<void, ValidationError>;
 	readonly apply: (
 		event: TEvent,
 		meta: EventMeta,
@@ -64,7 +63,7 @@ export interface IngestEngine<TEvent> {
 		meta: EventMeta,
 	) => Effect.Effect<
 		void,
-		| ServerValidationError
+		| ValidationError
 		| CanonicalStorageError
 		| BroadcastError
 		| ApplicatorError

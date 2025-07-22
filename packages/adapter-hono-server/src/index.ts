@@ -38,7 +38,7 @@ export const attachSyncServer = <TEvent>(
 				if (result.cause.error._tag === "DuplicateEventError") {
 					return c.json({ error: "Duplicate event" }, 409);
 				}
-				if (result.cause.error._tag === "ServerValidationError") {
+				if (result.cause.error._tag === "ValidationError") {
 					return c.json({ error: "Invalid event" }, 400);
 				}
 			}

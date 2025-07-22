@@ -1,16 +1,5 @@
 import { Data } from "effect";
 
-export class ServerValidationError extends Data.TaggedError(
-	"ServerValidationError",
-)<{
-	readonly cause: unknown;
-	readonly reason:
-		| "DUPLICATE"
-		| "NOT_FOUND"
-		| "NOT_ALLOWED"
-		| "INVALID"
-		| "UNKNOWN";
-}> {}
 export class CanonicalStorageError extends Data.TaggedError(
 	"CanonicalStorageError",
 )<{

@@ -36,7 +36,7 @@ export const syncServer = <TEvent>(config: HonoServerConfig<TEvent>) => ({
 				if (result.cause.error._tag === "DuplicateEventError") {
 					return new Response("Duplicate event", { status: 409 });
 				}
-				if (result.cause.error._tag === "ServerValidationError") {
+				if (result.cause.error._tag === "ValidationError") {
 					return new Response("Invalid event", { status: 400 });
 				}
 				if (result.cause.error._tag === "UserNotFoundError") {
