@@ -22,7 +22,7 @@ import type {
 	Transport,
 } from "./interface.js";
 
-class RandomUUID extends Context.Tag("RandomUUID")<
+export class RandomUUID extends Context.Tag("RandomUUID")<
 	RandomUUID,
 	{ readonly next: Effect.Effect<string> }
 >() {}
