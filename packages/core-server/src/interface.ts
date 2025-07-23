@@ -46,10 +46,6 @@ export interface CanonicalStorage<TEvent> {
 }
 
 export interface Broadcast<TEvent> {
-	readonly publishToTopics: (
-		topics: string[],
-		event: TEvent,
-	) => Effect.Effect<void, BroadcastError>;
 	readonly publishToUser: (
 		userId: string,
 		events: TEvent[],

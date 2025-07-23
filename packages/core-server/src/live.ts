@@ -53,7 +53,6 @@ export const ingestEngineLive = <
 
 				yield* broadcast.publishToUser(meta.initiatorId, missingEvents);
 				yield* broadcast.publishToUser(meta.initiatorId, [event]);
-				yield* broadcast.publishToTopics(topics, event);
 			});
 
 			return tag.of({

@@ -59,7 +59,6 @@ const mockStorage = (isUniqueRef: Ref.Ref<boolean>) =>
 const mockBroadcast = Layer.succeed(
 	DomainBroadcast,
 	DomainBroadcast.of({
-		publishToTopics: () => Effect.succeed(void 0),
 		publishToUser: () => Effect.succeed(void 0),
 		subscribe: () => Stream.empty,
 	}),
