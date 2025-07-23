@@ -1,52 +1,52 @@
 {
-	"name": "@groundswell/adapter-sse-client",
-	"version": "0.0.14",
-	"type": "module",
-	"main": "./dist/src/index.js",
-	"module": "./dist/src/index.js",
-	"types": "./dist/src/index.d.ts",
-	"exports": {
-		".": {
-			"types": "./dist/src/index.d.ts",
-			"import": "./dist/src/index.js",
-			"default": "./dist/src/index.js"
-		},
-		"./browser": {
-			"types": "./dist/src/event-source/browser.d.ts",
-			"import": "./dist/src/event-source/browser.js",
-			"default": "./dist/src/event-source/browser.js"
-		},
-		"./react-native": {
-			"types": "./dist/src/event-source/react-native.d.ts",
-			"import": "./dist/src/event-source/react-native.js",
-			"default": "./dist/src/event-source/react-native.js"
-		}
-	},
-	"files": [
-		"dist"
-	],
-	"scripts": {
-		"build": "tsc --build",
-		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
-	},
-	"devDependencies": {
-		"eventsource": "^4",
-		"react-native-sse": "^1"
-	},
-	"peerDependencies": {
-		"eventsource": "^4",
-		"react-native-sse": "^1",
-		"@groundswell/core": "*",
-		"effect": "^3",
-		"superjson": "^2",
-		"zod": "^3"
-	},
-	"peerDependenciesMeta": {
-		"eventsource": {
-			"optional": true
-		},
-		"react-native-sse": {
-			"optional": true
-		}
-	}
+  "name": "@groundswell/adapter-sse-client",
+  "version": "0.0.15",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    },
+    "./browser": {
+      "types": "./dist/src/event-source/browser.d.ts",
+      "import": "./dist/src/event-source/browser.js",
+      "default": "./dist/src/event-source/browser.js"
+    },
+    "./react-native": {
+      "types": "./dist/src/event-source/react-native.d.ts",
+      "import": "./dist/src/event-source/react-native.js",
+      "default": "./dist/src/event-source/react-native.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "pub": "bunx npm publish --registry https://npm.schnau.dev/ "
+  },
+  "devDependencies": {
+    "eventsource": "^4",
+    "react-native-sse": "^1"
+  },
+  "peerDependencies": {
+    "eventsource": "^4",
+    "react-native-sse": "^1",
+    "@groundswell/core": "*",
+    "effect": "^3",
+    "superjson": "^2",
+    "zod": "^3"
+  },
+  "peerDependenciesMeta": {
+    "eventsource": {
+      "optional": true
+    },
+    "react-native-sse": {
+      "optional": true
+    }
+  }
 }
