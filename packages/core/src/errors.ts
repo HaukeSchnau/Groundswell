@@ -17,7 +17,11 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
 		| "NOT_ALLOWED"
 		| "INVALID"
 		| "UNKNOWN";
-}> {}
+}> {
+	override get message() {
+		return `ValidationError: ${this.reason}. Cause: ${this.cause}`;
+	}
+}
 
 export class ApplicatorError extends Data.TaggedError("ApplicatorError")<{
 	readonly cause: unknown;
