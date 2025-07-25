@@ -12,7 +12,7 @@ export interface HonoTransportConfig<TEvent> {
 	/** The Zod schema for parsing incoming events. */
 	eventSchema: z.Schema<TEvent>;
 	/** Optional headers to be sent with every request (e.g., for authorization). */
-	headers?: Record<string, string>;
+	headers?: () => Record<string, string>;
 }
 
 /**
@@ -39,7 +39,7 @@ export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
 								method: "POST",
 								headers: {
 									"Content-Type": "application/json",
-									...config.headers,
+									...config.headers?.(),
 								},
 								body: superjson.stringify(event),
 							}),
@@ -76,7 +76,7 @@ export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
 					const stream = eventSourceService.connect(
 						`${config.baseUrl}/events`,
 						{
-							headers: config.headers ?? {},
+							headers: config.headers ?? (() => ({})),
 						},
 					);
 

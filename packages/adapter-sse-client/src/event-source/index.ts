@@ -28,7 +28,7 @@ export class EventSourceService extends Context.Tag("EventSourceService")<
 		readonly connect: (
 			url: string,
 			options?: {
-				headers: Record<string, string>;
+				headers: () => Record<string, string>;
 			}, // Standard EventSourceInit options
 		) => Stream.Stream<EventSourceMessage, EventSourceError>;
 	}
