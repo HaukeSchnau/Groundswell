@@ -2,15 +2,15 @@
 	"compilerOptions": {
 		// Environment setup & latest features
 		"lib": ["ESNext"],
-		"target": "ESNext",
-		"module": "NodeNext",
+		"target": "ES2022",
+		"module": "ES2022",
 		"moduleDetection": "force",
 		"jsx": "react-jsx",
 		"composite": true,
 		"allowJs": true,
 
 		// Bundler mode
-		"moduleResolution": "nodenext",
+		"moduleResolution": "Bundler",
 		"verbatimModuleSyntax": true,
 
 		// Best practices
@@ -29,12 +29,12 @@
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
 
-		"esModuleInterop": true,
+		"esModuleInterop": true
 	},
 
 	"references": [
 		{
 			"path": "../../packages/core"
 		}
-	],
+	]
 }

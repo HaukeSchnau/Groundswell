@@ -14,7 +14,7 @@ export const ReactNativeEventSourceServiceLive = Layer.succeed(
 		connect: (url, options) =>
 			Stream.asyncEffect((emit) =>
 				Effect.gen(function* () {
-					const es = new EventSource.default(url, {
+					const es = new EventSource(url, {
 						headers: options?.headers(),
 					});
 
