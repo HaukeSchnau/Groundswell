@@ -3,11 +3,9 @@ import {
 	type Context,
 	Effect,
 	Fiber,
-	type Layer,
 	type ManagedRuntime,
 	Stream,
 } from "effect";
-import type React from "react";
 import {
 	createContext,
 	useCallback,
@@ -15,17 +13,6 @@ import {
 	useEffect,
 	useState,
 } from "react";
-
-export interface SyncEngineProviderProps<TEngineTag> {
-	/**
-	 * The fully composed Layer for the SyncEngine. This should include the
-	 * core engine layer, plus the consumer's provided applicator and adapter layers.
-	 */
-	layer: Layer.Layer<TEngineTag>;
-	/** A fallback component to render while the engine is initializing. */
-	loadingFallback?: React.ReactNode;
-	children: React.ReactNode;
-}
 
 // --- Context Setup ---
 

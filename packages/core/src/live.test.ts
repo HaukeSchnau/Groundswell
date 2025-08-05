@@ -11,7 +11,7 @@ import {
 	Stream,
 	TestClock,
 } from "effect";
-import { TransportError, ValidationError } from "./errors.js";
+import { StorageError, TransportError, ValidationError } from "./errors.js";
 import type {
 	Applicator,
 	LocalEvent,
@@ -269,6 +269,16 @@ describe("SyncEngine", () => {
 			expect(applied).toHaveLength(1);
 			expect(applied[0]?.id).toBe("remote-1");
 
+			// Check that the event was saved to the local event log
+			const saved = yield* Ref.get(storageSaveCalls);
+			expect(saved).toHaveLength(1);
+			expect(saved[0]?.event.id).toBe("remote-1");
+			expect(saved[0]?.event.data.value).toBe(100);
+			expect(saved[0]?.status).toEqual({
+				local: "pending",
+				remote: "success",
+			});
+
 			// Crucially, it should NOT be published back
 			const published = yield* Ref.get(transportPublishCalls);
 			expect(published).toHaveLength(0);
@@ -326,4 +336,66 @@ describe("SyncEngine", () => {
 			expect(remoteUpdate?.status).toEqual({ remote: "success" });
 		}).pipe(Effect.scoped, Effect.provide(Logger.pretty));
 	});
+
+	it.effect(
+		"should handle duplicate events gracefully without processing them",
+		() => {
+			const mockStorageWithDuplicate = Layer.succeed(
+				DomainStorage,
+				DomainStorage.of({
+					getPendingEvents: Stream.fromPubSub(pendingEventsPubSub),
+					saveEvent: () =>
+						Effect.fail(
+							new StorageError({
+								cause: new Error("Duplicate event"),
+							}),
+						),
+					updateEventStatus: (eventId, status) =>
+						Ref.update(storageUpdateCalls, (calls) => [
+							...calls,
+							{ id: eventId, status },
+						]),
+				}),
+			);
+
+			const testLayer = Layer.provide(
+				engine,
+				Layer.mergeAll(mockTransport, mockStorageWithDuplicate, mockApplicator),
+			);
+
+			return Effect.gen(function* () {
+				const duplicateEvent: TestEvent = {
+					id: "duplicate-1",
+					timestamp: new Date(),
+					type: "test.event",
+					data: { value: 200 },
+				};
+
+				// Simulate a duplicate remote event arriving
+				yield* PubSub.publish(remoteEventsPubSub, duplicateEvent);
+				yield* TestClock.adjust("2 seconds");
+
+				// --- Assertions ---
+				// Should NOT be applied (duplicate events should be ignored)
+				const applied = yield* Ref.get(applicatorApplyCalls);
+				expect(applied).toHaveLength(0);
+
+				// Should NOT be verified (duplicate events should be ignored)
+				const verified = yield* Ref.get(applicatorVerifyCalls);
+				expect(verified).toHaveLength(0);
+
+				// Should NOT be published (duplicate events should be ignored)
+				const published = yield* Ref.get(transportPublishCalls);
+				expect(published).toHaveLength(0);
+
+				// Should NOT have any status updates (duplicate events should be ignored)
+				const updates = yield* Ref.get(storageUpdateCalls);
+				expect(updates).toHaveLength(0);
+			}).pipe(
+				Effect.provide(testLayer),
+				Effect.scoped,
+				Effect.provide(Logger.pretty),
+			);
+		},
+	);
 });

@@ -27,10 +27,15 @@ export const ingestEngineLive = <
 			const storage = yield* canonicalStorageTag;
 			const broadcast = yield* broadcastTag;
 
-			const ingestLogic = Effect.fn("ingest")(function* (
+			const ingestLogic = Effect.fn("SYNC/Server Ingest")(function* (
 				event: TEvent,
 				meta: EventMeta,
 			) {
+				yield* Effect.annotateCurrentSpan({
+					meta,
+					event,
+				});
+
 				// 1. Verify business rules and event uniqueness
 				const isUnique = yield* storage.isEventUnique(event.id);
 				if (!isUnique) {

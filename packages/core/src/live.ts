@@ -1,5 +1,6 @@
 import {
 	Context,
+	Duration,
 	Effect,
 	Layer,
 	Option,
@@ -84,7 +85,7 @@ export const syncEngineLive = <
 			const eventsPubSub = yield* PubSub.unbounded<LocalEvent<TEvent>>();
 			const statusPubSub = yield* PubSub.unbounded<{ queueSize: number }>();
 
-			const applyEventLocally = Effect.fn("SYNC Apply Event Locally")(
+			const applyEventLocally = Effect.fn("SYNC/Client Apply Event Locally")(
 				function* (localEvent: LocalEvent<TEvent>) {
 					yield* applicator.verify(localEvent.event).pipe(
 						Effect.tapErrorTag("ValidationError", () =>
@@ -117,47 +118,48 @@ export const syncEngineLive = <
 				},
 			);
 
-			const publishEventRemotely = Effect.fn("SYNC Publish Event Remotely")(
-				function* (localEvent: LocalEvent<TEvent>) {
-					const published = yield* pipe(
-						transport.publish(localEvent.event),
-						// Retry on retryable network errors with a backoff schedule
-						Effect.retry({
-							schedule: Schedule.exponential("1 second").pipe(
-								Schedule.jittered,
-							),
-							while: (e) => e._tag === "TransportError" && e.isRetryable,
-						}),
-						Effect.as({ ...localEvent.status, remote: "success" } as const),
-						Effect.catchTag("TransportError", () =>
-							Effect.succeed({
-								...localEvent.status,
-								remote: "error",
-							} as const),
+			const publishEventRemotely = Effect.fn(
+				"SYNC/Client Publish Event Remotely",
+			)(function* (localEvent: LocalEvent<TEvent>) {
+				const published = yield* pipe(
+					transport.publish(localEvent.event),
+					// Retry on retryable network errors with a backoff schedule
+					Effect.retry({
+						schedule: Schedule.exponential("1 second").pipe(
+							Schedule.modifyDelay(Duration.min("8 seconds")),
+							Schedule.jittered,
 						),
-						Effect.catchTag("DuplicateEventError", () =>
-							Effect.succeed({
-								...localEvent.status,
-								remote: "success", // it's already applied on remote, so we can safely mark it as success
-							} as const),
-						),
-					);
-
-					yield* storage.updateEventStatus(localEvent.event.id, {
-						remote: published.remote,
-					});
-
-					yield* eventsPubSub.publish({
-						...localEvent,
-						status: {
+						while: (e) => e._tag === "TransportError" && e.isRetryable,
+					}),
+					Effect.as({ ...localEvent.status, remote: "success" } as const),
+					Effect.catchTag("TransportError", () =>
+						Effect.succeed({
 							...localEvent.status,
-							remote: published.remote,
-						},
-					});
-				},
-			);
+							remote: "error",
+						} as const),
+					),
+					Effect.catchTag("DuplicateEventError", () =>
+						Effect.succeed({
+							...localEvent.status,
+							remote: "success", // it's already applied on remote, so we can safely mark it as success
+						} as const),
+					),
+				);
 
-			const processEvent = Effect.fn("SYNC Process Event")(function* (
+				yield* storage.updateEventStatus(localEvent.event.id, {
+					remote: published.remote,
+				});
+
+				yield* eventsPubSub.publish({
+					...localEvent,
+					status: {
+						...localEvent.status,
+						remote: published.remote,
+					},
+				});
+			});
+
+			const processEvent = Effect.fn("SYNC/Client Process Event")(function* (
 				localEvent: LocalEvent<TEvent>,
 			) {
 				yield* Effect.annotateCurrentSpan("event", localEvent.event);
@@ -213,7 +215,17 @@ export const syncEngineLive = <
 								status: { local: "pending", remote: "success" } as const,
 							}),
 						),
-						Stream.runForEach((localEvent) => enqueue(localEvent)),
+						Stream.mapEffect((localEvent) =>
+							storage.saveEvent(localEvent.event, localEvent.status).pipe(
+								Effect.as(localEvent),
+								Effect.catchTag("DuplicateEventError", () =>
+									Effect.succeed(null),
+								),
+							),
+						),
+						Stream.runForEach(
+							(localEvent) => (localEvent ? enqueue(localEvent) : Effect.void), // if it's a duplicate, we don't enqueue it
+						),
 					),
 				),
 				Effect.forkScoped,
@@ -223,7 +235,7 @@ export const syncEngineLive = <
 
 			// 5. Implement and provide the SyncEngine service interface
 			return tag.of({
-				ingest: Effect.fn("SYNC Ingest")(function* (unidentifiedEvent) {
+				ingest: Effect.fn("SYNC/Client Ingest")(function* (unidentifiedEvent) {
 					const event = {
 						...unidentifiedEvent,
 						id: yield* randomUUID,
