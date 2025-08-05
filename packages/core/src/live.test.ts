@@ -200,7 +200,9 @@ describe("SyncEngine", () => {
 			DomainApplicator,
 			DomainApplicator.of({
 				verify: () =>
-					Effect.fail(new ValidationError({ cause: "Invalid value", reason: "INVALID" })),
+					Effect.fail(
+						new ValidationError({ cause: "Invalid value", reason: "INVALID" }),
+					),
 				apply: () => Effect.succeed(undefined),
 			}),
 		);
