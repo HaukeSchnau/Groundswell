@@ -75,6 +75,7 @@ export const applicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 	};
 };
 
+// biome-ignore lint/suspicious/noExplicitAny: libray code, not worth the effort to type it properly
 const getApplicator = (event: UnknownEvent, applicatorTree: any) => {
 	const [namespace, ...eventNameParts] = event.type.split(".") as [
 		string,
