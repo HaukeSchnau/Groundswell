@@ -1,38 +1,38 @@
 {
-  "name": "@groundswell/adapter-hono-server",
-  "version": "0.0.17",
-  "type": "module",
-  "main": "./dist/src/index.js",
-  "module": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "default": "./dist/src/index.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc --build",
-    "pub": "bunx npm publish --registry https://npm.schnau.dev/",
-    "test": "vitest run",
-    "typecheck": "tsgo --noEmit"
-  },
-  "devDependencies": {
-    "@groundswell/core-server": "*",
-    "effect": "^3",
-    "hono": "^4",
-    "superjson": "^2",
-    "zod": "^3"
-  },
-  "peerDependencies": {
-    "@groundswell/core-server": "*",
-    "effect": "^3",
-    "hono": "^4",
-    "superjson": "^2",
-    "zod": "^3"
-  }
+	"name": "@groundswell/adapter-hono-server",
+	"version": "0.0.18",
+	"type": "module",
+	"main": "./dist/src/index.js",
+	"module": "./dist/src/index.js",
+	"types": "./dist/src/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"import": "./dist/src/index.js",
+			"default": "./dist/src/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc --build",
+		"pub": "bunx npm publish --registry https://npm.schnau.dev/",
+		"test": "vitest run",
+		"typecheck": "tsgo --noEmit"
+	},
+	"devDependencies": {
+		"@groundswell/core-server": "*",
+		"effect": "^3",
+		"hono": "^4",
+		"superjson": "^2",
+		"zod": "^3"
+	},
+	"peerDependencies": {
+		"@groundswell/core-server": "*",
+		"effect": "^3",
+		"hono": "^4",
+		"superjson": "^2",
+		"zod": "^3"
+	}
 }

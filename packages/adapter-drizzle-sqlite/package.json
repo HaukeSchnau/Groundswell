@@ -1,39 +1,39 @@
 {
-  "name": "@groundswell/adapter-drizzle-sqlite",
-  "version": "0.0.17",
-  "type": "module",
-  "main": "./dist/src/index.js",
-  "module": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "default": "./dist/src/index.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc --build",
-    "typecheck": "tsgo --noEmit",
-    "pub": "bunx npm publish --registry https://npm.schnau.dev/ "
-  },
-  "peerDependencies": {
-    "@groundswell/core": "*",
-    "@groundswell/core-server": "*",
-    "@groundswell/zod-helpers": "*",
-    "@schnau/effect-drizzle": "^0.5.1",
-    "drizzle-orm": "^0.44",
-    "effect": "^3",
-    "superjson": "^2",
-    "zod": "^3"
-  },
-  "devDependencies": {
-    "@effect/test": "^0.1.0",
-    "@types/better-sqlite3": "^7.6.13",
-    "better-sqlite3": "^12.1.1",
-    "drizzle-kit": "^0.31.4"
-  }
+	"name": "@groundswell/adapter-drizzle-sqlite",
+	"version": "0.0.18",
+	"type": "module",
+	"main": "./dist/src/index.js",
+	"module": "./dist/src/index.js",
+	"types": "./dist/src/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"import": "./dist/src/index.js",
+			"default": "./dist/src/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc --build",
+		"typecheck": "tsgo --noEmit",
+		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
+	},
+	"peerDependencies": {
+		"@groundswell/core": "*",
+		"@groundswell/core-server": "*",
+		"@groundswell/zod-helpers": "*",
+		"@schnau/effect-drizzle": "^0.5.1",
+		"drizzle-orm": "^0.44",
+		"effect": "^3",
+		"superjson": "^2",
+		"zod": "^3"
+	},
+	"devDependencies": {
+		"@effect/test": "^0.1.0",
+		"@types/better-sqlite3": "^7.6.13",
+		"better-sqlite3": "^12.1.1",
+		"drizzle-kit": "^0.31.4"
+	}
 }
