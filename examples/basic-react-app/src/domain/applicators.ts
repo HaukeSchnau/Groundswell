@@ -71,11 +71,13 @@ const todo: NamespaceApplicatorMap<
 	},
 };
 
-const tree: Partial<NamespaceApplicatorTree<
-	DomainEvent,
-	DatabaseError<GenericSqliteError> | Cause.UnknownException,
-	Database
->> = {
+const tree: Partial<
+	NamespaceApplicatorTree<
+		DomainEvent,
+		DatabaseError<GenericSqliteError> | Cause.UnknownException,
+		Database
+	>
+> = {
 	note,
 	todo,
 };
