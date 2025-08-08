@@ -54,7 +54,12 @@ export const attachSyncServer = <TEvent>(
 		}
 
 		return streamSSE(c, async (stream) => {
-			const eventStream = config.broadcast.subscribe(userId).pipe(
+			const rawOffset = c.req.query("offset");
+			let offset = rawOffset != null ? Number(rawOffset) : undefined;
+			if (offset !== undefined && Number.isNaN(offset)) {
+				offset = 0;
+			}
+			const eventStream = config.broadcast.subscribe(userId, { offset }).pipe(
 				Stream.runForEach((event) => {
 					stream.writeSSE({
 						data: superjson.stringify(event),

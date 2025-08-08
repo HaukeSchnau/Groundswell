@@ -1,4 +1,8 @@
-import type { ApplicatorError, DuplicateEventError, ValidationError } from "@groundswell/core";
+import type {
+	ApplicatorError,
+	DuplicateEventError,
+	ValidationError,
+} from "@groundswell/core";
 import type { EventMeta } from "@groundswell/zod-helpers";
 import type { Effect, Stream } from "effect";
 import type {
@@ -50,7 +54,10 @@ export interface Broadcast<TEvent> {
 		userId: string,
 		events: TEvent[],
 	) => Effect.Effect<void, BroadcastError>;
-	readonly subscribe: (userId: string) => Stream.Stream<TEvent, BroadcastError>;
+	readonly subscribe: (
+		userId: string,
+		options?: { offset?: number },
+	) => Stream.Stream<TEvent, BroadcastError>;
 }
 
 export interface IngestEngine<TEvent> {

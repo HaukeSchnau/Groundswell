@@ -26,11 +26,17 @@ const serverApplicatorLive = Layer.effect(
 					Effect.provideService(Database, db),
 					Effect.catchTags({
 						DatabaseError: (error) =>
-							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
+							Effect.fail(
+								new ValidationError({ cause: error, reason: "INVALID" }),
+							),
 						ValidationError: (error) =>
-							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
+							Effect.fail(
+								new ValidationError({ cause: error, reason: "INVALID" }),
+							),
 						UnknownException: (error) =>
-							Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
+							Effect.fail(
+								new ValidationError({ cause: error, reason: "UNKNOWN" }),
+							),
 					}),
 				),
 			apply: (event, meta) =>
@@ -67,17 +73,19 @@ export const memoryBroadcastLive = Layer.effect(
 		const canonicalStorage = yield* DomainCanonicalStorage;
 
 		return DomainBroadcast.of({
-			publishToTopics: (topics, event) => {
-				console.log("publishing to topics", topics, event);
-				return pubsub.publish(event);
+			publishToUser: (userId, events) => {
+				console.log("publishing to user", userId, events);
+				return pubsub.publishAll(events).pipe(Effect.andThen(Effect.void));
 			}, // Simple broadcast, ignores topics
-			publishToUser: (userId, event) => {
-				console.log("publishing to user", userId, event);
-				return pubsub.publishAll(event);
-			}, // Simple broadcast, ignores topics
-			subscribe: (userId) => {
+			subscribe: (userId, options) => {
 				const initStream = Stream.fromIterableEffect(
 					initializeEventStream(userId, canonicalStorage).pipe(
+						Effect.map((events) => {
+							const offset = options?.offset;
+							if (offset === undefined) return events;
+							if (offset < 0) return events;
+							return events.slice(offset);
+						}),
 						Effect.catchTag("CanonicalStorageError", (error) => {
 							return Effect.fail(new BroadcastError({ cause: error }));
 						}),
