@@ -16,9 +16,8 @@
     },
     "examples/basic-react-app": {
       "name": "basic-react-app",
-      "version": "0.0.18",
+      "version": "0.0.15",
       "dependencies": {
-        "@effect/opentelemetry": "^0.56.0",
         "@effect/platform-bun": "^0.72.3",
         "@groundswell/adapter-bun-server": "workspace:*",
         "@groundswell/adapter-drizzle-sqlite": "workspace:*",
@@ -44,7 +43,7 @@
     },
     "packages/adapter-bun-server": {
       "name": "@groundswell/adapter-bun-server",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "peerDependencies": {
         "@groundswell/core-server": "*",
         "effect": "^3",
@@ -54,7 +53,7 @@
     },
     "packages/adapter-drizzle-postgres": {
       "name": "@groundswell/adapter-drizzle-postgres",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "@effect/test": "^0.1.0",
         "drizzle-kit": "^0.31.4",
@@ -74,7 +73,7 @@
     },
     "packages/adapter-drizzle-sqlite": {
       "name": "@groundswell/adapter-drizzle-sqlite",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "@effect/test": "^0.1.0",
         "@types/better-sqlite3": "^7.6.13",
@@ -94,7 +93,7 @@
     },
     "packages/adapter-hono-server": {
       "name": "@groundswell/adapter-hono-server",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "@groundswell/core-server": "*",
         "effect": "^3",
@@ -112,7 +111,7 @@
     },
     "packages/adapter-sse-client": {
       "name": "@groundswell/adapter-sse-client",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "eventsource": "^4",
         "react-native-sse": "^1",
@@ -132,7 +131,7 @@
     },
     "packages/core": {
       "name": "@groundswell/core",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "@effect/vitest": "^0.23.10",
       },
@@ -142,7 +141,7 @@
     },
     "packages/core-server": {
       "name": "@groundswell/core-server",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "@effect/vitest": "^0.23.10",
       },
@@ -153,7 +152,7 @@
     },
     "packages/react": {
       "name": "@groundswell/react",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "devDependencies": {
         "@types/react": "^19.1.8",
       },
@@ -164,7 +163,7 @@
     },
     "packages/zod-helpers": {
       "name": "@groundswell/zod-helpers",
-      "version": "0.0.18",
+      "version": "0.0.19",
       "dependencies": {
         "zod": "^3.25.67",
       },
@@ -204,8 +203,6 @@
     "@effect/io": ["@effect/io@0.3.1", "", { "dependencies": { "@effect/data": "~0.2.0" } }, "sha512-mcUWfA0eVNGklL9rx7pOAiRxd5TOmjJMxvBapb7fPiarYJCPJgvCPRxOi2mWb31buDN0Z9v3C8DE9KKLE8Yv3w=="],
 
     "@effect/language-service": ["@effect/language-service@0.23.5", "https://npm.schnau.dev/@effect/language-service/-/language-service-0.23.5.tgz", {}, "sha512-aQN24eziWuqK/EdFhhZ2Jr/CZgYxNfsP9r7DT7jCYgJWhZ8HPO39hyHcij14cMv41ZM8j0p8lmBnHYZwYN1Wyg=="],
-
-    "@effect/opentelemetry": ["@effect/opentelemetry@0.56.0", "https://npm.schnau.dev/@effect/opentelemetry/-/opentelemetry-0.56.0.tgz", { "peerDependencies": { "@effect/platform": "^0.90.0", "@opentelemetry/api": "^1.9", "@opentelemetry/resources": "^2.0.0", "@opentelemetry/sdk-logs": "^0.203.0", "@opentelemetry/sdk-metrics": "^2.0.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "@opentelemetry/sdk-trace-node": "^2.0.0", "@opentelemetry/sdk-trace-web": "^2.0.0", "@opentelemetry/semantic-conventions": "^1.33.0", "effect": "^3.17.0" }, "optionalPeers": ["@opentelemetry/api", "@opentelemetry/resources", "@opentelemetry/sdk-logs", "@opentelemetry/sdk-metrics", "@opentelemetry/sdk-trace-base", "@opentelemetry/sdk-trace-node", "@opentelemetry/sdk-trace-web"] }, "sha512-WRqSnhF5bTMXlyC7q7fH7k+J2cbh7JRD+o2Vpj/H7AtAhdKmPilYMj9eudTyPcM14tgw555mnNRgTS7v6TCp3Q=="],
 
     "@effect/platform": ["@effect/platform@0.87.1", "", { "dependencies": { "find-my-way-ts": "^0.1.5", "msgpackr": "^1.11.4", "multipasta": "^0.2.5" }, "peerDependencies": { "effect": "^3.16.10" } }, "sha512-OJmdAOle5ZYExJIppBh2+N3RHCAdn3WdtxvLgkECI0aJLjpEy/O88XdkkLmRKrVPFByxsShfVUEhZyKtVdHA8A=="],
 
