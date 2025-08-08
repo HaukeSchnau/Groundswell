@@ -18,6 +18,7 @@
 	"scripts": {
 		"build": "tsc --build",
 		"typecheck": "tsgo --noEmit",
+		"bump": "bunx npm version",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"peerDependencies": {

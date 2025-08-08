@@ -13,6 +13,7 @@
 	},
 	"scripts": {
 		"build": "bun run --filter '*' build",
+		"bump": "bun run --filter '*' bump --",
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"pub": "bun run --filter '*' pub",
