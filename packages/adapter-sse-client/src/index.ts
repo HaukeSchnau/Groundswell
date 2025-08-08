@@ -72,37 +72,39 @@ export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
 						),
 					),
 
-				listen: Effect.gen(function* () {
-					const stream = eventSourceService.connect(
-						`${config.baseUrl}/events`,
-						{
+				listen: (options?: { offset?: number }) =>
+					Effect.gen(function* () {
+						const url = new URL(`${config.baseUrl}/events`);
+						if (options?.offset != null) {
+							url.searchParams.set("offset", String(options.offset));
+						}
+						const stream = eventSourceService.connect(url.toString(), {
 							headers: config.headers ?? (() => ({})),
-						},
-					);
+						});
 
-					return stream.pipe(
-						Stream.mapEffect((message) =>
-							Effect.try({
-								try: () => {
-									const parsedData = superjson.parse(message.data);
-									return config.eventSchema.parse(parsedData);
-								},
-								catch: (cause) =>
-									new TransportError({ cause, isRetryable: false }),
-							}),
-						),
-						Stream.catchTag("EventSourceError", (error) => {
-							if (error.reason === "NetworkError") {
+						return stream.pipe(
+							Stream.mapEffect((message) =>
+								Effect.try({
+									try: () => {
+										const parsedData = superjson.parse(message.data);
+										return config.eventSchema.parse(parsedData);
+									},
+									catch: (cause) =>
+										new TransportError({ cause, isRetryable: false }),
+								}),
+							),
+							Stream.catchTag("EventSourceError", (error) => {
+								if (error.reason === "NetworkError") {
+									return Stream.fail(
+										new TransportError({ cause: error, isRetryable: true }),
+									);
+								}
 								return Stream.fail(
-									new TransportError({ cause: error, isRetryable: true }),
+									new TransportError({ cause: error, isRetryable: false }),
 								);
-							}
-							return Stream.fail(
-								new TransportError({ cause: error, isRetryable: false }),
-							);
-						}),
-					);
-				}),
+							}),
+						);
+					}),
 			});
 		}),
 	);

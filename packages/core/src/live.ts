@@ -61,6 +61,7 @@ export const syncEngineLive = <
 	applicatorTag: Context.Tag<IdApplicator, Applicator<TEvent>>,
 	storageTag: Context.Tag<IdStorage, Storage<TEvent>>,
 	transportTag: Context.Tag<IdTransport, Transport<TEvent>>,
+	options?: { offset?: number },
 ) =>
 	Layer.scoped(
 		tag,
@@ -203,7 +204,7 @@ export const syncEngineLive = <
 
 			//    - Listen for remote events and add them to the queue
 			yield* pipe(
-				transport.listen,
+				transport.listen({ offset: options?.offset }),
 				Effect.andThen((stream) =>
 					stream.pipe(
 						Stream.tap((event) =>

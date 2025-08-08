@@ -124,7 +124,7 @@ describe("SyncEngine", () => {
 			DomainTransport.of({
 				publish: (event) =>
 					Ref.update(transportPublishCalls, (calls) => [...calls, event]),
-				listen: Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
+				listen: () => Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
 			}),
 		);
 
@@ -134,6 +134,7 @@ describe("SyncEngine", () => {
 			DomainApplicator,
 			DomainStorage,
 			DomainTransport,
+			{ offset: 0 },
 		);
 		testLayer = Layer.provide(
 			engine,
@@ -236,13 +237,12 @@ describe("SyncEngine", () => {
 		const mockTransport = Layer.effect(
 			DomainTransport,
 			Effect.gen(function* () {
+				const stream = yield* Stream.fromPubSub(remoteEventsPubSub, {
+					scoped: true,
+				});
 				return DomainTransport.of({
 					publish: () => Effect.succeed(undefined),
-					listen: Effect.succeed(
-						yield* Stream.fromPubSub(remoteEventsPubSub, {
-							scoped: true,
-						}),
-					),
+					listen: () => Effect.succeed(stream),
 				});
 			}),
 		);
@@ -311,7 +311,7 @@ describe("SyncEngine", () => {
 									: Ref.update(transportPublishCalls, (c) => [...c, event]),
 							),
 						),
-					listen: Effect.succeed(Stream.empty),
+					listen: () => Effect.succeed(Stream.empty),
 				}),
 			);
 			const testLayer = Layer.provide(

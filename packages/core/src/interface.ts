@@ -60,7 +60,9 @@ export interface Transport<TEvent extends { id: string }> {
 	readonly publish: (
 		event: TEvent,
 	) => Effect.Effect<void, TransportError | DuplicateEventError>;
-	readonly listen: Effect.Effect<Stream.Stream<TEvent, TransportError>>;
+	readonly listen: (options?: {
+		offset?: number;
+	}) => Effect.Effect<Stream.Stream<TEvent, TransportError>>;
 }
 
 /**

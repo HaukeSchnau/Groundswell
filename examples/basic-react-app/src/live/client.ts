@@ -83,6 +83,7 @@ export const SyncEngineLive = syncEngineLive(
 	DomainApplicator,
 	DomainStorage,
 	DomainTransport,
+	{ offset: 0 },
 ).pipe(
 	Layer.provide(clientApplicatorsLive),
 	Layer.provide(StorageLive),
