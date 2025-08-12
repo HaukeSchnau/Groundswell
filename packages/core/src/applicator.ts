@@ -58,7 +58,13 @@ export const applicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 		meta: EventMeta,
 	) => {
 		const applicator = applicatorMap[event.type];
-		return applicator.apply(event, meta);
+		return applicator.apply(event, meta).pipe(
+			Effect.withSpan("SYNC/Apply", {
+				attributes: {
+					event,
+				},
+			}),
+		);
 	};
 
 	const verify = <T extends DomainEvent["type"]>(
@@ -66,7 +72,13 @@ export const applicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 		meta: EventMeta,
 	) => {
 		const applicator = applicatorMap[event.type];
-		return applicator.verify(event, meta);
+		return applicator.verify(event, meta).pipe(
+			Effect.withSpan("SYNC/Verify", {
+				attributes: {
+					event,
+				},
+			}),
+		);
 	};
 
 	return {
@@ -99,7 +111,13 @@ export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
 			return Effect.void;
 		}
-		return applicator.apply(event, meta);
+		return applicator.apply(event, meta).pipe(
+			Effect.withSpan("SYNC/Apply", {
+				attributes: {
+					event: event.type,
+				},
+			}),
+		);
 	};
 
 	const verify = <T extends DomainEvent["type"]>(
@@ -116,7 +134,13 @@ export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
 			return Effect.void;
 		}
-		return applicator.verify(event, meta);
+		return applicator.verify(event, meta).pipe(
+			Effect.withSpan("SYNC/Verify", {
+				attributes: {
+					event: event.type,
+				},
+			}),
+		);
 	};
 
 	return {
