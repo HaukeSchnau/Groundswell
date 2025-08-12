@@ -16,7 +16,7 @@
     },
     "examples/basic-react-app": {
       "name": "basic-react-app",
-      "version": "0.0.15",
+      "version": "0.0.17",
       "dependencies": {
         "@effect/platform-bun": "^0.72.3",
         "@groundswell/adapter-bun-server": "workspace:*",
@@ -43,7 +43,7 @@
     },
     "packages/adapter-bun-server": {
       "name": "@groundswell/adapter-bun-server",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "peerDependencies": {
         "@groundswell/core-server": "*",
         "effect": "^3",
@@ -53,7 +53,7 @@
     },
     "packages/adapter-drizzle-postgres": {
       "name": "@groundswell/adapter-drizzle-postgres",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "@effect/test": "^0.1.0",
         "drizzle-kit": "^0.31.4",
@@ -73,7 +73,7 @@
     },
     "packages/adapter-drizzle-sqlite": {
       "name": "@groundswell/adapter-drizzle-sqlite",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "@effect/test": "^0.1.0",
         "@types/better-sqlite3": "^7.6.13",
@@ -93,7 +93,7 @@
     },
     "packages/adapter-hono-server": {
       "name": "@groundswell/adapter-hono-server",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "@groundswell/core-server": "*",
         "effect": "^3",
@@ -111,7 +111,7 @@
     },
     "packages/adapter-sse-client": {
       "name": "@groundswell/adapter-sse-client",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "eventsource": "^4",
         "react-native-sse": "^1",
@@ -131,7 +131,7 @@
     },
     "packages/core": {
       "name": "@groundswell/core",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "@effect/vitest": "^0.23.10",
       },
@@ -141,7 +141,7 @@
     },
     "packages/core-server": {
       "name": "@groundswell/core-server",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "@effect/vitest": "^0.23.10",
       },
@@ -152,7 +152,7 @@
     },
     "packages/react": {
       "name": "@groundswell/react",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "devDependencies": {
         "@types/react": "^19.1.8",
       },
@@ -163,7 +163,7 @@
     },
     "packages/zod-helpers": {
       "name": "@groundswell/zod-helpers",
-      "version": "0.0.19",
+      "version": "0.0.21",
       "dependencies": {
         "zod": "^3.25.67",
       },
