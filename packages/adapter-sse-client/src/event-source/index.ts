@@ -16,7 +16,13 @@ export type EventSourceMessage = {
 export class EventSourceError extends Data.TaggedError("EventSourceError")<{
 	reason: "NetworkError" | "ParsingError" | "UnknownError";
 	originalError?: unknown;
-}> {}
+}> {
+	override get message() {
+		switch (this.reason) {
+		}
+		return `EventSourceError: ${this.reason}. Cause: ${this.originalError}`;
+	}
+}
 
 /**
  * Effect Context Tag for the EventSourceService.
