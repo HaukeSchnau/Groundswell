@@ -17,6 +17,7 @@
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"pub": "bun run --filter '*' pub",
+		"release": "bun scripts/release.ts",
 		"test": "vitest run",
 		"test:dev": "vitest",
 		"typecheck": "bun run --filter '*' typecheck"
