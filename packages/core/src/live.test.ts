@@ -56,7 +56,9 @@ describe("SyncEngine", () => {
 	let applicatorVerifyCalls: Ref.Ref<TestEvent[]>;
 	let applicatorApplyCalls: Ref.Ref<TestEvent[]>;
 	let storageSaveCalls: Ref.Ref<LocalEvent<TestEvent>[]>;
-	let storageUpdateCalls: Ref.Ref<{ id: string; status: any }[]>;
+	let storageUpdateCalls: Ref.Ref<
+		{ id: string; status: Partial<LocalEvent<TestEvent>["status"]> }[]
+	>;
 	let transportPublishCalls: Ref.Ref<TestEvent[]>;
 
 	// PubSubs to control mock streams
@@ -83,7 +85,9 @@ describe("SyncEngine", () => {
 			applicatorVerifyCalls = yield* Ref.make<TestEvent[]>([]);
 			applicatorApplyCalls = yield* Ref.make<TestEvent[]>([]);
 			storageSaveCalls = yield* Ref.make<LocalEvent<TestEvent>[]>([]);
-			storageUpdateCalls = yield* Ref.make<{ id: string; status: any }[]>([]);
+			storageUpdateCalls = yield* Ref.make<
+				{ id: string; status: Partial<LocalEvent<TestEvent>["status"]> }[]
+			>([]);
 			transportPublishCalls = yield* Ref.make<TestEvent[]>([]);
 			remoteEventsPubSub = yield* PubSub.unbounded<TestEvent>();
 

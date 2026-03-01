@@ -32,7 +32,13 @@ const useEffectQuery = <A, E>(
 	const runtime = useRuntime();
 	return useQuery({
 		queryKey,
-		queryFn: () => runtime.runPromise(effect),
+		queryFn: async () => {
+			try {
+				return await runtime.runPromise(effect);
+			} catch (error) {
+				throw error instanceof Error ? error : new Error(String(error));
+			}
+		},
 	});
 };
 
@@ -147,9 +153,13 @@ const MainScreen = () => {
 
 const migrationPromise = runMigrations();
 
-const runtime = ManagedRuntime.make(
-	SyncEngineLive.pipe(Layer.provideMerge(WasmDatabaseLive)),
-);
+const RuntimeLive: Layer.Layer<DomainSyncEngine | Database, never, never> =
+	SyncEngineLive.pipe(
+		Layer.provideMerge(WasmDatabaseLive),
+		Layer.orDie,
+	) as Layer.Layer<DomainSyncEngine | Database, never, never>;
+
+const runtime = ManagedRuntime.make(RuntimeLive);
 
 export function App() {
 	use(migrationPromise);

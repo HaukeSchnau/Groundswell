@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Context, Effect, Layer, pipe, Ref, Stream } from "effect";
+import { CanonicalStorageError } from "./errors.js";
 import type {
 	Broadcast,
 	CanonicalStorage,
@@ -45,24 +46,51 @@ const mockApplicator = Layer.succeed(
 		getUserTopics: () => Effect.succeed(["topic1"]),
 	}),
 );
-const mockStorage = (isUniqueRef: Ref.Ref<boolean>) =>
+const mockStorage = (
+	isUniqueRef: Ref.Ref<boolean>,
+	options?: {
+		missingEvents?: TestEvent[];
+		markedEventsRef?: Ref.Ref<Array<{ eventId: string; userId: string }>>;
+		failMarkedEventIds?: string[];
+	},
+) =>
 	Layer.succeed(
 		DomainCanonicalStorage,
 		DomainCanonicalStorage.of({
 			isEventUnique: () => Ref.get(isUniqueRef),
 			saveEvent: () => Effect.succeed(void 0),
-			getMissingEventsForUser: () => Effect.succeed([]),
+			getMissingEventsForUser: () =>
+				Effect.succeed(options?.missingEvents ?? []),
 			getEventsSentToUser: () => Effect.succeed([]),
-			markEventAsSentToUser: () => Effect.succeed(void 0),
+			markEventAsSentToUser: (eventId, userId) =>
+				options?.failMarkedEventIds?.includes(eventId)
+					? Effect.fail(
+							new CanonicalStorageError({
+								cause: `failed to mark ${eventId}`,
+							}),
+						)
+					: options?.markedEventsRef == null
+						? Effect.succeed(void 0)
+						: Ref.update(options.markedEventsRef, (events) => [
+								...events,
+								{ eventId, userId },
+							]),
 		}),
 	);
-const mockBroadcast = Layer.succeed(
-	DomainBroadcast,
-	DomainBroadcast.of({
-		publishToUser: () => Effect.succeed(void 0),
-		subscribe: () => Stream.empty,
-	}),
-);
+const mockBroadcast = (publishedEventsRef?: Ref.Ref<TestEvent[][]>) =>
+	Layer.succeed(
+		DomainBroadcast,
+		DomainBroadcast.of({
+			publishToUser: (_userId, events) =>
+				publishedEventsRef == null
+					? Effect.succeed(void 0)
+					: Ref.update(publishedEventsRef, (published) => [
+							...published,
+							events,
+						]),
+			subscribe: () => Stream.empty,
+		}),
+	);
 
 describe("IngestEngine", () => {
 	it.effect("should run the full ingest flow on success", () => {
@@ -76,7 +104,7 @@ describe("IngestEngine", () => {
 			Layer.mergeAll(
 				mockApplicator,
 				mockStorage(Ref.unsafeMake(true)),
-				mockBroadcast,
+				mockBroadcast(),
 			),
 		);
 		return Effect.gen(function* () {
@@ -108,7 +136,7 @@ describe("IngestEngine", () => {
 			Layer.mergeAll(
 				mockApplicator,
 				mockStorage(Ref.unsafeMake(false)),
-				mockBroadcast,
+				mockBroadcast(),
 			),
 		);
 
@@ -131,4 +159,147 @@ describe("IngestEngine", () => {
 			expect(result._tag).toBe("DuplicateEventError");
 		}).pipe(Effect.provide(testLayer));
 	});
+
+	it.effect("marks every published event as sent for the user", () =>
+		Effect.gen(function* () {
+			const markedEventsRef = yield* Ref.make<
+				Array<{
+					eventId: string;
+					userId: string;
+				}>
+			>([]);
+
+			const testLayer = Layer.provide(
+				ingestEngineLive(
+					DomainIngestEngine,
+					DomainServerApplicator,
+					DomainCanonicalStorage,
+					DomainBroadcast,
+				),
+				Layer.mergeAll(
+					mockApplicator,
+					mockStorage(Ref.unsafeMake(true), { markedEventsRef }),
+					mockBroadcast(),
+				),
+			);
+
+			const engine = yield* DomainIngestEngine.pipe(Effect.provide(testLayer));
+			const event = {
+				id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
+				timestamp: new Date(),
+				type: "test.event" as const,
+				data: { value: 1 },
+			};
+
+			yield* engine.ingest(event, { initiatorId: "user-1" });
+
+			const markedEvents = yield* Ref.get(markedEventsRef);
+			expect(markedEvents).toEqual([{ eventId: event.id, userId: "user-1" }]);
+		}),
+	);
+
+	it.effect(
+		"publishes a deduplicated event list when current event is already missing",
+		() =>
+			Effect.gen(function* () {
+				const markedEventsRef = yield* Ref.make<
+					Array<{
+						eventId: string;
+						userId: string;
+					}>
+				>([]);
+				const publishedEventsRef = yield* Ref.make<TestEvent[][]>([]);
+				const currentEvent = {
+					id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
+					timestamp: new Date(),
+					type: "test.event" as const,
+					data: { value: 1 },
+				};
+				const previousEvent = {
+					id: "f4a4e8c2-c472-47af-a435-ad61f94f3558",
+					timestamp: new Date(),
+					type: "test.event" as const,
+					data: { value: 2 },
+				};
+
+				const testLayer = Layer.provide(
+					ingestEngineLive(
+						DomainIngestEngine,
+						DomainServerApplicator,
+						DomainCanonicalStorage,
+						DomainBroadcast,
+					),
+					Layer.mergeAll(
+						mockApplicator,
+						mockStorage(Ref.unsafeMake(true), {
+							missingEvents: [previousEvent, currentEvent],
+							markedEventsRef,
+						}),
+						mockBroadcast(publishedEventsRef),
+					),
+				);
+
+				const engine = yield* DomainIngestEngine.pipe(
+					Effect.provide(testLayer),
+				);
+				yield* engine.ingest(currentEvent, { initiatorId: "user-1" });
+
+				const publishedEvents = yield* Ref.get(publishedEventsRef);
+				const markedEvents = yield* Ref.get(markedEventsRef);
+
+				expect(publishedEvents).toHaveLength(1);
+				expect(publishedEvents[0]?.map((event) => event.id)).toEqual([
+					previousEvent.id,
+					currentEvent.id,
+				]);
+				expect(markedEvents).toEqual([
+					{ eventId: previousEvent.id, userId: "user-1" },
+					{ eventId: currentEvent.id, userId: "user-1" },
+				]);
+			}),
+	);
+
+	it.effect(
+		"does not fail ingest when sent markers cannot be persisted after publish",
+		() =>
+			Effect.gen(function* () {
+				const publishedEventsRef = yield* Ref.make<TestEvent[][]>([]);
+				const event = {
+					id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
+					timestamp: new Date(),
+					type: "test.event" as const,
+					data: { value: 1 },
+				};
+
+				const testLayer = Layer.provide(
+					ingestEngineLive(
+						DomainIngestEngine,
+						DomainServerApplicator,
+						DomainCanonicalStorage,
+						DomainBroadcast,
+					),
+					Layer.mergeAll(
+						mockApplicator,
+						mockStorage(Ref.unsafeMake(true), {
+							failMarkedEventIds: [event.id],
+						}),
+						mockBroadcast(publishedEventsRef),
+					),
+				);
+
+				const engine = yield* DomainIngestEngine.pipe(
+					Effect.provide(testLayer),
+				);
+				const result = yield* Effect.exit(
+					engine.ingest(event, { initiatorId: "user-1" }),
+				);
+				const publishedEvents = yield* Ref.get(publishedEventsRef);
+
+				expect(result._tag).toBe("Success");
+				expect(publishedEvents).toHaveLength(1);
+				expect(
+					publishedEvents[0]?.map((publishedEvent) => publishedEvent.id),
+				).toEqual([event.id]);
+			}),
+	);
 });

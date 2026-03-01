@@ -5,7 +5,7 @@ import { makeService } from "@schnau/effect-drizzle/bun-sqlite";
 import { serve } from "bun";
 import { Effect, Layer, Redacted } from "effect";
 import { DomainBroadcast, DomainIngestEngine } from "./boilerplate";
-import { Database, TransactionContext } from "./domain/db/contract";
+import { Database } from "./domain/db/contract";
 import * as Schema from "./domain/db/schema";
 import { DomainEvent } from "./domain/events";
 import index from "./index.html";
@@ -22,7 +22,7 @@ const BunDatabaseLive = Layer.scoped(
 			url: Redacted.make("file:./db.sqlite"),
 			schema: Schema,
 		},
-		TransactionContext,
+		Database,
 	),
 );
 

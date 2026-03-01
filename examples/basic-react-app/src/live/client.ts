@@ -15,7 +15,7 @@ import {
 	DomainTransport,
 } from "@/boilerplate";
 import { applicator } from "@/domain/applicators";
-import { Database, TransactionContext } from "@/domain/db/contract";
+import { Database } from "@/domain/db/contract";
 import * as Schema from "@/domain/db/schema";
 import { DomainEvent } from "@/domain/events";
 
@@ -33,9 +33,13 @@ const clientApplicatorsLive = Layer.effect(
 						Effect.provideService(Database, db),
 						Effect.catchTags({
 							DatabaseError: (error) =>
-								Effect.fail(new ValidationError({ cause: error })),
+								Effect.fail(
+									new ValidationError({ cause: error, reason: "INVALID" }),
+								),
 							UnknownException: (error) =>
-								Effect.fail(new ValidationError({ cause: error })),
+								Effect.fail(
+									new ValidationError({ cause: error, reason: "UNKNOWN" }),
+								),
 						}),
 					),
 			apply: (event: DomainEvent) =>
@@ -64,7 +68,7 @@ export const WasmDatabaseLive = Layer.scoped(
 			url: Redacted.make("file:./db.sqlite"),
 			schema: Schema,
 		},
-		TransactionContext,
+		Database,
 	),
 );
 

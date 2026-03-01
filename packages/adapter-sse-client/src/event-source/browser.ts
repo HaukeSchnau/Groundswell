@@ -20,7 +20,7 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 								...init,
 								headers: {
 									...init.headers,
-									...options?.headers,
+									...options?.headers(),
 								},
 							});
 						},

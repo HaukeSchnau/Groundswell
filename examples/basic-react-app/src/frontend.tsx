@@ -9,7 +9,12 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 
 function start() {
-	const root = createRoot(document.getElementById("root")!);
+	const rootElement = document.getElementById("root");
+	if (rootElement == null) {
+		throw new Error("Missing root element");
+	}
+
+	const root = createRoot(rootElement);
 	root.render(<App />);
 }
 

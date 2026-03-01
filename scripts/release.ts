@@ -36,7 +36,9 @@ function die(msg: string, code = 1): never {
 }
 
 function run(cmd: string[], cwd: string): void {
-	const pretty = cmd.map((c) => (c.includes(" ") ? JSON.stringify(c) : c)).join(" ");
+	const pretty = cmd
+		.map((c) => (c.includes(" ") ? JSON.stringify(c) : c))
+		.join(" ");
 	console.log(`\n$ (cd ${cwd}) ${pretty}`);
 
 	const r = Bun.spawnSync({
@@ -50,11 +52,15 @@ function run(cmd: string[], cwd: string): void {
 	if (r.exitCode !== 0) process.exit(r.exitCode);
 }
 
-function readJson(path: string): any {
+function readJson(path: string): unknown {
 	return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function listPublishablePackages(): { dir: string; name: string; version: string }[] {
+function listPublishablePackages(): {
+	dir: string;
+	name: string;
+	version: string;
+}[] {
 	const packagesDir = join(ROOT, "packages");
 	const entries = readdirSync(packagesDir, { withFileTypes: true })
 		.filter((e) => e.isDirectory())
@@ -67,9 +73,20 @@ function listPublishablePackages(): { dir: string; name: string; version: string
 		const pkgPath = join(dir, "package.json");
 		try {
 			const pkg = readJson(pkgPath);
-			if (pkg?.private) continue;
-			if (typeof pkg?.name !== "string" || typeof pkg?.version !== "string") continue;
-			out.push({ dir, name: pkg.name, version: pkg.version });
+			if (pkg == null || typeof pkg !== "object") continue;
+			const packageJson = pkg as Record<string, unknown>;
+			if (packageJson.private) continue;
+			if (
+				typeof packageJson.name !== "string" ||
+				typeof packageJson.version !== "string"
+			) {
+				continue;
+			}
+			out.push({
+				dir,
+				name: packageJson.name,
+				version: packageJson.version,
+			});
 		} catch {
 			// skip
 		}
@@ -91,7 +108,10 @@ function parseArgs(argv: string[]): { bump: string; flags: Flags } {
 	let bump = "";
 	let i = 0;
 	while (i < argv.length) {
-		const a = argv[i]!;
+		const a = argv[i];
+		if (a == null) {
+			break;
+		}
 		if (!a.startsWith("-") && bump === "") {
 			bump = a;
 			i++;
@@ -131,16 +151,16 @@ function parseArgs(argv: string[]): { bump: string; flags: Flags } {
 		}
 		if (a === "--registry") {
 			const v = argv[i + 1];
-			if (!v) die("Missing value for --registry\n\n" + usage());
+			if (!v) die(`Missing value for --registry\n\n${usage()}`);
 			flags.registry = v;
 			i += 2;
 			continue;
 		}
 
-		die(`Unknown arg: ${a}\n\n` + usage());
+		die(`Unknown arg: ${a}\n\n${usage()}`);
 	}
 
-	if (!bump) die("Missing required bump argument.\n\n" + usage());
+	if (!bump) die(`Missing required bump argument.\n\n${usage()}`);
 	return { bump, flags };
 }
 
@@ -152,7 +172,9 @@ if (pkgs.length === 0) die("No publishable packages found under ./packages/*");
 console.log("Release plan:");
 console.log(`- Registry: ${flags.registry}`);
 console.log(`- Bump: ${flags.skipBump ? "(skipped)" : bump}`);
-console.log(`- Packages: ${pkgs.map((p) => `${p.name}@${p.version}`).join(", ")}`);
+console.log(
+	`- Packages: ${pkgs.map((p) => `${p.name}@${p.version}`).join(", ")}`,
+);
 console.log(
 	`- Steps: ${[
 		flags.skipTests ? null : "tests",
@@ -199,4 +221,3 @@ if (!flags.skipPublish) {
 }
 
 console.log("\nRelease complete.");
-
