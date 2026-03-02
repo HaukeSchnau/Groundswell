@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      run: bun run checks:fmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+
+    - name: lint
+      run: bun run checks:lint:fix-safe -- {staged_files}
+      glob: "*.{js,ts,jsx,tsx,mjs,cjs,mts,cts}"
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: test
+      run: bun run test

@@ -64,6 +64,8 @@ Detailed architecture docs:
 
 ```bash
 bun install
+direnv allow            # optional, if you use Nix + direnv
+bunx lefthook install   # optional, install local git hooks
 ```
 
 ### Common Tasks
@@ -74,6 +76,13 @@ bun run checks:fmt:ci
 bun run checks:lint
 bun run test
 bun run typecheck
+```
+
+Helpful local shortcuts:
+
+```bash
+just check
+just qa
 ```
 
 ## Example App

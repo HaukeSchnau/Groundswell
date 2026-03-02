@@ -9,6 +9,13 @@
 
 ```bash
 bun install
+bunx lefthook install
+```
+
+If you use Nix + direnv locally:
+
+```bash
+direnv allow
 ```
 
 ## Run Checks
@@ -19,6 +26,13 @@ bun run checks:lint
 bun run typecheck
 bun run test
 bun run build
+```
+
+Convenience commands:
+
+```bash
+just check
+just qa
 ```
 
 ## Workspace Structure
