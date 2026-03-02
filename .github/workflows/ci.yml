@@ -10,6 +10,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  npm_token: ${{ secrets.NPM_TOKEN }}
+
 jobs:
   quality:
     name: Quality (Toolchain, Hygiene, Format, Lint, Build)
@@ -24,6 +27,13 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.10
+
+      - name: Verify private registry auth
+        run: |
+          if [ -z "${npm_token}" ]; then
+            echo "::error::Missing required repository secret NPM_TOKEN (used as npm_token for bunfig.toml)."
+            exit 1
+          fi
 
       - name: Verify toolchain
         run: bun run check:toolchain
