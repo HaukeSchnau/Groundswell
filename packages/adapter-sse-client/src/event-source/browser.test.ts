@@ -1,80 +1,105 @@
 import { describe, expect, it } from "@effect/vitest";
-import { pipe } from "effect";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
+import { once } from "node:events";
+import { createServer } from "node:http";
 import { BrowserEventSourceServiceLive } from "./browser.js";
-// Import the service interface and the Node.js implementation
 import { EventSourceError, EventSourceService } from "./index.js";
 
-// URL for the sse.dev/test server
-const TEST_SSE_URL = "https://sse.dev/test";
+const withSseTestServer = async <T>(run: (baseUrl: string) => Promise<T>): Promise<T> => {
+	const server = createServer((request, response) => {
+		if (request.method === "POST" && request.url === "/events") {
+			response.writeHead(200, { "Content-Type": "application/json" });
+			response.end(JSON.stringify({ ok: true }));
+			return;
+		}
 
-describe("NodeEventSourceService", () => {
-	it.effect(
-		"should connect to sse.dev/test and receive diverse messages",
-		() =>
-			Effect.gen(function* () {
-				const eventSource = yield* EventSourceService;
+		if (request.method === "GET" && request.url?.startsWith("/events")) {
+			response.writeHead(200, {
+				"Content-Type": "text/event-stream",
+				"Cache-Control": "no-cache",
+				Connection: "keep-alive",
+			});
+			response.write('data: {"msg":"one"}\n\n');
+			response.write('data: {"msg":"two"}\n\n');
+			response.write('data: {"msg":"three"}\n\n');
+			response.end();
+			return;
+		}
 
-				console.log(`[Test] Connecting to ${TEST_SSE_URL}...`);
+		response.writeHead(404);
+		response.end();
+	});
 
-				const collectedMessages = yield* eventSource.connect(TEST_SSE_URL).pipe(
-					Stream.take(3), // Take the first 3 messages (sse.dev/test sends a mix)
-					Stream.runCollect, // Collect them into an Effect.Chunk
-					Effect.timeoutOrElse({
-						duration: Duration.seconds(5), // Allow up to 15 seconds for connection and messages
-						onTimeout: () =>
-							Effect.fail(
-								new EventSourceError({
-									reason: "NetworkError",
-									originalError: new Error(
-										"Connection to sse.dev/test timed out or did not receive enough messages.",
-									),
-								}),
-							),
-					}),
-					Effect.tap((chunk) =>
-						Effect.log(`[Test] Received ${chunk.length} messages: ${JSON.stringify(chunk)}`),
-					),
-					Effect.tapError((error) => Effect.logError(`[Test] Stream failed with error:`, error)),
-				);
+	server.listen(0, "127.0.0.1");
+	await once(server, "listening");
 
-				// --- Assertions ---
-				expect(collectedMessages).toHaveLength(3); // Expect a reasonable number of messages
-				expect(collectedMessages.every((msg) => typeof msg.data === "string")).toBe(true);
+	const address = server.address();
+	if (address == null || typeof address === "string") {
+		server.close();
+		throw new Error("Failed to determine SSE test server address");
+	}
 
-				// Check for messages known to be sent by sse.dev/test
-				const firstMessage = Option.fromNullishOr(collectedMessages[0]).pipe(Option.getOrNull);
-				expect(firstMessage?.data).toContain(
-					`{"testing":true,"sse_dev":"is great","msg":"It works!",`,
-				);
-			}).pipe(
-				Effect.provide(BrowserEventSourceServiceLive), // Provide the Node.js implementation
-			),
-		15000,
+	try {
+		return await run(`http://127.0.0.1:${address.port}`);
+	} finally {
+		server.close();
+		await once(server, "close");
+	}
+};
+
+describe("BrowserEventSourceServiceLive", () => {
+	it.effect("connects to a local SSE endpoint and receives messages", () =>
+		Effect.promise(() =>
+			withSseTestServer(async (baseUrl) => {
+				const program = Effect.gen(function* () {
+					const eventSource = yield* EventSourceService;
+
+					const collectedMessages = yield* eventSource.connect(`${baseUrl}/events`).pipe(
+						Stream.take(3),
+						Stream.runCollect,
+						Effect.timeoutOrElse({
+							duration: Duration.seconds(5),
+							onTimeout: () =>
+								Effect.fail(
+									new EventSourceError({
+										reason: "NetworkError",
+										originalError: new Error("Timed out waiting for local SSE messages"),
+									}),
+								),
+						}),
+					);
+
+					expect(collectedMessages).toHaveLength(3);
+					expect(collectedMessages.every((msg) => typeof msg.data === "string")).toBe(true);
+					const [
+						firstMessage = {
+							id: Option.none(),
+							data: "",
+							event: Option.none(),
+							retry: Option.none(),
+						},
+					] = collectedMessages;
+					expect(Option.getOrNull(firstMessage.id)).toBe("");
+					expect(firstMessage.data).toContain('"msg":"one"');
+				});
+
+				await Effect.runPromise(program.pipe(Effect.provide(BrowserEventSourceServiceLive)));
+			}),
+		),
 	);
 
-	it.effect("should fail gracefully when connecting to an invalid URL", () =>
+	it.effect("fails gracefully when connecting to an invalid URL", () =>
 		Effect.gen(function* () {
 			const eventSource = yield* EventSourceService;
-			const invalidUrl = "http://localhost:9999/non-existent-events"; // A URL that should consistently fail
+			const invalidUrl = "http://127.0.0.1:65535/non-existent-events";
 
-			console.log(`[Test] Attempting connection to invalid URL: ${invalidUrl}`);
+			const outcome = yield* eventSource.connect(invalidUrl).pipe(Stream.runDrain, Effect.flip);
 
-			// Attempt to run the stream, expecting it to fail
-			const outcome = yield* pipe(
-				eventSource.connect(invalidUrl),
-				Stream.runDrain, // Run until the stream completes or errors
-				Effect.flip,
-			);
-
-			// --- Assertions for error handling ---
-			expect(outcome._tag).toBe("EventSourceError"); // Expect the Effect to result in a failure
+			expect(outcome._tag).toBe("EventSourceError");
 			expect(outcome.reason).toBe("NetworkError");
-		}).pipe(
-			Effect.provide(BrowserEventSourceServiceLive), // Provide the Node.js implementation
-		),
+		}).pipe(Effect.provide(BrowserEventSourceServiceLive)),
 	);
 });

@@ -1,5 +1,6 @@
 import { BunRuntime } from "@effect/platform-bun";
 import { syncServer } from "@groundswell/adapter-bun-server";
+import type { GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
 import { makeService } from "@schnau/effect-drizzle/bun-sqlite";
 import { serve } from "bun";
 import { Effect, Layer } from "effect";
@@ -10,11 +11,34 @@ import { DomainEvent } from "./domain/events";
 import index from "./index.html";
 import { appServerLayer, canonicalStorageLive, memoryBroadcastLive } from "./live/server";
 
+const ensurePromise = <T>(value: T | Promise<T>): Promise<T> => {
+	if (value instanceof Promise) {
+		return value;
+	}
+	return Promise.resolve(value);
+};
+
+const runServerMigrations = (db: GenericDatabaseService<typeof Schema>) =>
+	Effect.gen(function* () {
+		const migrationSql = yield* Effect.promise(() =>
+			Bun.file("./drizzle/0000_conscious_northstar.sql").text(),
+		);
+		const statements = migrationSql
+			.split("--> statement-breakpoint")
+			.map((statement) => statement.trim())
+			.filter((statement) => statement.length > 0);
+
+		for (const statement of statements) {
+			const normalized = statement.replace(/^CREATE TABLE /u, "CREATE TABLE IF NOT EXISTS ");
+			yield* db.execute((client) => ensurePromise(client.run(normalized)));
+		}
+	});
+
 const BunDatabaseLive = Layer.effect(
 	Database,
 	makeService(
 		{
-			url: "file:./db.sqlite",
+			url: `file:${process.env.GROUNDSWELL_SERVER_DB_PATH ?? "./db.sqlite"}`,
 			schema: Schema,
 		},
 		Database,
@@ -22,6 +46,9 @@ const BunDatabaseLive = Layer.effect(
 );
 
 const server = Effect.gen(function* () {
+	const db = yield* Database;
+	yield* runServerMigrations(db);
+
 	const ingestEngine = yield* DomainIngestEngine;
 	const broadcast = yield* DomainBroadcast;
 
@@ -45,6 +72,19 @@ const server = Effect.gen(function* () {
 	const server = serve({
 		idleTimeout: 255,
 		routes: {
+			"/drizzle/meta/_journal.json": {
+				GET: () => new Response(Bun.file("./drizzle/meta/_journal.json")),
+			},
+			"/drizzle/0000_conscious_northstar.sql": {
+				GET: () => new Response(Bun.file("./drizzle/0000_conscious_northstar.sql")),
+			},
+			"/src/drizzle/meta/_journal.json": {
+				GET: () => new Response(Bun.file("./drizzle/meta/_journal.json")),
+			},
+			"/src/drizzle/0000_conscious_northstar.sql": {
+				GET: () => new Response(Bun.file("./drizzle/0000_conscious_northstar.sql")),
+			},
+
 			// Serve index.html for all unmatched routes.
 			"/*": index,
 

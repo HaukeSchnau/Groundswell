@@ -171,4 +171,44 @@ describe("DrizzleStorageAdapter", () => {
 			Effect.provide(bunDatabaseLive),
 		),
 	);
+
+	it.effect("filters malformed rows from pending replay stream", () =>
+		Effect.gen(function* () {
+			const storage = yield* DomainStorage;
+			const db = yield* Database;
+
+			yield* storage.saveEvent(
+				{
+					id: "123e4567-e89b-42d3-a456-426614174112",
+					timestamp: new Date(1_000),
+					type: "test.event",
+					data: { value: 1 },
+				},
+				{ local: "pending", remote: "pending" },
+			);
+
+			yield* db.execute((client) =>
+				client.insert(EventsTable).values({
+					id: "123e4567-e89b-42d3-a456-426614174113",
+					timestamp: new Date(2_000),
+					type: "test.event",
+					data: "not-superjson",
+					localStatus: "pending",
+					remoteStatus: "pending",
+				}),
+			);
+
+			const pendingEvents = yield* storage.getPendingEvents.pipe(Stream.runCollect);
+			expect(pendingEvents).toHaveLength(1);
+			expect(pendingEvents[0]?.event.id).toBe("123e4567-e89b-42d3-a456-426614174112");
+		}).pipe(
+			Effect.provide(
+				createDrizzleStorageLayer(DomainStorage, {
+					db: Database,
+					eventSchema: TestEventUnion,
+				}),
+			),
+			Effect.provide(bunDatabaseLive),
+		),
+	);
 });

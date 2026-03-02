@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, PubSub, pipe, Ref, ServiceMap, Stream } from "effect";
 import { TestClock } from "effect/testing";
-import { StorageError, TransportError, ValidationError } from "./errors.js";
+import { DuplicateEventError, StorageError, TransportError, ValidationError } from "./errors.js";
 import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
 import { syncEngineLive } from "./live.js";
 
@@ -291,6 +291,164 @@ describe("SyncEngine", () => {
 			expect(remoteUpdate?.status).toEqual({ remote: "success" });
 		}).pipe(Effect.scoped);
 	});
+
+	it.effect("should mark remote status as error on non-retryable transport failures", () =>
+		Effect.gen(function* () {
+			const failingTransport = Layer.succeed(
+				DomainTransport,
+				DomainTransport.of({
+					publish: () =>
+						Effect.fail(
+							new TransportError({
+								cause: new Error("Bad request"),
+								isRetryable: false,
+							}),
+						),
+					listen: () => Effect.succeed(Stream.empty),
+				}),
+			);
+			const testLayer = Layer.provide(
+				engine,
+				Layer.mergeAll(failingTransport, mockStorage, mockApplicator),
+			);
+			const engineLive = yield* testLayer.pipe(
+				Layer.build,
+				Effect.map((layer) => ServiceMap.get(layer, DomainSyncEngine)),
+			);
+
+			yield* engineLive.ingest({ type: "test.event", data: { value: 1 } });
+			yield* TestClock.adjust("2 seconds");
+
+			const updates = yield* Ref.get(storageUpdateCalls);
+			const remoteUpdate = updates.find((update) => update.status.remote !== undefined);
+			expect(remoteUpdate?.status).toEqual({ remote: "error" });
+		}).pipe(Effect.scoped),
+	);
+
+	it.effect("should treat duplicate publish as remote success", () =>
+		Effect.gen(function* () {
+			const duplicateTransport = Layer.succeed(
+				DomainTransport,
+				DomainTransport.of({
+					publish: (event) =>
+						Effect.fail(
+							new DuplicateEventError({
+								eventId: event.id,
+							}),
+						),
+					listen: () => Effect.succeed(Stream.empty),
+				}),
+			);
+			const testLayer = Layer.provide(
+				engine,
+				Layer.mergeAll(duplicateTransport, mockStorage, mockApplicator),
+			);
+			const engineLive = yield* testLayer.pipe(
+				Layer.build,
+				Effect.map((layer) => ServiceMap.get(layer, DomainSyncEngine)),
+			);
+
+			yield* engineLive.ingest({ type: "test.event", data: { value: 5 } });
+			yield* TestClock.adjust("2 seconds");
+
+			const updates = yield* Ref.get(storageUpdateCalls);
+			const remoteUpdate = updates.find((update) => update.status.remote !== undefined);
+			expect(remoteUpdate?.status).toEqual({ remote: "success" });
+		}).pipe(Effect.scoped),
+	);
+
+	it.effect("replays pending events in order and only publishes remote-pending items", () => {
+		const pendingA: LocalEvent<TestEvent> = {
+			event: {
+				id: "pending-a",
+				timestamp: new Date(1_000),
+				type: "test.event",
+				data: { value: 1 },
+			},
+			status: {
+				local: "pending",
+				remote: "pending",
+			},
+		};
+		const pendingB: LocalEvent<TestEvent> = {
+			event: {
+				id: "pending-b",
+				timestamp: new Date(2_000),
+				type: "test.event",
+				data: { value: 2 },
+			},
+			status: {
+				local: "pending",
+				remote: "success",
+			},
+		};
+
+		const replayStorage = Layer.succeed(
+			DomainStorage,
+			DomainStorage.of({
+				getPendingEvents: Stream.fromIterable([pendingA, pendingB]),
+				saveEvent: (event, status) =>
+					Ref.update(storageSaveCalls, (calls) => [...calls, { event, status }]),
+				updateEventStatus: (eventId, status) =>
+					Ref.update(storageUpdateCalls, (calls) => [...calls, { id: eventId, status }]),
+			}),
+		);
+		const replayTransport = Layer.succeed(
+			DomainTransport,
+			DomainTransport.of({
+				publish: (event) => Ref.update(transportPublishCalls, (calls) => [...calls, event]),
+				listen: () => Effect.succeed(Stream.empty),
+			}),
+		);
+		const testLayer = Layer.provide(
+			engine,
+			Layer.mergeAll(replayStorage, replayTransport, mockApplicator),
+		);
+
+		return Effect.gen(function* () {
+			yield* TestClock.adjust("2 seconds");
+
+			const applied = yield* Ref.get(applicatorApplyCalls);
+			expect(applied[0]?.id).toBe("pending-a");
+
+			const published = yield* Ref.get(transportPublishCalls);
+			expect(published.map((event) => event.id)).toEqual(["pending-a"]);
+		}).pipe(Effect.provide(testLayer), Effect.scoped);
+	});
+
+	it.effect("continues local ingest when listen stream setup fails", () =>
+		Effect.gen(function* () {
+			const brokenListenerTransport = Layer.succeed(
+				DomainTransport,
+				DomainTransport.of({
+					publish: (event) => Ref.update(transportPublishCalls, (calls) => [...calls, event]),
+					listen: () =>
+						Effect.succeed(
+							Stream.fail(
+								new TransportError({
+									cause: new Error("listen failed"),
+									isRetryable: true,
+								}),
+							),
+						),
+				}),
+			);
+			const testLayer = Layer.provide(
+				engine,
+				Layer.mergeAll(brokenListenerTransport, mockStorage, mockApplicator),
+			);
+			const engineLive = yield* testLayer.pipe(
+				Layer.build,
+				Effect.map((layer) => ServiceMap.get(layer, DomainSyncEngine)),
+			);
+
+			yield* engineLive.ingest({ type: "test.event", data: { value: 7 } });
+			yield* TestClock.adjust("2 seconds");
+
+			const published = yield* Ref.get(transportPublishCalls);
+			expect(published).toHaveLength(1);
+		}).pipe(Effect.scoped),
+	);
 
 	it.effect("should handle duplicate events gracefully without processing them", () => {
 		const mockStorageWithDuplicate = Layer.succeed(

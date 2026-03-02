@@ -143,7 +143,10 @@
 				"typescript/no-unsafe-call": "off",
 				"vitest/prefer-import-in-mock": "off",
 				"vitest/no-importing-vitest-globals": "off",
+				"vitest/prefer-called-once": "off",
 				"jest/no-untyped-mock-factory": "off",
+				"import/no-nodejs-modules": "off",
+				"promise/avoid-new": "off",
 				"eslint/no-empty-function": "off",
 				"eslint/class-methods-use-this": "off",
 				"eslint/require-await": "off",
@@ -151,7 +154,12 @@
 			}
 		},
 		{
-			"files": ["vitest.config.ts", "packages/*/vitest.config.ts", "examples/*/drizzle.config.ts"],
+			"files": [
+				"vitest.config.ts",
+				"packages/*/vitest.config.ts",
+				"examples/*/drizzle.config.ts",
+				"playwright.config.ts"
+			],
 			"rules": {
 				"import/no-default-export": "off",
 				"node/no-process-env": "off"

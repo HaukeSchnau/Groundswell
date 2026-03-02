@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ApplicatorError, ValidationError } from "@groundswell/core";
 import { Effect, Layer, pipe, Ref, ServiceMap, Stream } from "effect";
-import { CanonicalStorageError } from "./errors.js";
+import { BroadcastError, CanonicalStorageError, UserNotFoundError } from "./errors.js";
 import type { Broadcast, CanonicalStorage, IngestEngine, ServerApplicator } from "./interface.js";
 import { ingestEngineLive } from "./live.js";
 
@@ -257,6 +258,208 @@ describe("IngestEngine", () => {
 			expect(result._tag).toBe("Success");
 			expect(publishedEvents).toHaveLength(1);
 			expect(publishedEvents[0]?.map((publishedEvent) => publishedEvent.id)).toEqual([event.id]);
+		}).pipe(Effect.provide(testLayer));
+	});
+
+	it.effect("fails ingest when verify fails", () => {
+		const failingApplicator = Layer.succeed(
+			DomainServerApplicator,
+			DomainServerApplicator.of({
+				verify: () => Effect.fail(new ValidationError({ cause: "invalid", reason: "INVALID" })),
+				apply: () => Effect.void,
+				getEventTopics: () => Effect.succeed(["topic1"]),
+				getUserTopics: () => Effect.succeed(["topic1"]),
+			}),
+		);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(failingApplicator, mockStorage(makeRef(true)), mockBroadcast()),
+		);
+
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
+			const error = yield* Effect.flip(
+				engine.ingest(
+					{
+						id: "verify-failure",
+						timestamp: new Date(),
+						type: "test.event",
+						data: { value: 1 },
+					},
+					{ initiatorId: "user-1" },
+				),
+			);
+			expect(error._tag).toBe("ValidationError");
+		}).pipe(Effect.provide(testLayer));
+	});
+
+	it.effect("fails ingest when apply fails", () => {
+		const failingApplicator = Layer.succeed(
+			DomainServerApplicator,
+			DomainServerApplicator.of({
+				verify: () => Effect.void,
+				apply: () => Effect.fail(new ApplicatorError({ cause: "apply failed" })),
+				getEventTopics: () => Effect.succeed(["topic1"]),
+				getUserTopics: () => Effect.succeed(["topic1"]),
+			}),
+		);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(failingApplicator, mockStorage(makeRef(true)), mockBroadcast()),
+		);
+
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
+			const error = yield* Effect.flip(
+				engine.ingest(
+					{
+						id: "apply-failure",
+						timestamp: new Date(),
+						type: "test.event",
+						data: { value: 1 },
+					},
+					{ initiatorId: "user-1" },
+				),
+			);
+			expect(error._tag).toBe("ApplicatorError");
+		}).pipe(Effect.provide(testLayer));
+	});
+
+	it.effect("fails ingest when broadcast fails", () => {
+		const failingBroadcast = Layer.succeed(
+			DomainBroadcast,
+			DomainBroadcast.of({
+				publishToUser: () => Effect.fail(new BroadcastError({ cause: "publish failed" })),
+				subscribe: () => Stream.empty,
+			}),
+		);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(mockApplicator, mockStorage(makeRef(true)), failingBroadcast),
+		);
+
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
+			const error = yield* Effect.flip(
+				engine.ingest(
+					{
+						id: "broadcast-failure",
+						timestamp: new Date(),
+						type: "test.event",
+						data: { value: 1 },
+					},
+					{ initiatorId: "user-1" },
+				),
+			);
+			expect(error._tag).toBe("BroadcastError");
+		}).pipe(Effect.provide(testLayer));
+	});
+
+	it.effect("publishes only current event when no missing events are returned", () => {
+		const publishedEventsRef = makeRef<TestEvent[][]>([]);
+		const recordedTopicsRef = makeRef<string[][]>([]);
+		const applicatorWithEmptyTopics = Layer.succeed(
+			DomainServerApplicator,
+			DomainServerApplicator.of({
+				verify: () => Effect.succeed(void 0),
+				apply: () => Effect.succeed(void 0),
+				getEventTopics: () => Effect.succeed([]),
+				getUserTopics: () => Effect.succeed([]),
+			}),
+		);
+		const storageWithTopicCapture = Layer.succeed(
+			DomainCanonicalStorage,
+			DomainCanonicalStorage.of({
+				isEventUnique: () => Effect.succeed(true),
+				saveEvent: () => Effect.succeed(void 0),
+				getMissingEventsForUser: (_userId, topics) =>
+					Ref.update(recordedTopicsRef, (allTopics) => [...allTopics, topics]).pipe(Effect.as([])),
+				getEventsSentToUser: () => Effect.succeed([]),
+				markEventAsSentToUser: () => Effect.succeed(void 0),
+			}),
+		);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(
+				applicatorWithEmptyTopics,
+				storageWithTopicCapture,
+				mockBroadcast(publishedEventsRef),
+			),
+		);
+
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
+			const event = {
+				id: "single-event",
+				timestamp: new Date(),
+				type: "test.event" as const,
+				data: { value: 1 },
+			};
+
+			yield* engine.ingest(event, { initiatorId: "user-1" });
+
+			const recordedTopics = yield* Ref.get(recordedTopicsRef);
+			const publishedEvents = yield* Ref.get(publishedEventsRef);
+			expect(recordedTopics).toEqual([[]]);
+			expect(publishedEvents).toHaveLength(1);
+			expect(publishedEvents[0]?.map((publishedEvent) => publishedEvent.id)).toEqual([event.id]);
+		}).pipe(Effect.provide(testLayer));
+	});
+
+	it.effect("fails ingest when user topics cannot be loaded", () => {
+		const noUserApplicator = Layer.succeed(
+			DomainServerApplicator,
+			DomainServerApplicator.of({
+				verify: () => Effect.void,
+				apply: () => Effect.void,
+				getEventTopics: () => Effect.succeed(["topic1"]),
+				getUserTopics: () => Effect.fail(new UserNotFoundError({ userId: "missing" })),
+			}),
+		);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(noUserApplicator, mockStorage(makeRef(true)), mockBroadcast()),
+		);
+
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
+			const error = yield* Effect.flip(
+				engine.ingest(
+					{
+						id: "user-not-found",
+						timestamp: new Date(),
+						type: "test.event",
+						data: { value: 1 },
+					},
+					{ initiatorId: "user-1" },
+				),
+			);
+			expect(error._tag).toBe("UserNotFoundError");
 		}).pipe(Effect.provide(testLayer));
 	});
 });
