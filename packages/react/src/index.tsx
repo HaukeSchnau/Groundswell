@@ -1,12 +1,12 @@
 import type { SyncEngine } from "@groundswell/core";
-import { type Context, Effect, Fiber, type ManagedRuntime, Stream } from "effect";
+import { Effect, Fiber, type ManagedRuntime, type ServiceMap, Stream } from "effect";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 // --- Context Setup ---
 
 export const syncEngineFactory = <TEvent, TEngineTag, TContextTag, TContext>(
-	syncEngineTag: Context.Tag<TEngineTag, SyncEngine<TEvent>>,
-	_contextTag: Context.Tag<TContextTag, TContext>,
+	syncEngineTag: ServiceMap.Service<TEngineTag, SyncEngine<TEvent>>,
+	_contextTag: ServiceMap.Service<TContextTag, TContext>,
 ) => {
 	// The context will hold the live SyncEngine service instance.
 	const SyncEngineContext = createContext<ManagedRuntime.ManagedRuntime<

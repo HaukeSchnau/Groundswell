@@ -3,7 +3,7 @@ import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import type { DatabaseService } from "@schnau/effect-drizzle/postgres";
 import { and, asc, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import { index, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { type Context, Effect, Layer, pipe } from "effect";
+import { Effect, Layer, pipe, type ServiceMap } from "effect";
 import superjson from "superjson";
 import type { z } from "zod";
 
@@ -54,7 +54,7 @@ type Schema = {
 };
 
 export interface DrizzleCanonicalStorageConfig<TEvent, TSchema extends Schema, TagId> {
-	db: Context.Tag<TagId, DatabaseService<TSchema>>;
+	db: ServiceMap.Service<TagId, DatabaseService<TSchema>>;
 	eventSchema: z.ZodSchema<TEvent>;
 }
 
@@ -180,7 +180,7 @@ export const createDrizzleCanonicalStorageLayer = <
 	TSchema extends Schema,
 	DbTagId,
 >(
-	CanonicalStorageTag: Context.Tag<TagId, CanonicalStorage<TEvent>>,
+	CanonicalStorageTag: ServiceMap.Service<TagId, CanonicalStorage<TEvent>>,
 	config: DrizzleCanonicalStorageConfig<TEvent, TSchema, DbTagId>,
 ) =>
 	Layer.effect(

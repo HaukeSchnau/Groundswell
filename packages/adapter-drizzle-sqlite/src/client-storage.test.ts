@@ -4,7 +4,7 @@ import { createDomainEvent, createEventUnion } from "@groundswell/zod-helpers";
 import type { GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
 import { makeService } from "@schnau/effect-drizzle/libsql";
 import { eq } from "drizzle-orm";
-import { Chunk, Context, Effect, Layer, pipe, Redacted, Stream } from "effect";
+import { Chunk, Effect, Layer, pipe, Redacted, ServiceMap, Stream } from "effect";
 import { z } from "zod";
 import { createDrizzleStorageLayer, EventsTable } from "./client-storage.js";
 
@@ -21,16 +21,18 @@ const ensurePromise = <T>(value: T | Promise<T>): Promise<T> => {
 };
 
 describe("DrizzleStorageAdapter", () => {
-	class DomainStorage extends Context.Tag("DomainStorage")<DomainStorage, Storage<TestEvent>>() {}
+	class DomainStorage extends ServiceMap.Service<DomainStorage, Storage<TestEvent>>()(
+		"DomainStorage",
+	) {}
 
 	const Schema = {
 		eventLog: EventsTable,
 	};
 	// const Database = genericDatabaseFactory<typeof Schema>();
-	class Database extends Context.Tag("Database")<
+	class Database extends ServiceMap.Service<
 		Database,
 		GenericDatabaseService<typeof Schema>
-	>() {}
+	>()("Database") {}
 
 	const bunDatabaseLive = Layer.scoped(
 		Database,

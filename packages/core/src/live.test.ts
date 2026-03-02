@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	Chunk,
-	Context,
 	Effect,
 	Layer,
 	Logger,
 	PubSub,
 	pipe,
 	Ref,
+	ServiceMap,
 	Stream,
 	TestClock,
 } from "effect";
@@ -23,19 +23,21 @@ type TestEvent = {
 	data: { value: number };
 };
 
-class DomainApplicator extends Context.Tag("Applicator")<
+class DomainApplicator extends ServiceMap.Service<
 	DomainApplicator,
 	Applicator<TestEvent>
->() {}
+>()("Applicator") {}
 
-class DomainStorage extends Context.Tag("Storage")<DomainStorage, Storage<TestEvent>>() {}
+class DomainStorage extends ServiceMap.Service<DomainStorage, Storage<TestEvent>>()("Storage") {}
 
-class DomainTransport extends Context.Tag("Transport")<DomainTransport, Transport<TestEvent>>() {}
+class DomainTransport extends ServiceMap.Service<DomainTransport, Transport<TestEvent>>()(
+	"Transport",
+) {}
 
-class DomainSyncEngine extends Context.Tag("SyncEngine")<
+class DomainSyncEngine extends ServiceMap.Service<
 	DomainSyncEngine,
 	SyncEngine<TestEvent>
->() {}
+>()("SyncEngine") {}
 
 describe("SyncEngine", () => {
 	// --- Mocks and Test State ---
@@ -286,7 +288,7 @@ describe("SyncEngine", () => {
 
 			const engineLive = yield* testLayer.pipe(
 				Layer.build,
-				Effect.map((layer) => Context.get(layer, DomainSyncEngine)),
+				Effect.map((layer) => ServiceMap.get(layer, DomainSyncEngine)),
 			);
 
 			yield* engineLive.ingest({ type: "test.event", data: { value: 1 } });

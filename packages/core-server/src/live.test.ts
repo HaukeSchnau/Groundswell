@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Context, Effect, Layer, pipe, Ref, Stream } from "effect";
+import { Effect, Layer, pipe, Ref, ServiceMap, Stream } from "effect";
 import { CanonicalStorageError } from "./errors.js";
 import type { Broadcast, CanonicalStorage, IngestEngine, ServerApplicator } from "./interface.js";
 import { ingestEngineLive } from "./live.js";
@@ -11,25 +11,25 @@ type TestEvent = {
 	data: { value: number };
 };
 
-class DomainIngestEngine extends Context.Tag("DomainIngestEngine")<
+class DomainIngestEngine extends ServiceMap.Service<
 	DomainIngestEngine,
 	IngestEngine<TestEvent>
->() {}
+>()("DomainIngestEngine") {}
 
-class DomainServerApplicator extends Context.Tag("DomainServerApplicator")<
+class DomainServerApplicator extends ServiceMap.Service<
 	DomainServerApplicator,
 	ServerApplicator<TestEvent>
->() {}
+>()("DomainServerApplicator") {}
 
-class DomainCanonicalStorage extends Context.Tag("DomainCanonicalStorage")<
+class DomainCanonicalStorage extends ServiceMap.Service<
 	DomainCanonicalStorage,
 	CanonicalStorage<TestEvent>
->() {}
+>()("DomainCanonicalStorage") {}
 
-class DomainBroadcast extends Context.Tag("DomainBroadcast")<
+class DomainBroadcast extends ServiceMap.Service<
 	DomainBroadcast,
 	Broadcast<TestEvent>
->() {}
+>()("DomainBroadcast") {}
 
 // Mock implementations for testing the engine's orchestration
 const mockApplicator = Layer.succeed(

@@ -21,7 +21,7 @@
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"devDependencies": {
-		"@types/react": "^19.1.8"
+		"@types/react": "^19.2.14"
 	},
 	"peerDependencies": {
 		"@groundswell/core": "*",

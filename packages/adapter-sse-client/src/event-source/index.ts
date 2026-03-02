@@ -1,4 +1,4 @@
-import { Context, Data, type Option, type Stream } from "effect";
+import { Data, ServiceMap, type Option, type Stream } from "effect";
 
 /**
  * Represents a single message received from an EventSource.
@@ -32,7 +32,7 @@ export class EventSourceError extends Data.TaggedError("EventSourceError")<{
  * Effect Context Tag for the EventSourceService.
  * This is used for dependency injection.
  */
-export class EventSourceService extends Context.Tag("EventSourceService")<
+export class EventSourceService extends ServiceMap.Service<
 	EventSourceService,
 	{
 		readonly connect: (
@@ -42,4 +42,4 @@ export class EventSourceService extends Context.Tag("EventSourceService")<
 			}, // Standard EventSourceInit options
 		) => Stream.Stream<EventSourceMessage, EventSourceError>;
 	}
->() {}
+>()("EventSourceService") {}

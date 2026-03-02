@@ -12,7 +12,7 @@ import type {
 } from "@schnau/effect-drizzle/generic-sqlite";
 import { asc, eq, or } from "drizzle-orm";
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { type Context, Effect, Layer, pipe, Stream } from "effect";
+import { Effect, Layer, pipe, type ServiceMap, Stream } from "effect";
 import superjson from "superjson";
 import type { z } from "zod";
 import { sqliteEnum, timestamp, uuid } from "./helpers.js";
@@ -37,7 +37,7 @@ type Schema = {
 // Define the configuration for creating the storage layer.
 export interface DrizzleStorageConfig<TEvent, TSchema extends Schema, TagId> {
 	/** The Drizzle database client instance. */
-	db: Context.Tag<TagId, GenericDatabaseService<TSchema>>;
+	db: ServiceMap.Service<TagId, GenericDatabaseService<TSchema>>;
 	/** The Zod schema for parsing events, to ensure type safety on retrieval. */
 	eventSchema: z.ZodSchema<TEvent>;
 }
@@ -117,7 +117,7 @@ export const createDrizzleStorageLayer = <
 	TSchema extends Schema,
 	DbTagId,
 >(
-	StorageTag: Context.Tag<TagId, Storage<TEvent>>,
+	StorageTag: ServiceMap.Service<TagId, Storage<TEvent>>,
 	config: DrizzleStorageConfig<TEvent, TSchema, DbTagId>,
 ): Layer.Layer<TagId, never, DbTagId> =>
 	Layer.effect(

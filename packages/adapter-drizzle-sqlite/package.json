@@ -21,19 +21,18 @@
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
 	"devDependencies": {
-		"@effect/test": "^0.1.0",
 		"@types/better-sqlite3": "^7.6.13",
-		"better-sqlite3": "^12.1.1",
-		"drizzle-kit": "^0.31.4"
+		"better-sqlite3": "^12.6.2",
+		"drizzle-kit": "^0.31.9"
 	},
 	"peerDependencies": {
 		"@groundswell/core": "*",
 		"@groundswell/core-server": "*",
 		"@groundswell/zod-helpers": "*",
-		"@schnau/effect-drizzle": "^0.5.1",
-		"drizzle-orm": "^0.44",
-		"effect": "^3",
-		"superjson": "^2",
-		"zod": "^3"
+		"@schnau/effect-drizzle": "^0.5.10",
+		"drizzle-orm": "^0.45.1",
+		"effect": "^4.0.0-beta.23",
+		"superjson": "^2.2.6",
+		"zod": "^4.3.6"
 	}
 }

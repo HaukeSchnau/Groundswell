@@ -7,7 +7,7 @@ import type {
 } from "@schnau/effect-drizzle/generic-sqlite";
 import { and, asc, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { type Context, Effect, Layer, pipe } from "effect";
+import { Effect, Layer, pipe, type ServiceMap } from "effect";
 import superjson from "superjson";
 import type { z } from "zod";
 import { timestamp, uuid } from "./helpers.js";
@@ -56,7 +56,7 @@ type Schema = {
 };
 
 export interface DrizzleCanonicalStorageConfig<TEvent, TSchema extends Schema, TagId> {
-	db: Context.Tag<TagId, GenericDatabaseService<TSchema>>;
+	db: ServiceMap.Service<TagId, GenericDatabaseService<TSchema>>;
 	eventSchema: z.ZodSchema<TEvent>;
 }
 
@@ -203,7 +203,7 @@ export const createDrizzleCanonicalStorageLayer = <
 	TSchema extends Schema,
 	DbTagId,
 >(
-	CanonicalStorageTag: Context.Tag<TagId, CanonicalStorage<TEvent>>,
+	CanonicalStorageTag: ServiceMap.Service<TagId, CanonicalStorage<TEvent>>,
 	config: DrizzleCanonicalStorageConfig<TEvent, TSchema, DbTagId>,
 ): Layer.Layer<TagId, never, DbTagId> =>
 	Layer.effect(

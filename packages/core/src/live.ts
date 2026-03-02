@@ -1,5 +1,4 @@
 import {
-	Context,
 	Duration,
 	Effect,
 	Layer,
@@ -8,15 +7,16 @@ import {
 	pipe,
 	Queue,
 	Schedule,
+	ServiceMap,
 	Stream,
 } from "effect";
 import { StorageError } from "./errors.js";
 import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
 
-export class RandomUUID extends Context.Tag("RandomUUID")<
+export class RandomUUID extends ServiceMap.Service<
 	RandomUUID,
 	{ readonly next: Effect.Effect<string> }
->() {}
+>()("RandomUUID") {}
 
 const randomUUID = pipe(
 	Effect.serviceOption(RandomUUID),
@@ -51,10 +51,10 @@ export const syncEngineLive = <
 	IdStorage,
 	IdTransport,
 >(
-	tag: Context.Tag<IdSelf, SyncEngine<TEvent>>,
-	applicatorTag: Context.Tag<IdApplicator, Applicator<TEvent>>,
-	storageTag: Context.Tag<IdStorage, Storage<TEvent>>,
-	transportTag: Context.Tag<IdTransport, Transport<TEvent>>,
+	tag: ServiceMap.Service<IdSelf, SyncEngine<TEvent>>,
+	applicatorTag: ServiceMap.Service<IdApplicator, Applicator<TEvent>>,
+	storageTag: ServiceMap.Service<IdStorage, Storage<TEvent>>,
+	transportTag: ServiceMap.Service<IdTransport, Transport<TEvent>>,
 	options?: { offset?: number },
 ) =>
 	Layer.scoped(

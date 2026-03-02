@@ -7,46 +7,48 @@ import {
 	type ServerApplicator,
 } from "@groundswell/core-server";
 import { syncEngineFactory } from "@groundswell/react";
-import { Context } from "effect";
+import { ServiceMap } from "effect";
 import { Database } from "./domain/db/contract";
 import type { DomainEvent } from "./domain/events";
 
-export class DomainApplicator extends Context.Tag("Applicator")<
+export class DomainApplicator extends ServiceMap.Service<
 	DomainApplicator,
 	Applicator<DomainEvent>
->() {}
+>()("Applicator") {}
 
-export class DomainStorage extends Context.Tag("Storage")<DomainStorage, Storage<DomainEvent>>() {}
+export class DomainStorage extends ServiceMap.Service<DomainStorage, Storage<DomainEvent>>()(
+	"Storage",
+) {}
 
-export class DomainCanonicalStorage extends Context.Tag("CanonicalStorage")<
+export class DomainCanonicalStorage extends ServiceMap.Service<
 	DomainCanonicalStorage,
 	CanonicalStorage<DomainEvent>
->() {}
+>()("CanonicalStorage") {}
 
-export class DomainTransport extends Context.Tag("Transport")<
+export class DomainTransport extends ServiceMap.Service<
 	DomainTransport,
 	Transport<DomainEvent>
->() {}
+>()("Transport") {}
 
-export class DomainSyncEngine extends Context.Tag("SyncEngine")<
+export class DomainSyncEngine extends ServiceMap.Service<
 	DomainSyncEngine,
 	SyncEngine<DomainEvent>
->() {}
+>()("SyncEngine") {}
 
-export class DomainServerApplicator extends Context.Tag("ServerApplicator")<
+export class DomainServerApplicator extends ServiceMap.Service<
 	DomainServerApplicator,
 	ServerApplicator<DomainEvent>
->() {}
+>()("ServerApplicator") {}
 
-export class DomainBroadcast extends Context.Tag("Broadcast")<
+export class DomainBroadcast extends ServiceMap.Service<
 	DomainBroadcast,
 	Broadcast<DomainEvent>
->() {}
+>()("Broadcast") {}
 
-export class DomainIngestEngine extends Context.Tag("IngestEngine")<
+export class DomainIngestEngine extends ServiceMap.Service<
 	DomainIngestEngine,
 	IngestEngine<DomainEvent>
->() {}
+>()("IngestEngine") {}
 
 export const ingestEngine = ingestEngineLive(
 	DomainIngestEngine,

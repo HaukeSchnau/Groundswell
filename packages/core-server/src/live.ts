@@ -1,6 +1,6 @@
 import { DuplicateEventError } from "@groundswell/core";
 import type { EventMeta } from "@groundswell/zod-helpers";
-import { type Context, Effect, Layer } from "effect";
+import { Effect, Layer, type ServiceMap } from "effect";
 import type { Broadcast, CanonicalStorage, IngestEngine, ServerApplicator } from "./interface.js";
 
 export const ingestEngineLive = <
@@ -10,10 +10,10 @@ export const ingestEngineLive = <
 	IdStorage,
 	IdBroadcast,
 >(
-	tag: Context.Tag<IdSelf, IngestEngine<TEvent>>,
-	serverApplicatorTag: Context.Tag<IdApplicator, ServerApplicator<TEvent>>,
-	canonicalStorageTag: Context.Tag<IdStorage, CanonicalStorage<TEvent>>,
-	broadcastTag: Context.Tag<IdBroadcast, Broadcast<TEvent>>,
+	tag: ServiceMap.Service<IdSelf, IngestEngine<TEvent>>,
+	serverApplicatorTag: ServiceMap.Service<IdApplicator, ServerApplicator<TEvent>>,
+	canonicalStorageTag: ServiceMap.Service<IdStorage, CanonicalStorage<TEvent>>,
+	broadcastTag: ServiceMap.Service<IdBroadcast, Broadcast<TEvent>>,
 ) =>
 	Layer.effect(
 		tag,

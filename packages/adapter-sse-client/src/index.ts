@@ -1,5 +1,5 @@
 import { DuplicateEventError, type Transport, TransportError } from "@groundswell/core";
-import { type Context, Effect, Layer, Stream } from "effect";
+import { Effect, Layer, Stream, type ServiceMap } from "effect";
 import superjson from "superjson";
 import type z from "zod";
 import { EventSourceService } from "./event-source/index.js";
@@ -22,7 +22,7 @@ export interface HonoTransportConfig<TEvent> {
  * @returns A Layer that provides the Transport service.
  */
 export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
-	TransportTag: Context.Tag<TagId, Transport<TEvent>>,
+	TransportTag: ServiceMap.Service<TagId, Transport<TEvent>>,
 	config: HonoTransportConfig<TEvent>,
 ) =>
 	Layer.effect(

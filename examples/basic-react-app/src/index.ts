@@ -1,5 +1,4 @@
-import { DevTools } from "@effect/experimental";
-import { BunRuntime, BunSocket } from "@effect/platform-bun";
+import { BunRuntime } from "@effect/platform-bun";
 import { syncServer } from "@groundswell/adapter-bun-server";
 import { makeService } from "@schnau/effect-drizzle/bun-sqlite";
 import { serve } from "bun";
@@ -74,16 +73,11 @@ const server = Effect.gen(function* () {
 	yield* Effect.never;
 });
 
-const DevToolsLive = DevTools.layerWebSocket().pipe(
-	Layer.provide(BunSocket.layerWebSocketConstructor),
-);
-
 const serverLive = server.pipe(
 	Effect.provide(appServerLayer),
 	Effect.provide(memoryBroadcastLive),
 	Effect.provide(canonicalStorageLive),
 	Effect.provide(BunDatabaseLive),
-	Effect.provide(DevToolsLive),
 );
 
 BunRuntime.runMain(serverLive);

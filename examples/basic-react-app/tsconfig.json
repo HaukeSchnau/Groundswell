@@ -8,11 +8,7 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-		"plugins": [
-			{
-				"name": "@effect/language-service"
-			}
-		]
+		"plugins": []
 	},
 	"exclude": ["dist", "node_modules"]
 }
