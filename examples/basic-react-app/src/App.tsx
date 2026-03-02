@@ -154,7 +154,7 @@ const migrationPromise = runMigrations();
 const RuntimeLive: Layer.Layer<DomainSyncEngine | Database> = SyncEngineLive.pipe(
 	Layer.provideMerge(WasmDatabaseLive),
 	Layer.orDie,
-) as Layer.Layer<DomainSyncEngine | Database>;
+);
 
 const runtime = ManagedRuntime.make(RuntimeLive);
 

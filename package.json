@@ -15,6 +15,8 @@
 		"checks:lint:ci": "oxlint --type-aware --type-check --deny-warnings .",
 		"checks:lint:fix-safe": "oxlint --type-aware --type-check --fix .",
 		"checks:lint:fix-all": "oxlint --type-aware --type-check --fix --fix-suggestions --fix-dangerously .",
+		"local:effect-drizzle:repack": "bun scripts/sync-local-effect-drizzle.ts --skip-install",
+		"local:effect-drizzle:sync": "bun scripts/sync-local-effect-drizzle.ts",
 		"pub": "bun run --filter '*' pub",
 		"release": "bun scripts/release.ts",
 		"test": "vitest run",
@@ -22,7 +24,7 @@
 	},
 	"devDependencies": {
 		"@libsql/client": "^0.17.0",
-		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local.tgz",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz",
 		"@typescript/native-preview": "^7.0.0-dev.20260302.1",
 		"drizzle-orm": "0.45.1",
 		"effect": "4.0.0-beta.23",
@@ -38,7 +40,7 @@
 		"typescript": "^5.9.3"
 	},
 	"overrides": {
-		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local.tgz",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz",
 		"drizzle-orm": "0.45.1",
 		"effect": "4.0.0-beta.23",
 		"pg": "8.19.0"

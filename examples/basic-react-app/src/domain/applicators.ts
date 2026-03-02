@@ -3,74 +3,57 @@ import {
 	type NamespaceApplicatorMap,
 	type NamespaceApplicatorTree,
 } from "@groundswell/core";
-import type { DatabaseError, GenericSqliteError } from "@schnau/effect-drizzle/generic-sqlite";
+import type { DatabaseError } from "@schnau/effect-drizzle/generic-sqlite";
 import { eq } from "drizzle-orm";
-import { type Cause, Effect, pipe } from "effect";
+import { Effect, type Cause } from "effect";
 import { queryClient } from "../query-client";
 import { Database } from "./db/contract";
 import * as t from "./db/schema";
 import type { DomainEvent } from "./events";
 
-const note: NamespaceApplicatorMap<
-	DomainEvent,
-	"note",
-	DatabaseError<GenericSqliteError> | Cause.UnknownException,
-	Database
-> = {
+type ApplicatorError = DatabaseError | Cause.UnknownError;
+
+const invalidateNotesQuery = Effect.promise(() =>
+	queryClient.invalidateQueries({
+		queryKey: ["notes"],
+	}),
+);
+
+const note: NamespaceApplicatorMap<DomainEvent, "note", ApplicatorError, Database> = {
 	created: {
-		apply: (event) => {
-			return pipe(
-				Database,
-				Effect.flatMap((db) =>
-					db.execute((client) =>
-						client
-							.insert(t.notes)
-							.values({ id: event.data.id, content: event.data.content })
-							.onConflictDoNothing(),
-					),
-				),
-				Effect.tap(() => queryClient.invalidateQueries({ queryKey: ["notes"] })),
-			);
-		},
+		apply: (event) =>
+			Effect.gen(function* () {
+				const db = yield* Database;
+				yield* db.execute((client) =>
+					client
+						.insert(t.notes)
+						.values({ id: event.data.id, content: event.data.content })
+						.onConflictDoNothing(),
+				);
+				yield* invalidateNotesQuery;
+			}),
 		verify: () => Effect.void,
 	},
 	archived: {
-		apply: (event) => {
-			return pipe(
-				Database,
-				Effect.flatMap((db) =>
-					db.execute((client) =>
-						client
-							.update(t.notes)
-							.set({ isArchived: true })
-							.where(eq(t.notes.id, event.data.noteId)),
-					),
-				),
-				Effect.tap(() => queryClient.invalidateQueries({ queryKey: ["notes"] })),
-			);
-		},
+		apply: (event) =>
+			Effect.gen(function* () {
+				const db = yield* Database;
+				yield* db.execute((client) =>
+					client.update(t.notes).set({ isArchived: true }).where(eq(t.notes.id, event.data.noteId)),
+				);
+				yield* invalidateNotesQuery;
+			}),
 		verify: () => Effect.void,
 	},
 };
-const todo: NamespaceApplicatorMap<
-	DomainEvent,
-	"todo",
-	DatabaseError<GenericSqliteError> | Cause.UnknownException,
-	Database
-> = {
+const todo: NamespaceApplicatorMap<DomainEvent, "todo", ApplicatorError, Database> = {
 	created: {
 		apply: () => Effect.void,
 		verify: () => Effect.void,
 	},
 };
 
-const tree: Partial<
-	NamespaceApplicatorTree<
-		DomainEvent,
-		DatabaseError<GenericSqliteError> | Cause.UnknownException,
-		Database
-	>
-> = {
+const tree: Partial<NamespaceApplicatorTree<DomainEvent, ApplicatorError, Database>> = {
 	note,
 	todo,
 };

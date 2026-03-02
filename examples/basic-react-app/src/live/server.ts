@@ -26,7 +26,7 @@ const serverApplicatorLive = Layer.effect(
 							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
 						ValidationError: (error) =>
 							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
-						UnknownException: (error) =>
+						UnknownError: (error) =>
 							Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
 					}),
 				),
@@ -36,7 +36,7 @@ const serverApplicatorLive = Layer.effect(
 					Effect.provideService(Database, db),
 					Effect.catchTags({
 						DatabaseError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
-						UnknownException: (error) => Effect.fail(new ApplicatorError({ cause: error })),
+						UnknownError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
 					}),
 				),
 			getEventTopics: () => Effect.succeed(["all_notes"]), // Static topic

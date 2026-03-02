@@ -25,7 +25,7 @@ const clientApplicatorsLive = Layer.effect(
 						Effect.catchTags({
 							DatabaseError: (error) =>
 								Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
-							UnknownException: (error) =>
+							UnknownError: (error) =>
 								Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
 						}),
 					),
@@ -38,14 +38,14 @@ const clientApplicatorsLive = Layer.effect(
 						Effect.provideService(Database, db),
 						Effect.catchTags({
 							DatabaseError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
-							UnknownException: (error) => Effect.fail(new ApplicatorError({ cause: error })),
+							UnknownError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
 						}),
 					),
 		});
 	}),
 );
 
-export const WasmDatabaseLive = Layer.effect(
+export const WasmDatabaseLive = Layer.succeed(
 	Database,
 	makeService(
 		{
