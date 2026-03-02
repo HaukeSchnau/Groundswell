@@ -52,21 +52,22 @@ export const ingestEngineLive = <
 				if (eventsToPublish.length > 0) {
 					yield* broadcast.publishToUser(meta.initiatorId, eventsToPublish);
 					yield* Effect.forEach(eventsToPublish, (event) =>
-						storage
-							.markEventAsSentToUser(event.id, meta.initiatorId)
-							.pipe(
-								Effect.catchAll((error) =>
-									Effect.logWarning(
-										`Failed to mark event ${event.id} as sent to user ${meta.initiatorId}: ${error.message}`,
-									),
+						storage.markEventAsSentToUser(event.id, meta.initiatorId).pipe(
+							Effect.tapError((error) =>
+								Effect.logWarning(
+									`Failed to mark event ${event.id} as sent to user ${meta.initiatorId}: ${error.message}`,
 								),
 							),
+							Effect.ignore,
+						),
 					);
 				}
 			});
 
+			const ingest: IngestEngine<TEvent>["ingest"] = (event, meta) => ingestLogic(event, meta);
+
 			return tag.of({
-				ingest: (event, meta) => ingestLogic(event, meta),
+				ingest,
 			});
 		}),
 	);

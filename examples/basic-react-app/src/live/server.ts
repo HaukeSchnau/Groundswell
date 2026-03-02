@@ -61,7 +61,7 @@ export const memoryBroadcastLive = Layer.effect(
 		return DomainBroadcast.of({
 			publishToUser: (userId, events) => {
 				console.log("publishing to user", userId, events);
-				return pubsub.publishAll(events).pipe(Effect.andThen(Effect.void));
+				return PubSub.publishAll(pubsub, events).pipe(Effect.andThen(Effect.void));
 			}, // Simple broadcast, ignores topics
 			subscribe: (userId, options) => {
 				const initStream = Stream.fromIterableEffect(

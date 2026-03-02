@@ -5,11 +5,7 @@ import {
 	StorageError,
 } from "@groundswell/core";
 import type { UnknownEvent } from "@groundswell/zod-helpers";
-import type {
-	DatabaseError,
-	GenericDatabaseService,
-	GenericSqliteError,
-} from "@schnau/effect-drizzle/generic-sqlite";
+import type { DatabaseError, GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
 import { asc, eq, or } from "drizzle-orm";
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { Effect, Layer, pipe, type ServiceMap, Stream } from "effect";
@@ -55,7 +51,7 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	db: GenericDatabaseService<TSchema>,
 	event: TEvent,
 	status: LocalEventStatus,
-): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
+): Effect.Effect<void, DatabaseError> =>
 	db.execute((client) =>
 		client.insert(EventsTable).values({
 			id: event.id,
@@ -71,7 +67,7 @@ const updateEventStatus = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	eventId: string,
 	status: Partial<LocalEventStatus>,
-): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
+): Effect.Effect<void, DatabaseError> =>
 	db.execute((client) =>
 		client
 			.update(EventsTable)

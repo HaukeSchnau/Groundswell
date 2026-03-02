@@ -4,7 +4,7 @@ import { createDomainEvent, createEventUnion } from "@groundswell/zod-helpers";
 import type { GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
 import { makeService } from "@schnau/effect-drizzle/libsql";
 import { eq } from "drizzle-orm";
-import { Chunk, Effect, Layer, pipe, Redacted, ServiceMap, Stream } from "effect";
+import { Effect, Layer, pipe, ServiceMap, Stream } from "effect";
 import { z } from "zod";
 import { createDrizzleStorageLayer, EventsTable } from "./client-storage.js";
 
@@ -12,8 +12,13 @@ import { createDrizzleStorageLayer, EventsTable } from "./client-storage.js";
 
 // 1. Define a test event schema
 const testEvent = createDomainEvent("test.event", { value: z.number() });
-const TestEventUnion = createEventUnion([testEvent]);
-type TestEvent = z.infer<typeof TestEventUnion>;
+type TestEvent = {
+	id: string;
+	timestamp: Date;
+	type: "test.event";
+	data: { value: number };
+};
+const TestEventUnion = createEventUnion([testEvent]) as z.ZodSchema<TestEvent>;
 
 const ensurePromise = <T>(value: T | Promise<T>): Promise<T> => {
 	if (value instanceof Promise) return value;
@@ -29,17 +34,16 @@ describe("DrizzleStorageAdapter", () => {
 		eventLog: EventsTable,
 	};
 	// const Database = genericDatabaseFactory<typeof Schema>();
-	class Database extends ServiceMap.Service<
-		Database,
-		GenericDatabaseService<typeof Schema>
-	>()("Database") {}
+	class Database extends ServiceMap.Service<Database, GenericDatabaseService<typeof Schema>>()(
+		"Database",
+	) {}
 
-	const bunDatabaseLive = Layer.scoped(
+	const bunDatabaseLive = Layer.effect(
 		Database,
 		Effect.gen(function* () {
 			const service: GenericDatabaseService<typeof Schema> = makeService(
 				{
-					url: Redacted.make(":memory:"),
+					url: ":memory:",
 					schema: Schema,
 				},
 				Database,
@@ -150,11 +154,7 @@ describe("DrizzleStorageAdapter", () => {
 			yield* Effect.forEach(events, ({ event, status }) => storage.saveEvent(event, status));
 
 			const pendingStream = storage.getPendingEvents;
-			const result = yield* pipe(
-				pendingStream,
-				Stream.runCollect,
-				Effect.map(Chunk.toReadonlyArray),
-			);
+			const result = yield* pipe(pendingStream, Stream.runCollect);
 
 			expect(result).toHaveLength(2);
 			// Should be ordered by timestamp

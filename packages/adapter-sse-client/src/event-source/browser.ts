@@ -63,7 +63,10 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 						legacyEventSource.onerror = handleError;
 					}
 
-					yield* Scope.addFinalizer(scope, Effect.sync(() => es.close()));
+					yield* Scope.addFinalizer(
+						scope,
+						Effect.sync(() => es.close()),
+					);
 				}),
 			),
 	}),

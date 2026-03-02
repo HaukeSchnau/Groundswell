@@ -22,15 +22,26 @@
 	},
 	"devDependencies": {
 		"@libsql/client": "^0.17.0",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local.tgz",
 		"@typescript/native-preview": "^7.0.0-dev.20260302.1",
+		"drizzle-orm": "0.45.1",
+		"effect": "4.0.0-beta.23",
 		"lefthook": "^2.0.13",
-		"oxfmt": "^0.35.0",
-		"oxlint": "^1.50.0",
+		"oxfmt": "^0.36.0",
+		"oxlint": "^1.51.0",
 		"oxlint-tsgolint": "^0.15.0",
+		"pg": "^8.19.0",
+		"typescript": "^5.9.3",
 		"vitest": "^4.0.18"
 	},
 	"peerDependencies": {
 		"typescript": "^5.9.3"
+	},
+	"overrides": {
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local.tgz",
+		"drizzle-orm": "0.45.1",
+		"effect": "4.0.0-beta.23",
+		"pg": "8.19.0"
 	},
 	"patchedDependencies": {
 		"@libsql/libsql-wasm-experimental@0.0.2": "patches/@libsql%2Flibsql-wasm-experimental@0.0.2.patch",

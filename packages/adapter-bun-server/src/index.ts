@@ -1,7 +1,7 @@
 import type { Broadcast, IngestEngine } from "@groundswell/core-server";
-import { Effect, Stream } from "effect";
+import { Cause, Effect, Option, Stream } from "effect";
 import superjson from "superjson";
-import type z from "zod";
+import type { z } from "zod";
 
 interface HonoServerConfig<TEvent> {
 	ingestEngine: IngestEngine<TEvent>;
@@ -32,14 +32,16 @@ export const syncServer = <TEvent>(config: HonoServerConfig<TEvent>) => ({
 		);
 
 		if (result._tag === "Failure") {
-			if (result.cause._tag === "Fail") {
-				if (result.cause.error._tag === "DuplicateEventError") {
+			const failure = Cause.findErrorOption(result.cause);
+			if (Option.isSome(failure)) {
+				const error = failure.value;
+				if (error._tag === "DuplicateEventError") {
 					return new Response("Duplicate event", { status: 409 });
 				}
-				if (result.cause.error._tag === "ValidationError") {
+				if (error._tag === "ValidationError") {
 					return new Response("Invalid event", { status: 400 });
 				}
-				if (result.cause.error._tag === "UserNotFoundError") {
+				if (error._tag === "UserNotFoundError") {
 					return new Response("Unauthorized", { status: 403 });
 				}
 			}

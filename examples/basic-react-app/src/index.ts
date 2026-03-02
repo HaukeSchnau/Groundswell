@@ -2,7 +2,7 @@ import { BunRuntime } from "@effect/platform-bun";
 import { syncServer } from "@groundswell/adapter-bun-server";
 import { makeService } from "@schnau/effect-drizzle/bun-sqlite";
 import { serve } from "bun";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer } from "effect";
 import { DomainBroadcast, DomainIngestEngine } from "./boilerplate";
 import { Database } from "./domain/db/contract";
 import * as Schema from "./domain/db/schema";
@@ -10,11 +10,11 @@ import { DomainEvent } from "./domain/events";
 import index from "./index.html";
 import { appServerLayer, canonicalStorageLive, memoryBroadcastLive } from "./live/server";
 
-const BunDatabaseLive = Layer.scoped(
+const BunDatabaseLive = Layer.effect(
 	Database,
 	makeService(
 		{
-			url: Redacted.make("file:./db.sqlite"),
+			url: "file:./db.sqlite",
 			schema: Schema,
 		},
 		Database,

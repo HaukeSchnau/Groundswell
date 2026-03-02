@@ -3,7 +3,7 @@ import { createSseTransportLayer } from "@groundswell/adapter-sse-client";
 import { BrowserEventSourceServiceLive } from "@groundswell/adapter-sse-client/browser";
 import { ApplicatorError, syncEngineLive, ValidationError } from "@groundswell/core";
 import { makeService } from "@schnau/effect-drizzle/libsql-wasm";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer } from "effect";
 import { DomainApplicator, DomainStorage, DomainSyncEngine, DomainTransport } from "../boilerplate";
 import { applicator } from "../domain/applicators";
 import { Database } from "../domain/db/contract";
@@ -45,12 +45,11 @@ const clientApplicatorsLive = Layer.effect(
 	}),
 );
 
-export const WasmDatabaseLive = Layer.scoped(
+export const WasmDatabaseLive = Layer.effect(
 	Database,
-	// @ts-expect-error -- weird: only on cli
 	makeService(
 		{
-			url: Redacted.make("file:./db.sqlite"),
+			url: "file:./db.sqlite",
 			schema: Schema,
 		},
 		Database,

@@ -11,10 +11,9 @@ type TestEvent = {
 	data: { value: number };
 };
 
-class DomainIngestEngine extends ServiceMap.Service<
-	DomainIngestEngine,
-	IngestEngine<TestEvent>
->()("DomainIngestEngine") {}
+class DomainIngestEngine extends ServiceMap.Service<DomainIngestEngine, IngestEngine<TestEvent>>()(
+	"DomainIngestEngine",
+) {}
 
 class DomainServerApplicator extends ServiceMap.Service<
 	DomainServerApplicator,
@@ -26,10 +25,9 @@ class DomainCanonicalStorage extends ServiceMap.Service<
 	CanonicalStorage<TestEvent>
 >()("DomainCanonicalStorage") {}
 
-class DomainBroadcast extends ServiceMap.Service<
-	DomainBroadcast,
-	Broadcast<TestEvent>
->()("DomainBroadcast") {}
+class DomainBroadcast extends ServiceMap.Service<DomainBroadcast, Broadcast<TestEvent>>()(
+	"DomainBroadcast",
+) {}
 
 // Mock implementations for testing the engine's orchestration
 const mockApplicator = Layer.succeed(
@@ -81,6 +79,8 @@ const mockBroadcast = (publishedEventsRef?: Ref.Ref<TestEvent[][]>) =>
 	);
 
 describe("IngestEngine", () => {
+	const makeRef = <A>(value: A): Ref.Ref<A> => Effect.runSync(Ref.make(value));
+
 	it.effect("should run the full ingest flow on success", () => {
 		const testLayer = Layer.provide(
 			ingestEngineLive(
@@ -89,7 +89,7 @@ describe("IngestEngine", () => {
 				DomainCanonicalStorage,
 				DomainBroadcast,
 			),
-			Layer.mergeAll(mockApplicator, mockStorage(Ref.unsafeMake(true)), mockBroadcast()),
+			Layer.mergeAll(mockApplicator, mockStorage(makeRef(true)), mockBroadcast()),
 		);
 		return Effect.gen(function* () {
 			const engine = yield* DomainIngestEngine;
@@ -117,7 +117,7 @@ describe("IngestEngine", () => {
 				DomainCanonicalStorage,
 				DomainBroadcast,
 			),
-			Layer.mergeAll(mockApplicator, mockStorage(Ref.unsafeMake(false)), mockBroadcast()),
+			Layer.mergeAll(mockApplicator, mockStorage(makeRef(false)), mockBroadcast()),
 		);
 
 		return Effect.gen(function* () {
@@ -140,30 +140,24 @@ describe("IngestEngine", () => {
 		}).pipe(Effect.provide(testLayer));
 	});
 
-	it.effect("marks every published event as sent for the user", () =>
-		Effect.gen(function* () {
-			const markedEventsRef = yield* Ref.make<
-				Array<{
-					eventId: string;
-					userId: string;
-				}>
-			>([]);
+	it.effect("marks every published event as sent for the user", () => {
+		const markedEventsRef = makeRef<Array<{ eventId: string; userId: string }>>([]);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(
+				mockApplicator,
+				mockStorage(makeRef(true), { markedEventsRef }),
+				mockBroadcast(),
+			),
+		);
 
-			const testLayer = Layer.provide(
-				ingestEngineLive(
-					DomainIngestEngine,
-					DomainServerApplicator,
-					DomainCanonicalStorage,
-					DomainBroadcast,
-				),
-				Layer.mergeAll(
-					mockApplicator,
-					mockStorage(Ref.unsafeMake(true), { markedEventsRef }),
-					mockBroadcast(),
-				),
-			);
-
-			const engine = yield* DomainIngestEngine.pipe(Effect.provide(testLayer));
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
 			const event = {
 				id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
 				timestamp: new Date(),
@@ -175,49 +169,44 @@ describe("IngestEngine", () => {
 
 			const markedEvents = yield* Ref.get(markedEventsRef);
 			expect(markedEvents).toEqual([{ eventId: event.id, userId: "user-1" }]);
-		}),
-	);
+		}).pipe(Effect.provide(testLayer));
+	});
 
-	it.effect("publishes a deduplicated event list when current event is already missing", () =>
-		Effect.gen(function* () {
-			const markedEventsRef = yield* Ref.make<
-				Array<{
-					eventId: string;
-					userId: string;
-				}>
-			>([]);
-			const publishedEventsRef = yield* Ref.make<TestEvent[][]>([]);
-			const currentEvent = {
-				id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
-				timestamp: new Date(),
-				type: "test.event" as const,
-				data: { value: 1 },
-			};
-			const previousEvent = {
-				id: "f4a4e8c2-c472-47af-a435-ad61f94f3558",
-				timestamp: new Date(),
-				type: "test.event" as const,
-				data: { value: 2 },
-			};
+	it.effect("publishes a deduplicated event list when current event is already missing", () => {
+		const markedEventsRef = makeRef<Array<{ eventId: string; userId: string }>>([]);
+		const publishedEventsRef = makeRef<TestEvent[][]>([]);
+		const currentEvent = {
+			id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
+			timestamp: new Date(),
+			type: "test.event" as const,
+			data: { value: 1 },
+		};
+		const previousEvent = {
+			id: "f4a4e8c2-c472-47af-a435-ad61f94f3558",
+			timestamp: new Date(),
+			type: "test.event" as const,
+			data: { value: 2 },
+		};
 
-			const testLayer = Layer.provide(
-				ingestEngineLive(
-					DomainIngestEngine,
-					DomainServerApplicator,
-					DomainCanonicalStorage,
-					DomainBroadcast,
-				),
-				Layer.mergeAll(
-					mockApplicator,
-					mockStorage(Ref.unsafeMake(true), {
-						missingEvents: [previousEvent, currentEvent],
-						markedEventsRef,
-					}),
-					mockBroadcast(publishedEventsRef),
-				),
-			);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(
+				mockApplicator,
+				mockStorage(makeRef(true), {
+					missingEvents: [previousEvent, currentEvent],
+					markedEventsRef,
+				}),
+				mockBroadcast(publishedEventsRef),
+			),
+		);
 
-			const engine = yield* DomainIngestEngine.pipe(Effect.provide(testLayer));
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
 			yield* engine.ingest(currentEvent, { initiatorId: "user-1" });
 
 			const publishedEvents = yield* Ref.get(publishedEventsRef);
@@ -232,42 +221,42 @@ describe("IngestEngine", () => {
 				{ eventId: previousEvent.id, userId: "user-1" },
 				{ eventId: currentEvent.id, userId: "user-1" },
 			]);
-		}),
-	);
+		}).pipe(Effect.provide(testLayer));
+	});
 
-	it.effect("does not fail ingest when sent markers cannot be persisted after publish", () =>
-		Effect.gen(function* () {
-			const publishedEventsRef = yield* Ref.make<TestEvent[][]>([]);
-			const event = {
-				id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
-				timestamp: new Date(),
-				type: "test.event" as const,
-				data: { value: 1 },
-			};
+	it.effect("does not fail ingest when sent markers cannot be persisted after publish", () => {
+		const publishedEventsRef = makeRef<TestEvent[][]>([]);
+		const event = {
+			id: "8efea19d-47ad-4696-b4f6-b78d796f8f9c",
+			timestamp: new Date(),
+			type: "test.event" as const,
+			data: { value: 1 },
+		};
 
-			const testLayer = Layer.provide(
-				ingestEngineLive(
-					DomainIngestEngine,
-					DomainServerApplicator,
-					DomainCanonicalStorage,
-					DomainBroadcast,
-				),
-				Layer.mergeAll(
-					mockApplicator,
-					mockStorage(Ref.unsafeMake(true), {
-						failMarkedEventIds: [event.id],
-					}),
-					mockBroadcast(publishedEventsRef),
-				),
-			);
+		const testLayer = Layer.provide(
+			ingestEngineLive(
+				DomainIngestEngine,
+				DomainServerApplicator,
+				DomainCanonicalStorage,
+				DomainBroadcast,
+			),
+			Layer.mergeAll(
+				mockApplicator,
+				mockStorage(makeRef(true), {
+					failMarkedEventIds: [event.id],
+				}),
+				mockBroadcast(publishedEventsRef),
+			),
+		);
 
-			const engine = yield* DomainIngestEngine.pipe(Effect.provide(testLayer));
+		return Effect.gen(function* () {
+			const engine = yield* DomainIngestEngine;
 			const result = yield* Effect.exit(engine.ingest(event, { initiatorId: "user-1" }));
 			const publishedEvents = yield* Ref.get(publishedEventsRef);
 
 			expect(result._tag).toBe("Success");
 			expect(publishedEvents).toHaveLength(1);
 			expect(publishedEvents[0]?.map((publishedEvent) => publishedEvent.id)).toEqual([event.id]);
-		}),
-	);
+		}).pipe(Effect.provide(testLayer));
+	});
 });

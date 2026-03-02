@@ -1,7 +1,7 @@
 import { DuplicateEventError, type Transport, TransportError } from "@groundswell/core";
 import { Effect, Layer, Stream, type ServiceMap } from "effect";
 import superjson from "superjson";
-import type z from "zod";
+import type { z } from "zod";
 import { EventSourceService } from "./event-source/index.js";
 
 // Define the configuration for creating the transport layer.

@@ -34,7 +34,10 @@ export const syncEngineFactory = <TEvent, TEngineTag, TContextTag, TContext>(
 			(event: Omit<TEvent, "id" | "timestamp">) => {
 				// Bridge the Effect world to the Promise world for the UI.
 				return runtime.runPromiseExit(
-					Effect.andThen(syncEngineTag, (engine) => engine.ingest(event)),
+					Effect.gen(function* () {
+						const engine = yield* syncEngineTag;
+						yield* engine.ingest(event);
+					}),
 				);
 			},
 			[runtime],

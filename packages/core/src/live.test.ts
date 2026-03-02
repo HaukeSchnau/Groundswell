@@ -1,13 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-	Effect,
-	Layer,
-	PubSub,
-	pipe,
-	Ref,
-	ServiceMap,
-	Stream,
-} from "effect";
+import { Effect, Layer, PubSub, pipe, Ref, ServiceMap, Stream } from "effect";
 import { TestClock } from "effect/testing";
 import { StorageError, TransportError, ValidationError } from "./errors.js";
 import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
@@ -21,10 +13,9 @@ type TestEvent = {
 	data: { value: number };
 };
 
-class DomainApplicator extends ServiceMap.Service<
-	DomainApplicator,
-	Applicator<TestEvent>
->()("Applicator") {}
+class DomainApplicator extends ServiceMap.Service<DomainApplicator, Applicator<TestEvent>>()(
+	"Applicator",
+) {}
 
 class DomainStorage extends ServiceMap.Service<DomainStorage, Storage<TestEvent>>()("Storage") {}
 
@@ -32,10 +23,9 @@ class DomainTransport extends ServiceMap.Service<DomainTransport, Transport<Test
 	"Transport",
 ) {}
 
-class DomainSyncEngine extends ServiceMap.Service<
-	DomainSyncEngine,
-	SyncEngine<TestEvent>
->()("SyncEngine") {}
+class DomainSyncEngine extends ServiceMap.Service<DomainSyncEngine, SyncEngine<TestEvent>>()(
+	"SyncEngine",
+) {}
 
 describe("SyncEngine", () => {
 	// --- Mocks and Test State ---
@@ -118,10 +108,10 @@ describe("SyncEngine", () => {
 		testLayer = Layer.provide(engine, Layer.mergeAll(mockApplicator, mockStorage, mockTransport));
 	});
 
-		it.effect("should process a successfully ingested event through the full lifecycle", () =>
-			Effect.gen(function* () {
-				const engine = yield* DomainSyncEngine;
-				const eventSubscription = yield* PubSub.subscribe(engine.events);
+	it.effect("should process a successfully ingested event through the full lifecycle", () =>
+		Effect.gen(function* () {
+			const engine = yield* DomainSyncEngine;
+			const eventSubscription = yield* PubSub.subscribe(engine.events);
 
 			// Ingest a new event
 			yield* engine.ingest({ type: "test.event", data: { value: 1 } });
@@ -152,15 +142,16 @@ describe("SyncEngine", () => {
 			expect(updates[0]?.status).toEqual({ local: "success" });
 			expect(updates[1]?.status).toEqual({ remote: "success" });
 
-				const events = yield* PubSub.takeAll(eventSubscription);
+			const events = yield* PubSub.takeAll(eventSubscription);
 
 			// Check the broadcasted events
 			expect(events).toHaveLength(2); // initial, local:success, remote:success
-			expect(events[0]?.status).toEqual({
+			const [firstEvent, secondEvent] = events as [LocalEvent<TestEvent>, LocalEvent<TestEvent>];
+			expect(firstEvent.status).toEqual({
 				local: "success",
 				remote: "pending",
 			});
-			expect(events[1]?.status).toEqual({
+			expect(secondEvent.status).toEqual({
 				local: "success",
 				remote: "success",
 			});
@@ -202,15 +193,15 @@ describe("SyncEngine", () => {
 		}).pipe(Effect.scoped, Effect.provide(testLayer));
 	});
 
-		it.effect("should process a remote event without publishing it", () => {
-			const mockTransport = Layer.effect(
-				DomainTransport,
-				Effect.gen(function* () {
-					const subscription = yield* PubSub.subscribe(remoteEventsPubSub);
-					const stream = Stream.fromEffectRepeat(PubSub.take(subscription));
-					return DomainTransport.of({
-						publish: () => Effect.succeed(undefined),
-						listen: () => Effect.succeed(stream),
+	it.effect("should process a remote event without publishing it", () => {
+		const mockTransport = Layer.effect(
+			DomainTransport,
+			Effect.gen(function* () {
+				const subscription = yield* PubSub.subscribe(remoteEventsPubSub);
+				const stream = Stream.fromEffectRepeat(PubSub.take(subscription));
+				return DomainTransport.of({
+					publish: () => Effect.succeed(undefined),
+					listen: () => Effect.succeed(stream),
 				});
 			}),
 		);
@@ -250,11 +241,11 @@ describe("SyncEngine", () => {
 			// Crucially, it should NOT be published back
 			const published = yield* Ref.get(transportPublishCalls);
 			expect(published).toHaveLength(0);
-				const updates = yield* Ref.get(storageUpdateCalls);
-				expect(updates).toHaveLength(1);
-				expect(updates[0]?.status).toEqual({ local: "success" });
-			}).pipe(Effect.provide(testLayer), Effect.scoped);
-		});
+			const updates = yield* Ref.get(storageUpdateCalls);
+			expect(updates).toHaveLength(1);
+			expect(updates[0]?.status).toEqual({ local: "success" });
+		}).pipe(Effect.provide(testLayer), Effect.scoped);
+	});
 
 	it.effect("should retry publishing on a retryable transport error", () => {
 		return Effect.gen(function* () {
@@ -347,9 +338,9 @@ describe("SyncEngine", () => {
 			const published = yield* Ref.get(transportPublishCalls);
 			expect(published).toHaveLength(0);
 
-				// Should NOT have any status updates (duplicate events should be ignored)
-				const updates = yield* Ref.get(storageUpdateCalls);
-				expect(updates).toHaveLength(0);
-			}).pipe(Effect.provide(testLayer), Effect.scoped);
-		});
+			// Should NOT have any status updates (duplicate events should be ignored)
+			const updates = yield* Ref.get(storageUpdateCalls);
+			expect(updates).toHaveLength(0);
+		}).pipe(Effect.provide(testLayer), Effect.scoped);
 	});
+});

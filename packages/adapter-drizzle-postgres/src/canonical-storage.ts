@@ -104,7 +104,7 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 const getMissingEventsForUser = <TSchema extends Schema>(
 	db: DatabaseService<TSchema>,
 	userId: string,
-	topics: string[],
+	topics: [string, ...string[]],
 ) =>
 	db.execute((db) =>
 		db
@@ -206,21 +206,23 @@ export const createDrizzleCanonicalStorageLayer = <
 					),
 
 				getMissingEventsForUser: (userId, topics) =>
-					pipe(
-						getMissingEventsForUser(db, userId, topics),
-						Effect.andThen((rows) =>
-							Effect.allSuccesses(rows.map((row) => parseCanonicalEvent(row, config.eventSchema))),
-						),
-						Effect.catchTag("DatabaseError", (error) =>
-							Effect.fail(new CanonicalStorageError({ cause: error })),
-						),
-					),
+					topics.length === 0
+						? Effect.succeed([])
+						: pipe(
+								getMissingEventsForUser(db, userId, topics as [string, ...string[]]),
+								Effect.andThen((rows) =>
+									Effect.forEach(rows, (row) => parseCanonicalEvent(row, config.eventSchema)),
+								),
+								Effect.catchTag("DatabaseError", (error) =>
+									Effect.fail(new CanonicalStorageError({ cause: error })),
+								),
+							),
 
 				getEventsSentToUser: (userId) =>
 					pipe(
 						getEventsSentToUser(db, userId),
 						Effect.andThen((rows) =>
-							Effect.allSuccesses(rows.map((row) => parseCanonicalEvent(row, config.eventSchema))),
+							Effect.forEach(rows, (row) => parseCanonicalEvent(row, config.eventSchema)),
 						),
 						Effect.catchTag("DatabaseError", (error) =>
 							Effect.fail(new CanonicalStorageError({ cause: error })),

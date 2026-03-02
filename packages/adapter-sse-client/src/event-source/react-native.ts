@@ -1,6 +1,9 @@
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Queue from "effect/Queue";
+import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import EventSource from "react-native-sse";
 import { EventSourceError, EventSourceService } from "./index.js";
@@ -12,32 +15,39 @@ export const ReactNativeEventSourceServiceLive = Layer.succeed(
 	EventSourceService,
 	EventSourceService.of({
 		connect: (url, options) =>
-			Stream.asyncEffect((emit) =>
-				Effect.sync(() => {
+			Stream.callback((queue) =>
+				Effect.gen(function* () {
+					const scope = yield* Scope.Scope;
 					const es = new EventSource(url, {
 						headers: options?.headers(),
 					});
 
 					es.addEventListener("message", (event) => {
-						void emit.single({
+						Queue.offerUnsafe(queue, {
 							data: event.data ?? "",
-							id: Option.fromNullable(event.lastEventId),
-							event: Option.fromNullable(event.type),
+							id: Option.fromNullishOr(event.lastEventId),
+							event: Option.fromNullishOr(event.type),
 							retry: Option.none(), // Native EventSource doesn't expose this directly
 						});
 					});
 
 					es.addEventListener("error", (errorEvent) => {
 						// Emit an error, which will terminate the stream
-						void emit.fail(
-							new EventSourceError({
-								reason: "NetworkError",
-								originalError: errorEvent,
-							}),
+						Queue.failCauseUnsafe(
+							queue,
+							Cause.fail(
+								new EventSourceError({
+									reason: "NetworkError",
+									originalError: errorEvent,
+								}),
+							),
 						);
 					});
 
-					return Stream.finalizer(Effect.sync(() => es.close()));
+					yield* Scope.addFinalizer(
+						scope,
+						Effect.sync(() => es.close()),
+					);
 				}),
 			),
 	}),

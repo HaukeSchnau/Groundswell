@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { pipe } from "effect";
-import * as Chunk from "effect/Chunk";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -24,28 +23,30 @@ describe("NodeEventSourceService", () => {
 				const collectedMessages = yield* eventSource.connect(TEST_SSE_URL).pipe(
 					Stream.take(3), // Take the first 3 messages (sse.dev/test sends a mix)
 					Stream.runCollect, // Collect them into an Effect.Chunk
-					Effect.timeoutFail({
+					Effect.timeoutOrElse({
 						duration: Duration.seconds(5), // Allow up to 15 seconds for connection and messages
 						onTimeout: () =>
-							new EventSourceError({
-								reason: "NetworkError",
-								originalError: new Error(
-									"Connection to sse.dev/test timed out or did not receive enough messages.",
-								),
-							}),
+							Effect.fail(
+								new EventSourceError({
+									reason: "NetworkError",
+									originalError: new Error(
+										"Connection to sse.dev/test timed out or did not receive enough messages.",
+									),
+								}),
+							),
 					}),
 					Effect.tap((chunk) =>
-						Effect.log(`[Test] Received ${Chunk.size(chunk)} messages: ${JSON.stringify(chunk)}`),
+						Effect.log(`[Test] Received ${chunk.length} messages: ${JSON.stringify(chunk)}`),
 					),
 					Effect.tapError((error) => Effect.logError(`[Test] Stream failed with error:`, error)),
 				);
 
 				// --- Assertions ---
-				expect(Chunk.size(collectedMessages)).toEqual(3); // Expect a reasonable number of messages
-				expect(Chunk.every(collectedMessages, (msg) => typeof msg.data === "string")).toBe(true);
+				expect(collectedMessages).toHaveLength(3); // Expect a reasonable number of messages
+				expect(collectedMessages.every((msg) => typeof msg.data === "string")).toBe(true);
 
 				// Check for messages known to be sent by sse.dev/test
-				const firstMessage = Chunk.head(collectedMessages).pipe(Option.getOrNull);
+				const firstMessage = Option.fromNullishOr(collectedMessages[0]).pipe(Option.getOrNull);
 				expect(firstMessage?.data).toContain(
 					`{"testing":true,"sse_dev":"is great","msg":"It works!",`,
 				);

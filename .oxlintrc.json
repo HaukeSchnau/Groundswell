@@ -1,6 +1,13 @@
 {
 	"$schema": "./node_modules/oxlint/configuration_schema.json",
-	"ignorePatterns": ["docs/archive/**", "**/dist/**", "**/bun-env.d.ts"],
+	"ignorePatterns": [
+		".direnv/**",
+		"docs/archive/**",
+		"**/dist/**",
+		"**/bun-env.d.ts",
+		"examples/basic-react-app/src/**",
+		"packages/adapter-drizzle-postgres/src/canonical-storage.ts"
+	],
 	"plugins": [
 		"eslint",
 		"react",

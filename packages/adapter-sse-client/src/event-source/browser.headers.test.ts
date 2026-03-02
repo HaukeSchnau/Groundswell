@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
@@ -57,14 +56,12 @@ describe("BrowserEventSourceServiceLive", () => {
 				})
 				.pipe(Stream.take(1), Stream.runCollect);
 
-			expect(Chunk.head(messages)).toEqual(
-				Option.some({
-					data: '{"ok":true}',
-					id: Option.some("evt-1"),
-					event: Option.some("message"),
-					retry: Option.none(),
-				}),
-			);
+			expect(messages[0]).toEqual({
+				data: '{"ok":true}',
+				id: Option.some("evt-1"),
+				event: Option.some("message"),
+				retry: Option.none(),
+			});
 			expect(fetchMock).toHaveBeenCalledWith(
 				"https://example.com/events",
 				expect.objectContaining({

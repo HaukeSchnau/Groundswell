@@ -25,10 +25,9 @@ export class DomainCanonicalStorage extends ServiceMap.Service<
 	CanonicalStorage<DomainEvent>
 >()("CanonicalStorage") {}
 
-export class DomainTransport extends ServiceMap.Service<
-	DomainTransport,
-	Transport<DomainEvent>
->()("Transport") {}
+export class DomainTransport extends ServiceMap.Service<DomainTransport, Transport<DomainEvent>>()(
+	"Transport",
+) {}
 
 export class DomainSyncEngine extends ServiceMap.Service<
 	DomainSyncEngine,
@@ -40,10 +39,9 @@ export class DomainServerApplicator extends ServiceMap.Service<
 	ServerApplicator<DomainEvent>
 >()("ServerApplicator") {}
 
-export class DomainBroadcast extends ServiceMap.Service<
-	DomainBroadcast,
-	Broadcast<DomainEvent>
->()("Broadcast") {}
+export class DomainBroadcast extends ServiceMap.Service<DomainBroadcast, Broadcast<DomainEvent>>()(
+	"Broadcast",
+) {}
 
 export class DomainIngestEngine extends ServiceMap.Service<
 	DomainIngestEngine,

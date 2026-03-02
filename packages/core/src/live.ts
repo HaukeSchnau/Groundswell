@@ -121,16 +121,16 @@ export const syncEngineLive = <
 				localEvent: LocalEvent<TEvent>,
 			) {
 				const published = yield* pipe(
-						transport.publish(localEvent.event),
-						// Retry on retryable network errors with a backoff schedule
-						Effect.retry({
-							schedule: Schedule.exponential("1 second").pipe(
-								Schedule.modifyDelay((_output, delay) =>
-									Effect.succeed(Duration.min(delay, Duration.seconds(8))),
-								),
-								Schedule.jittered,
+					transport.publish(localEvent.event),
+					// Retry on retryable network errors with a backoff schedule
+					Effect.retry({
+						schedule: Schedule.exponential("1 second").pipe(
+							Schedule.modifyDelay((_output, delay) =>
+								Effect.succeed(Duration.min(delay, Duration.seconds(8))),
 							),
-							while: (e) => e._tag === "TransportError" && e.isRetryable,
+							Schedule.jittered,
+						),
+						while: (e) => e._tag === "TransportError" && e.isRetryable,
 					}),
 					Effect.as({ ...localEvent.status, remote: "success" } as const),
 					Effect.catchTag("TransportError", () =>
@@ -175,16 +175,16 @@ export const syncEngineLive = <
 
 			// 4. Fork all background fibers, their lifecycle is tied to the Layer's scope
 			//    - Main worker processing events from the queue
-				yield* pipe(
-					dequeue,
-					Effect.flatMap((event) =>
-						processEvent(event).pipe(
-							Effect.tapError((error) => Effect.logError("Error processing event", error)),
-							Effect.ignore,
-							Effect.as(event),
-						),
+			yield* pipe(
+				dequeue,
+				Effect.flatMap((event) =>
+					processEvent(event).pipe(
+						Effect.tapError((error) => Effect.logError("Error processing event", error)),
+						Effect.ignore,
+						Effect.as(event),
 					),
-					Effect.tap((event) => Effect.log("Processed event", event)),
+				),
+				Effect.tap((event) => Effect.log("Processed event", event)),
 				Effect.forever,
 				Effect.forkScoped,
 			);

@@ -1,10 +1,6 @@
 import { type CanonicalStorage, CanonicalStorageError } from "@groundswell/core-server";
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
-import type {
-	DatabaseError,
-	GenericDatabaseService,
-	GenericSqliteError,
-} from "@schnau/effect-drizzle/generic-sqlite";
+import type { DatabaseError, GenericDatabaseService } from "@schnau/effect-drizzle/generic-sqlite";
 import { and, asc, eq, getTableColumns, inArray, isNull } from "drizzle-orm";
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { Effect, Layer, pipe, type ServiceMap } from "effect";
@@ -78,7 +74,7 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 	db: GenericDatabaseService<TSchema>,
 	event: TEvent,
 	meta: EventMeta & { topics: string[] },
-): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
+): Effect.Effect<void, DatabaseError> =>
 	Effect.gen(function* () {
 		yield* db.transaction(
 			Effect.fn(function* ({ execute: tx }) {
@@ -109,7 +105,7 @@ const saveEvent = <TSchema extends Schema, TEvent extends UnknownEvent>(
 const getMissingEventsForUser = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	userId: string,
-	topics: string[],
+	topics: [string, ...string[]],
 ): Effect.Effect<
 	{
 		id: string;
@@ -118,7 +114,7 @@ const getMissingEventsForUser = <TSchema extends Schema>(
 		data: string;
 		initiator: string;
 	}[],
-	DatabaseError<GenericSqliteError>
+	DatabaseError
 > =>
 	db.execute((db) =>
 		db
@@ -157,7 +153,7 @@ const getEventsSentToUser = <TSchema extends Schema>(
 		data: string;
 		initiator: string;
 	}[],
-	DatabaseError<GenericSqliteError>
+	DatabaseError
 > =>
 	db.execute((db) =>
 		db
@@ -192,7 +188,7 @@ const markEventAsSentToUser = <TSchema extends Schema>(
 	db: GenericDatabaseService<TSchema>,
 	eventId: string,
 	userId: string,
-): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
+): Effect.Effect<void, DatabaseError> =>
 	db.execute((db) =>
 		db.insert(CanonicalEventsSentToUsersTable).values({ event: eventId, user: userId }),
 	);
@@ -229,21 +225,23 @@ export const createDrizzleCanonicalStorageLayer = <
 					),
 
 				getMissingEventsForUser: (userId, topics) =>
-					pipe(
-						getMissingEventsForUser(db, userId, topics),
-						Effect.andThen((rows) =>
-							Effect.allSuccesses(rows.map((row) => parseCanonicalEvent(row, config.eventSchema))),
-						),
-						Effect.catchTag("DatabaseError", (error) =>
-							Effect.fail(new CanonicalStorageError({ cause: error })),
-						),
-					),
+					topics.length === 0
+						? Effect.succeed([])
+						: pipe(
+								getMissingEventsForUser(db, userId, topics as [string, ...string[]]),
+								Effect.andThen((rows) =>
+									Effect.forEach(rows, (row) => parseCanonicalEvent(row, config.eventSchema)),
+								),
+								Effect.catchTag("DatabaseError", (error) =>
+									Effect.fail(new CanonicalStorageError({ cause: error })),
+								),
+							),
 
 				getEventsSentToUser: (userId) =>
 					pipe(
 						getEventsSentToUser(db, userId),
 						Effect.andThen((rows) =>
-							Effect.allSuccesses(rows.map((row) => parseCanonicalEvent(row, config.eventSchema))),
+							Effect.forEach(rows, (row) => parseCanonicalEvent(row, config.eventSchema)),
 						),
 						Effect.catchTag("DatabaseError", (error) =>
 							Effect.fail(new CanonicalStorageError({ cause: error })),
