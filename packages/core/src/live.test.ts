@@ -1,16 +1,14 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-	Chunk,
 	Effect,
 	Layer,
-	Logger,
 	PubSub,
 	pipe,
 	Ref,
 	ServiceMap,
 	Stream,
-	TestClock,
 } from "effect";
+import { TestClock } from "effect/testing";
 import { StorageError, TransportError, ValidationError } from "./errors.js";
 import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
 import { syncEngineLive } from "./live.js";
@@ -120,10 +118,10 @@ describe("SyncEngine", () => {
 		testLayer = Layer.provide(engine, Layer.mergeAll(mockApplicator, mockStorage, mockTransport));
 	});
 
-	it.effect("should process a successfully ingested event through the full lifecycle", () =>
-		Effect.gen(function* () {
-			const engine = yield* DomainSyncEngine;
-			const eventSubscription = yield* engine.events.subscribe;
+		it.effect("should process a successfully ingested event through the full lifecycle", () =>
+			Effect.gen(function* () {
+				const engine = yield* DomainSyncEngine;
+				const eventSubscription = yield* PubSub.subscribe(engine.events);
 
 			// Ingest a new event
 			yield* engine.ingest({ type: "test.event", data: { value: 1 } });
@@ -154,7 +152,7 @@ describe("SyncEngine", () => {
 			expect(updates[0]?.status).toEqual({ local: "success" });
 			expect(updates[1]?.status).toEqual({ remote: "success" });
 
-			const events = yield* pipe(eventSubscription.takeAll, Effect.map(Chunk.toReadonlyArray));
+				const events = yield* PubSub.takeAll(eventSubscription);
 
 			// Check the broadcasted events
 			expect(events).toHaveLength(2); // initial, local:success, remote:success
@@ -204,16 +202,15 @@ describe("SyncEngine", () => {
 		}).pipe(Effect.scoped, Effect.provide(testLayer));
 	});
 
-	it.effect("should process a remote event without publishing it", () => {
-		const mockTransport = Layer.effect(
-			DomainTransport,
-			Effect.gen(function* () {
-				const stream = yield* Stream.fromPubSub(remoteEventsPubSub, {
-					scoped: true,
-				});
-				return DomainTransport.of({
-					publish: () => Effect.succeed(undefined),
-					listen: () => Effect.succeed(stream),
+		it.effect("should process a remote event without publishing it", () => {
+			const mockTransport = Layer.effect(
+				DomainTransport,
+				Effect.gen(function* () {
+					const subscription = yield* PubSub.subscribe(remoteEventsPubSub);
+					const stream = Stream.fromEffectRepeat(PubSub.take(subscription));
+					return DomainTransport.of({
+						publish: () => Effect.succeed(undefined),
+						listen: () => Effect.succeed(stream),
 				});
 			}),
 		);
@@ -253,11 +250,11 @@ describe("SyncEngine", () => {
 			// Crucially, it should NOT be published back
 			const published = yield* Ref.get(transportPublishCalls);
 			expect(published).toHaveLength(0);
-			const updates = yield* Ref.get(storageUpdateCalls);
-			expect(updates).toHaveLength(1);
-			expect(updates[0]?.status).toEqual({ local: "success" });
-		}).pipe(Effect.provide(testLayer), Effect.scoped, Effect.provide(Logger.pretty));
-	});
+				const updates = yield* Ref.get(storageUpdateCalls);
+				expect(updates).toHaveLength(1);
+				expect(updates[0]?.status).toEqual({ local: "success" });
+			}).pipe(Effect.provide(testLayer), Effect.scoped);
+		});
 
 	it.effect("should retry publishing on a retryable transport error", () => {
 		return Effect.gen(function* () {
@@ -301,7 +298,7 @@ describe("SyncEngine", () => {
 			const updates = yield* Ref.get(storageUpdateCalls);
 			const remoteUpdate = updates.find((u) => "remote" in u.status);
 			expect(remoteUpdate?.status).toEqual({ remote: "success" });
-		}).pipe(Effect.scoped, Effect.provide(Logger.pretty));
+		}).pipe(Effect.scoped);
 	});
 
 	it.effect("should handle duplicate events gracefully without processing them", () => {
@@ -350,9 +347,9 @@ describe("SyncEngine", () => {
 			const published = yield* Ref.get(transportPublishCalls);
 			expect(published).toHaveLength(0);
 
-			// Should NOT have any status updates (duplicate events should be ignored)
-			const updates = yield* Ref.get(storageUpdateCalls);
-			expect(updates).toHaveLength(0);
-		}).pipe(Effect.provide(testLayer), Effect.scoped, Effect.provide(Logger.pretty));
+				// Should NOT have any status updates (duplicate events should be ignored)
+				const updates = yield* Ref.get(storageUpdateCalls);
+				expect(updates).toHaveLength(0);
+			}).pipe(Effect.provide(testLayer), Effect.scoped);
+		});
 	});
-});
