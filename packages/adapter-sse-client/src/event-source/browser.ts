@@ -1,6 +1,9 @@
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Queue from "effect/Queue";
+import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import { EventSource } from "eventsource";
 import { EventSourceError, EventSourceService } from "./index.js";
@@ -12,8 +15,9 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 	EventSourceService,
 	EventSourceService.of({
 		connect: (url, options) =>
-			Stream.asyncEffect((emit) =>
-				Effect.sync(() => {
+			Stream.callback((queue) =>
+				Effect.gen(function* () {
+					const scope = yield* Scope.Scope;
 					const es = new EventSource(url, {
 						fetch: (requestUrl, init) => {
 							return fetch(requestUrl, {
@@ -27,20 +31,23 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 					});
 
 					const handleMessage = (event: MessageEvent) => {
-						void emit.single({
+						Queue.offerUnsafe(queue, {
 							data: String(event.data),
-							id: Option.fromNullable(event.lastEventId),
-							event: Option.fromNullable(event.type),
+							id: Option.fromNullishOr(event.lastEventId),
+							event: Option.fromNullishOr(event.type),
 							retry: Option.none(), // Native EventSource doesn't expose this directly
 						});
 					};
 					const handleError = (errorEvent: Event) => {
 						// Emit an error, which will terminate the stream
-						void emit.fail(
-							new EventSourceError({
-								reason: "NetworkError",
-								originalError: errorEvent,
-							}),
+						Queue.failCauseUnsafe(
+							queue,
+							Cause.fail(
+								new EventSourceError({
+									reason: "NetworkError",
+									originalError: errorEvent,
+								}),
+							),
 						);
 					};
 					const legacyEventSource = es as {
@@ -56,7 +63,7 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 						legacyEventSource.onerror = handleError;
 					}
 
-					return Stream.finalizer(Effect.sync(() => es.close()));
+					yield* Scope.addFinalizer(scope, Effect.sync(() => es.close()));
 				}),
 			),
 	}),

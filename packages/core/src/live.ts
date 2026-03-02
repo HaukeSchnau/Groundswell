@@ -57,7 +57,7 @@ export const syncEngineLive = <
 	transportTag: ServiceMap.Service<IdTransport, Transport<TEvent>>,
 	options?: { offset?: number },
 ) =>
-	Layer.scoped(
+	Layer.effect(
 		tag,
 		Effect.gen(function* () {
 			// 1. Get required services from the context
@@ -70,12 +70,16 @@ export const syncEngineLive = <
 			const statusPubSub = yield* PubSub.unbounded<{ queueSize: number }>();
 			const enqueue = (event: LocalEvent<TEvent>) =>
 				Effect.gen(function* () {
-					yield* queue.offer(event);
-					yield* statusPubSub.publish({ queueSize: yield* queue.size });
+					yield* Queue.offer(queue, event);
+					yield* PubSub.publish(statusPubSub, {
+						queueSize: yield* Queue.size(queue),
+					});
 				});
 			const dequeue = Effect.gen(function* () {
-				const event = yield* queue.take;
-				yield* statusPubSub.publish({ queueSize: yield* queue.size });
+				const event = yield* Queue.take(queue);
+				yield* PubSub.publish(statusPubSub, {
+					queueSize: yield* Queue.size(queue),
+				});
 				return event;
 			});
 			const eventsPubSub = yield* PubSub.unbounded<LocalEvent<TEvent>>();
@@ -109,7 +113,7 @@ export const syncEngineLive = <
 					},
 				};
 
-				yield* eventsPubSub.publish(result);
+				yield* PubSub.publish(eventsPubSub, result);
 				return result;
 			});
 
@@ -117,14 +121,16 @@ export const syncEngineLive = <
 				localEvent: LocalEvent<TEvent>,
 			) {
 				const published = yield* pipe(
-					transport.publish(localEvent.event),
-					// Retry on retryable network errors with a backoff schedule
-					Effect.retry({
-						schedule: Schedule.exponential("1 second").pipe(
-							Schedule.modifyDelay(Duration.min("8 seconds")),
-							Schedule.jittered,
-						),
-						while: (e) => e._tag === "TransportError" && e.isRetryable,
+						transport.publish(localEvent.event),
+						// Retry on retryable network errors with a backoff schedule
+						Effect.retry({
+							schedule: Schedule.exponential("1 second").pipe(
+								Schedule.modifyDelay((_output, delay) =>
+									Effect.succeed(Duration.min(delay, Duration.seconds(8))),
+								),
+								Schedule.jittered,
+							),
+							while: (e) => e._tag === "TransportError" && e.isRetryable,
 					}),
 					Effect.as({ ...localEvent.status, remote: "success" } as const),
 					Effect.catchTag("TransportError", () =>
@@ -145,7 +151,7 @@ export const syncEngineLive = <
 					remote: published.remote,
 				});
 
-				yield* eventsPubSub.publish({
+				yield* PubSub.publish(eventsPubSub, {
 					...localEvent,
 					status: {
 						...localEvent.status,
@@ -169,14 +175,16 @@ export const syncEngineLive = <
 
 			// 4. Fork all background fibers, their lifecycle is tied to the Layer's scope
 			//    - Main worker processing events from the queue
-			yield* pipe(
-				dequeue,
-				Effect.flatMap((event) =>
-					processEvent(event).pipe(
-						Effect.catchAll((error) => Effect.logError("Error processing event", error)),
+				yield* pipe(
+					dequeue,
+					Effect.flatMap((event) =>
+						processEvent(event).pipe(
+							Effect.tapError((error) => Effect.logError("Error processing event", error)),
+							Effect.ignore,
+							Effect.as(event),
+						),
 					),
-				),
-				Effect.tap((event) => Effect.log("Processed event", event)),
+					Effect.tap((event) => Effect.log("Processed event", event)),
 				Effect.forever,
 				Effect.forkScoped,
 			);
