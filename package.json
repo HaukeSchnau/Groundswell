@@ -26,6 +26,7 @@
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
 		"test:e2e": "playwright test",
+		"test:postgres:integration": "vitest run packages/adapter-drizzle-postgres/src/canonical-storage.integration.test.ts",
 		"test:dev": "vitest"
 	},
 	"devDependencies": {

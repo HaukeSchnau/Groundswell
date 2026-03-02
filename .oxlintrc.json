@@ -170,13 +170,15 @@
 				"packages/core/src/applicator.ts",
 				"packages/adapter-bun-server/src/index.ts",
 				"packages/adapter-sse-client/src/event-source/browser.ts",
+				"packages/adapter-drizzle-postgres/src/canonical-storage.integration.test.ts",
 				"scripts/release.ts",
 				"examples/basic-react-app/src/App.tsx",
 				"examples/basic-react-app/src/live/server.ts"
 			],
 			"rules": {
 				"no-console": "off",
-				"unicorn/prefer-add-event-listener": "off"
+				"unicorn/prefer-add-event-listener": "off",
+				"node/no-process-env": "off"
 			}
 		},
 		{
