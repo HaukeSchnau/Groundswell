@@ -28,6 +28,9 @@ bun run test
 bun run build
 ```
 
+CI runs `checks:fmt:ci`, `checks:lint:ci`, `test`, and `build`.
+There is no separate CI typecheck job because `oxlint --type-check` already covers that path.
+
 Convenience commands:
 
 ```bash

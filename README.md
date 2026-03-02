@@ -85,6 +85,8 @@ just check
 just qa
 ```
 
+GitHub Actions runs formatter, lint-with-type-checking, tests, and builds on push and pull request.
+
 ## Example App
 
 A runnable end-to-end integration lives in:
