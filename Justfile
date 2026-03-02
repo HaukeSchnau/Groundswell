@@ -1,7 +1,13 @@
 [parallel]
-check: check-lint check-fmt
+check: check-toolchain check-hygiene check-lint check-fmt
 
 qa: check test build
+
+check-toolchain:
+	bun run check:toolchain
+
+check-hygiene:
+	bun run checks:hygiene
 
 check-lint:
 	bun run checks:lint:fix-safe

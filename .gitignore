@@ -5,6 +5,8 @@ node_modules
 out
 dist
 *.tgz
+!vendor/effect-drizzle-local.tgz
+!vendor/effect-drizzle-local-v*.tgz
 
 # code coverage
 coverage

@@ -21,13 +21,15 @@ direnv allow
 ## Run Checks
 
 ```bash
+bun run check:toolchain
+bun run checks:hygiene
 bun run checks:fmt:ci
 bun run checks:lint
 bun run test
 bun run build
 ```
 
-CI runs `checks:fmt:ci`, `checks:lint:ci`, `test`, and `build`.
+CI runs `check:toolchain`, `checks:hygiene`, `checks:fmt:ci`, `checks:lint:ci`, `test`, and `build`.
 There is no separate CI typecheck job because `oxlint --type-check` already covers that path.
 
 Convenience commands:

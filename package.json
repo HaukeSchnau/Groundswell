@@ -9,14 +9,18 @@
 	"scripts": {
 		"build": "bun run --filter '*' build",
 		"bump": "bun run --filter '*' bump --",
+		"check:toolchain": "bun scripts/check-toolchain.ts",
+		"checks:hygiene": "bun scripts/check-hygiene.ts",
 		"checks:fmt": "oxfmt .",
 		"checks:fmt:ci": "oxfmt --check .",
 		"checks:lint": "oxlint --type-aware --type-check .",
 		"checks:lint:ci": "oxlint --type-aware --type-check --deny-warnings .",
 		"checks:lint:fix-safe": "oxlint --type-aware --type-check --fix .",
 		"checks:lint:fix-all": "oxlint --type-aware --type-check --fix --fix-suggestions --fix-dangerously .",
+		"checks:ci": "bun run check:toolchain && bun run checks:hygiene && bun run checks:fmt:ci && bun run checks:lint:ci && bun run test && bun run build",
 		"local:effect-drizzle:repack": "bun scripts/sync-local-effect-drizzle.ts --skip-install",
 		"local:effect-drizzle:sync": "bun scripts/sync-local-effect-drizzle.ts",
+		"local:effect-drizzle:verify": "bun scripts/sync-local-effect-drizzle.ts --verify-only",
 		"pub": "bun run --filter '*' pub",
 		"release": "bun scripts/release.ts",
 		"test": "vitest run",
@@ -24,8 +28,9 @@
 	},
 	"devDependencies": {
 		"@libsql/client": "^0.17.0",
-		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
 		"@typescript/native-preview": "^7.0.0-dev.20260302.1",
+		"bun": "1.3.10",
 		"drizzle-orm": "0.45.1",
 		"effect": "4.0.0-beta.23",
 		"lefthook": "^2.0.13",
@@ -40,10 +45,13 @@
 		"typescript": "^5.9.3"
 	},
 	"overrides": {
-		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
 		"drizzle-orm": "0.45.1",
 		"effect": "4.0.0-beta.23",
 		"pg": "8.19.0"
+	},
+	"engines": {
+		"bun": "1.3.10"
 	},
 	"patchedDependencies": {
 		"@libsql/libsql-wasm-experimental@0.0.2": "patches/@libsql%2Flibsql-wasm-experimental@0.0.2.patch",

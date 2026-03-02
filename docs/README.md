@@ -16,6 +16,7 @@ This directory contains architecture, reference, and contributor documentation f
 ## Guides
 
 - [Development Guide](./guides/development.md)
+- [Local effect-drizzle Integration](./contributing/local-effect-drizzle.md)
 
 ## Package Docs
 

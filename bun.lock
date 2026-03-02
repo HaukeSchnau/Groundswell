@@ -1,13 +1,13 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "groundswell",
       "devDependencies": {
         "@libsql/client": "^0.17.0",
-        "@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz",
+        "@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
         "@typescript/native-preview": "^7.0.0-dev.20260302.1",
+        "bun": "1.3.10",
         "drizzle-orm": "0.45.1",
         "effect": "4.0.0-beta.23",
         "lefthook": "^2.0.13",
@@ -181,7 +181,7 @@
     "@libsql/libsql-wasm-experimental@0.0.2": "patches/@libsql%2Flibsql-wasm-experimental@0.0.2.patch",
   },
   "overrides": {
-    "@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz",
+    "@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
     "drizzle-orm": "0.45.1",
     "effect": "4.0.0-beta.23",
     "pg": "8.19.0",
@@ -463,7 +463,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.44.1", "https://npm.schnau.dev/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.44.1.tgz", { "os": "win32", "cpu": "x64" }, "sha512-J8o22LuF0kTe7m+8PvW9wk3/bRq5+mRo5Dqo6+vXb7otCm3TPhYOJqOaQtGU9YMWQSL3krMnoOxMr0+9E6F3Ug=="],
 
-    "@schnau/effect-drizzle": ["@schnau/effect-drizzle@./vendor/effect-drizzle-local-v0.5.10-87bc0f7c4cee.tgz", { "peerDependencies": { "drizzle-orm": "^0.45.1", "effect": "^4.0.0-beta.23", "typescript": "^5" } }, "sha512-/aA8b+UJKZS34BLROuRFqiIBbH2jQCBB6JuDHSAPsgA7mi4w2nLmxG/nxzZkl4indcCXsfNw5JP8Livcqva3vw=="],
+    "@schnau/effect-drizzle": ["@schnau/effect-drizzle@./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz", { "peerDependencies": { "drizzle-orm": "^0.45.1", "effect": "^4.0.0-beta.23", "typescript": "^5" } }],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "https://npm.schnau.dev/@standard-schema/spec/-/spec-1.1.0.tgz", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 

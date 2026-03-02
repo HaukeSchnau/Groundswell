@@ -72,6 +72,7 @@ bunx lefthook install   # optional, install local git hooks
 
 ```bash
 bun run build
+bun run checks:hygiene
 bun run checks:fmt:ci
 bun run checks:lint
 bun run test
@@ -85,6 +86,27 @@ just qa
 ```
 
 GitHub Actions runs formatter, lint-with-type-checking, tests, and builds on push and pull request.
+
+## Local effect-drizzle Integration
+
+Groundswell uses a committed local tarball flow for `@schnau/effect-drizzle`.
+Use this workflow only; avoid ad-hoc nested installs in `examples/basic-react-app/node_modules`.
+
+```bash
+bun run local:effect-drizzle:sync
+bun run local:effect-drizzle:verify
+bun run checks:hygiene
+```
+
+If you are already in `/Users/haukeschnau/urbs/Libraries/effect-drizzle` and only want to repack:
+
+```bash
+bun run pack:local
+```
+
+Detailed troubleshooting guide:
+
+- [`docs/contributing/local-effect-drizzle.md`](./docs/contributing/local-effect-drizzle.md)
 
 ## Example App
 
