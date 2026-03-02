@@ -1,6 +1,9 @@
 {
 	"name": "@groundswell/react",
 	"version": "0.0.22",
+	"files": [
+		"dist"
+	],
 	"type": "module",
 	"main": "./dist/src/index.js",
 	"module": "./dist/src/index.js",
@@ -12,19 +15,16 @@
 			"default": "./dist/src/index.js"
 		}
 	},
-	"files": [
-		"dist"
-	],
 	"scripts": {
 		"build": "tsc --build",
 		"bump": "bunx npm version",
 		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
 	},
+	"devDependencies": {
+		"@types/react": "^19.1.8"
+	},
 	"peerDependencies": {
 		"@groundswell/core": "*",
 		"react": "*"
-	},
-	"devDependencies": {
-		"@types/react": "^19.1.8"
 	}
 }

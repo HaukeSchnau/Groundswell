@@ -1,6 +1,9 @@
 {
 	"name": "@groundswell/adapter-sse-client",
 	"version": "0.0.22",
+	"files": [
+		"dist"
+	],
 	"type": "module",
 	"main": "./dist/src/index.js",
 	"module": "./dist/src/index.js",
@@ -22,9 +25,6 @@
 			"default": "./dist/src/event-source/react-native.js"
 		}
 	},
-	"files": [
-		"dist"
-	],
 	"scripts": {
 		"build": "tsc --build",
 		"bump": "bunx npm version",
@@ -35,10 +35,10 @@
 		"react-native-sse": "^1"
 	},
 	"peerDependencies": {
-		"eventsource": "^4",
-		"react-native-sse": "^1",
 		"@groundswell/core": "*",
 		"effect": "^3",
+		"eventsource": "^4",
+		"react-native-sse": "^1",
 		"superjson": "^2",
 		"zod": "^3"
 	},

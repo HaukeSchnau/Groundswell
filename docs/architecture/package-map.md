@@ -7,6 +7,7 @@ This is a quick reference for package boundaries and responsibilities.
 ### `@groundswell/zod-helpers`
 
 Defines reusable schema helpers for event modeling:
+
 - `BaseEventSchema`
 - `createDomainEvent`
 - `createEventUnion`
@@ -18,6 +19,7 @@ Used by nearly all packages that validate or infer event types.
 ### `@groundswell/core`
 
 Client-side synchronization runtime:
+
 - Contracts: `Applicator`, `Storage`, `Transport`, `SyncEngine`
 - Runtime: `syncEngineLive`
 - Utilities: applicator map/tree factories
@@ -25,6 +27,7 @@ Client-side synchronization runtime:
 ### `@groundswell/core-server`
 
 Server-side ingest orchestration:
+
 - Contracts: `ServerApplicator`, `CanonicalStorage`, `Broadcast`, `IngestEngine`
 - Runtime: `ingestEngineLive`
 
@@ -33,16 +36,19 @@ Server-side ingest orchestration:
 ### `@groundswell/adapter-sse-client`
 
 Implements `Transport` via:
+
 - `POST /events` for publish
 - `GET /events` SSE for listen
 
 Subpath exports:
+
 - `@groundswell/adapter-sse-client/browser`
 - `@groundswell/adapter-sse-client/react-native`
 
 ### `@groundswell/adapter-hono-server`
 
 Mounts sync endpoints directly onto a Hono app:
+
 - `POST /events`
 - `GET /events`
 
@@ -55,6 +61,7 @@ Returns Bun route handlers (`GET`/`POST`) with equivalent sync behavior.
 ### `@groundswell/adapter-drizzle-sqlite`
 
 Provides both:
+
 - Client storage adapter (`event_log` table)
 - Canonical storage adapter (`canonical_*` tables)
 
@@ -67,6 +74,7 @@ Provides canonical storage adapter for PostgreSQL (`canonical_*` tables).
 ### `@groundswell/react`
 
 Factory for React integration around a `SyncEngine`:
+
 - Provider
 - `useIngest`
 - `useSyncStatus`

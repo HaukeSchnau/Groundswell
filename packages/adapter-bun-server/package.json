@@ -1,6 +1,9 @@
 {
 	"name": "@groundswell/adapter-bun-server",
 	"version": "0.0.22",
+	"files": [
+		"dist"
+	],
 	"type": "module",
 	"main": "./dist/src/index.js",
 	"module": "./dist/src/index.js",
@@ -12,9 +15,6 @@
 			"default": "./dist/src/index.js"
 		}
 	},
-	"files": [
-		"dist"
-	],
 	"scripts": {
 		"build": "tsc --build",
 		"bump": "bunx npm version",

@@ -57,9 +57,7 @@ export interface Storage<TEvent> {
  * Provided by: An adapter package (e.g., @groundswell/adapter-sse-client).
  */
 export interface Transport<TEvent extends { id: string }> {
-	readonly publish: (
-		event: TEvent,
-	) => Effect.Effect<void, TransportError | DuplicateEventError>;
+	readonly publish: (event: TEvent) => Effect.Effect<void, TransportError | DuplicateEventError>;
 	readonly listen: (options?: {
 		offset?: number;
 	}) => Effect.Effect<Stream.Stream<TEvent, TransportError>>;

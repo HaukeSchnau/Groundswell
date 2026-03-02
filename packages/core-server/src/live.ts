@@ -1,12 +1,7 @@
 import { DuplicateEventError } from "@groundswell/core";
 import type { EventMeta } from "@groundswell/zod-helpers";
 import { type Context, Effect, Layer } from "effect";
-import type {
-	Broadcast,
-	CanonicalStorage,
-	IngestEngine,
-	ServerApplicator,
-} from "./interface.js";
+import type { Broadcast, CanonicalStorage, IngestEngine, ServerApplicator } from "./interface.js";
 
 export const ingestEngineLive = <
 	TEvent extends { id: string },
@@ -39,9 +34,7 @@ export const ingestEngineLive = <
 				// 1. Verify business rules and event uniqueness
 				const isUnique = yield* storage.isEventUnique(event.id);
 				if (!isUnique) {
-					return yield* Effect.fail(
-						new DuplicateEventError({ eventId: event.id }),
-					);
+					return yield* Effect.fail(new DuplicateEventError({ eventId: event.id }));
 				}
 				yield* applicator.verify(event, meta);
 
@@ -51,15 +44,10 @@ export const ingestEngineLive = <
 				yield* applicator.apply(event, meta);
 
 				const userTopics = yield* applicator.getUserTopics(meta.initiatorId);
-				const missingEvents = yield* storage.getMissingEventsForUser(
-					meta.initiatorId,
-					userTopics,
-				);
-				const eventsToPublish = Array.from(
-					new Map(
-						[...missingEvents, event].map((event) => [event.id, event]),
-					).values(),
-				);
+				const missingEvents = yield* storage.getMissingEventsForUser(meta.initiatorId, userTopics);
+				const eventsToPublish = [
+					...new Map([...missingEvents, event].map((event) => [event.id, event])).values(),
+				];
 
 				if (eventsToPublish.length > 0) {
 					yield* broadcast.publishToUser(meta.initiatorId, eventsToPublish);

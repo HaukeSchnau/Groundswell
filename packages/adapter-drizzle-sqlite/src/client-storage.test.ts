@@ -21,10 +21,7 @@ const ensurePromise = <T>(value: T | Promise<T>): Promise<T> => {
 };
 
 describe("DrizzleStorageAdapter", () => {
-	class DomainStorage extends Context.Tag("DomainStorage")<
-		DomainStorage,
-		Storage<TestEvent>
-	>() {}
+	class DomainStorage extends Context.Tag("DomainStorage")<DomainStorage, Storage<TestEvent>>() {}
 
 	const Schema = {
 		eventLog: EventsTable,
@@ -148,9 +145,7 @@ describe("DrizzleStorageAdapter", () => {
 			];
 
 			// Save all events
-			yield* Effect.forEach(events, ({ event, status }) =>
-				storage.saveEvent(event, status),
-			);
+			yield* Effect.forEach(events, ({ event, status }) => storage.saveEvent(event, status));
 
 			const pendingStream = storage.getPendingEvents;
 			const result = yield* pipe(

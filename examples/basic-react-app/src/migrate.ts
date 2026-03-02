@@ -1,37 +1,43 @@
-// @ts-nocheck
-
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { drizzle } from "drizzle-orm/libsql/wasm";
-import journalRaw from "../drizzle/meta/_journal.json" with { type: "text" };
 
-const migrations = {
-	"0000_conscious_northstar": await import(
-		"../drizzle/0000_conscious_northstar.sql"
-	).then((m) => m.default),
+type JournalEntry = {
+	tag: keyof typeof migrations;
+	breakpoints: boolean;
+	when: number;
 };
 
-const journal = JSON.parse(journalRaw);
+type Journal = {
+	entries: JournalEntry[];
+};
 
-const migrationQueries = [];
-for (const journalEntry of journal.entries) {
-	// const query = migrations[journalEntry.tag];
-	const query = await fetch(migrations[journalEntry.tag]).then((r) => r.text());
-	const result = query.split("--> statement-breakpoint").map((it) => {
-		return it;
-	});
-	migrationQueries.push({
-		sql: result,
-		bps: journalEntry.breakpoints,
-		folderMillis: journalEntry.when,
-		hash: await window.crypto.subtle
-			.digest("SHA-256", new TextEncoder().encode(query))
-			.then((hash) => {
-				return Array.from(new Uint8Array(hash))
-					.map((b) => b.toString(16).padStart(2, "0"))
-					.join("");
-			}),
-	});
-}
+const migrations = {
+	"0000_conscious_northstar": new URL(
+		"../drizzle/0000_conscious_northstar.sql",
+		import.meta.url,
+	).toString(),
+};
+
+const journalData: unknown = await fetch(
+	new URL("../drizzle/meta/_journal.json", import.meta.url),
+).then((response) => response.json());
+const journal = journalData as Journal;
+
+const migrationQueries = await Promise.all(
+	journal.entries.map(async (journalEntry) => {
+		const query = await fetch(migrations[journalEntry.tag]).then((r) => r.text());
+		const hashBuffer = await window.crypto.subtle.digest(
+			"SHA-256",
+			new TextEncoder().encode(query),
+		);
+		return {
+			sql: query.split("--> statement-breakpoint"),
+			bps: journalEntry.breakpoints,
+			folderMillis: journalEntry.when,
+			hash: [...new Uint8Array(hashBuffer)].map((b) => b.toString(16).padStart(2, "0")).join(""),
+		};
+	}),
+);
 
 export const runMigrations = async () => {
 	const db = drizzle({

@@ -1,32 +1,38 @@
 {
 	"name": "groundswell",
+	"workspaces": [
+		"packages/*",
+		"examples/*"
+	],
+	"type": "module",
 	"module": "index.ts",
-	"devDependencies": {
-		"@biomejs/biome": "2.0.5",
-		"@effect/language-service": "^0.23.5",
-		"@libsql/client": "^0.15.9",
-		"@typescript/native-preview": "^7.0.0-dev.20250709.1",
-		"vitest": "^3.2.4"
-	},
-	"peerDependencies": {
-		"typescript": "^5.8.3"
-	},
 	"scripts": {
 		"build": "bun run --filter '*' build",
 		"bump": "bun run --filter '*' bump --",
-		"lint": "biome check",
-		"lint:fix": "biome check --write",
+		"checks:fmt": "oxfmt .",
+		"checks:fmt:ci": "oxfmt --check .",
+		"checks:lint": "oxlint --type-aware --type-check .",
+		"checks:lint:ci": "oxlint --type-aware --type-check --deny-warnings --format gitlab . | tee gl-codequality.json",
+		"checks:lint:fix-safe": "oxlint --type-aware --type-check --fix .",
+		"checks:lint:fix-all": "oxlint --type-aware --type-check --fix --fix-suggestions --fix-dangerously .",
 		"pub": "bun run --filter '*' pub",
 		"release": "bun scripts/release.ts",
 		"test": "vitest run",
 		"test:dev": "vitest",
 		"typecheck": "bun run --filter '*' typecheck"
 	},
-	"type": "module",
-	"workspaces": [
-		"packages/*",
-		"examples/*"
-	],
+	"devDependencies": {
+		"@effect/language-service": "^0.23.5",
+		"@libsql/client": "^0.15.9",
+		"@typescript/native-preview": "^7.0.0-dev.20250709.1",
+		"oxfmt": "^0.35.0",
+		"oxlint": "^1.50.0",
+		"oxlint-tsgolint": "^0.15.0",
+		"vitest": "^3.2.4"
+	},
+	"peerDependencies": {
+		"typescript": "^5.8.3"
+	},
 	"patchedDependencies": {
 		"@libsql/libsql-wasm-experimental@0.0.2": "patches/@libsql%2Flibsql-wasm-experimental@0.0.2.patch",
 		"drizzle-orm@0.44.2": "patches/drizzle-orm@0.44.2.patch"

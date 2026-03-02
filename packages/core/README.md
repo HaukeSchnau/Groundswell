@@ -52,6 +52,7 @@ syncEngineLive(
 ## Event Processing Behavior
 
 For each local ingest:
+
 1. Save event as `{ local: pending, remote: pending }`
 2. Run applicator `verify` then `apply`
 3. Update `local` status
@@ -60,6 +61,7 @@ For each local ingest:
 6. Update `remote` status
 
 For each remote event:
+
 1. Save as `{ local: pending, remote: success }`
 2. Ignore duplicates
 3. Queue for local processing
@@ -78,15 +80,16 @@ For each remote event:
 import { syncEngineLive } from "@groundswell/core";
 
 const SyncEngineLive = syncEngineLive(
-  DomainSyncEngine,
-  DomainApplicator,
-  DomainStorage,
-  DomainTransport,
-  { offset: 0 }
+	DomainSyncEngine,
+	DomainApplicator,
+	DomainStorage,
+	DomainTransport,
+	{ offset: 0 },
 );
 ```
 
 You must provide live layers for:
+
 - Applicator
 - Storage
 - Transport

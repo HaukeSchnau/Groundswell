@@ -1,6 +1,7 @@
 # HTTP + SSE Contract
 
 This document describes the wire contract expected between:
+
 - Client transport adapters (`@groundswell/adapter-sse-client`)
 - Server adapters (`@groundswell/adapter-hono-server`, `@groundswell/adapter-bun-server`)
 
@@ -58,6 +59,7 @@ data: <superjson event payload>
 ## Client Transport Expectations
 
 `@groundswell/adapter-sse-client` expects:
+
 - Publish endpoint at `${baseUrl}/events`
 - Listen endpoint at `${baseUrl}/events`
 - SSE `data` payload parseable by `superjson.parse`

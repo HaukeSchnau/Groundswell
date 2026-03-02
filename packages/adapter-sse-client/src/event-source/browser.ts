@@ -13,10 +13,10 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 	EventSourceService.of({
 		connect: (url, options) =>
 			Stream.asyncEffect((emit) =>
-				Effect.gen(function* () {
+				Effect.sync(() => {
 					const es = new EventSource(url, {
-						fetch: (url, init) => {
-							return fetch(url, {
+						fetch: (requestUrl, init) => {
+							return fetch(requestUrl, {
 								...init,
 								headers: {
 									...init.headers,
@@ -26,28 +26,35 @@ export const BrowserEventSourceServiceLive = Layer.succeed(
 						},
 					});
 
-					es.onopen = () => {
-						// Connection opened, no data to emit for this event
-					};
-
-					es.onmessage = (event) => {
-						emit.single({
-							data: event.data,
+					const handleMessage = (event: MessageEvent) => {
+						void emit.single({
+							data: String(event.data),
 							id: Option.fromNullable(event.lastEventId),
 							event: Option.fromNullable(event.type),
 							retry: Option.none(), // Native EventSource doesn't expose this directly
 						});
 					};
-
-					es.onerror = (errorEvent) => {
+					const handleError = (errorEvent: Event) => {
 						// Emit an error, which will terminate the stream
-						emit.fail(
+						void emit.fail(
 							new EventSourceError({
 								reason: "NetworkError",
 								originalError: errorEvent,
 							}),
 						);
 					};
+					const legacyEventSource = es as {
+						onmessage?: ((event: MessageEvent) => void) | null;
+						onerror?: ((event: Event) => void) | null;
+					};
+
+					if (typeof es.addEventListener === "function") {
+						es.addEventListener("message", handleMessage);
+						es.addEventListener("error", handleError);
+					} else {
+						legacyEventSource.onmessage = handleMessage;
+						legacyEventSource.onerror = handleError;
+					}
 
 					return Stream.finalizer(Effect.sync(() => es.close()));
 				}),

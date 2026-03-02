@@ -51,6 +51,7 @@ Clients subscribe through `GET /events` (SSE):
 - Client transport parses and schema-validates each message.
 
 Primary implementations:
+
 - `packages/adapter-hono-server/src/index.ts`
 - `packages/adapter-bun-server/src/index.ts`
 - `packages/adapter-sse-client/src/index.ts`
@@ -81,15 +82,15 @@ This enables recovery after restarts, offline windows, or partial failures.
 
 ## Status Transition Reference
 
-| Situation | Before | After |
-| --- | --- | --- |
-| Fresh local ingest | `pending/pending` | queued + local apply attempted |
-| Local apply success | `pending/*` | `success/*` |
-| Local verify/apply failure | `pending/*` | `error/*` |
-| Remote publish success | `*/pending` | `*/success` |
-| Remote publish non-retryable failure | `*/pending` | `*/error` |
-| Remote duplicate | `*/pending` | `*/success` |
-| Remote inbound event saved | n/a | `pending/success` |
+| Situation                            | Before            | After                          |
+| ------------------------------------ | ----------------- | ------------------------------ |
+| Fresh local ingest                   | `pending/pending` | queued + local apply attempted |
+| Local apply success                  | `pending/*`       | `success/*`                    |
+| Local verify/apply failure           | `pending/*`       | `error/*`                      |
+| Remote publish success               | `*/pending`       | `*/success`                    |
+| Remote publish non-retryable failure | `*/pending`       | `*/error`                      |
+| Remote duplicate                     | `*/pending`       | `*/success`                    |
+| Remote inbound event saved           | n/a               | `pending/success`              |
 
 `status` format above is `local/remote`.
 

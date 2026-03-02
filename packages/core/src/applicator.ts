@@ -2,23 +2,14 @@ import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import { Effect } from "effect";
 import type { ValidationError } from "./errors.js";
 
-type SplitNamespace<T> = T extends `${infer Prefix}.${infer Suffix}`
-	? [Prefix, Suffix]
-	: [T, ""];
+type SplitNamespace<T> = T extends `${infer Prefix}.${infer Suffix}` ? [Prefix, Suffix] : [T, ""];
 type NamespaceEvents<
 	DomainEvent extends UnknownEvent,
 	Namespace extends SplitNamespace<DomainEvent["type"]>[0],
 > = Extract<DomainEvent, { type: `${Namespace}.${string}` }>;
-type Namespaces<DomainEvent extends UnknownEvent> = SplitNamespace<
-	DomainEvent["type"]
->[0];
+type Namespaces<DomainEvent extends UnknownEvent> = SplitNamespace<DomainEvent["type"]>[0];
 
-type Applicator<
-	DomainEvent extends UnknownEvent,
-	EventName extends DomainEvent["type"],
-	E,
-	R,
-> = {
+type Applicator<DomainEvent extends UnknownEvent, EventName extends DomainEvent["type"], E, R> = {
 	apply: (
 		event: Extract<DomainEvent, { type: EventName }>,
 		meta: EventMeta,
@@ -37,17 +28,15 @@ export type NamespaceApplicatorMap<
 	E,
 	R,
 > = {
-	[EventName in SplitNamespace<
-		NamespaceEvents<DomainEvent, Namespace>["type"]
-	>[1]]: Applicator<DomainEvent, `${Namespace}.${EventName}`, E, R>;
-};
-export type NamespaceApplicatorTree<DomainEvent extends UnknownEvent, E, R> = {
-	[Namespace in Namespaces<DomainEvent>]: NamespaceApplicatorMap<
+	[EventName in SplitNamespace<NamespaceEvents<DomainEvent, Namespace>["type"]>[1]]: Applicator<
 		DomainEvent,
-		Namespace,
+		`${Namespace}.${EventName}`,
 		E,
 		R
 	>;
+};
+export type NamespaceApplicatorTree<DomainEvent extends UnknownEvent, E, R> = {
+	[Namespace in Namespaces<DomainEvent>]: NamespaceApplicatorMap<DomainEvent, Namespace, E, R>;
 };
 
 export const applicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
@@ -87,12 +76,11 @@ export const applicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 	};
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: libray code, not worth the effort to type it properly
-const getApplicator = (event: UnknownEvent, applicatorTree: any) => {
-	const [namespace, ...eventNameParts] = event.type.split(".") as [
-		string,
-		string,
-	];
+const getApplicator = (
+	event: UnknownEvent,
+	applicatorTree: Record<string, Record<string, unknown> | undefined>,
+) => {
+	const [namespace, ...eventNameParts] = event.type.split(".") as [string, string];
 	const eventName = eventNameParts.join(".");
 	return applicatorTree[namespace]?.[eventName];
 };
@@ -124,12 +112,9 @@ export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 		event: Extract<DomainEvent, { type: T }>,
 		meta: EventMeta,
 	) => {
-		const applicator = getApplicator(event, applicatorTree) as Applicator<
-			Extract<DomainEvent, { type: T }>,
-			T,
-			E,
-			R
-		>;
+		const applicator = getApplicator(event, applicatorTree) as
+			| Applicator<Extract<DomainEvent, { type: T }>, T, E, R>
+			| undefined;
 		if (!applicator) {
 			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
 			return Effect.void;
@@ -160,12 +145,7 @@ type ServerApplicator<
 	) => Effect.Effect<string[], E, R>;
 };
 export type ServerApplicatorMap<DomainEvent extends UnknownEvent, E, R> = {
-	[EventName in DomainEvent["type"]]: ServerApplicator<
-		DomainEvent,
-		EventName,
-		E,
-		R
-	>;
+	[EventName in DomainEvent["type"]]: ServerApplicator<DomainEvent, EventName, E, R>;
 };
 export type NamespaceServerApplicatorMap<
 	DomainEvent extends UnknownEvent,
@@ -177,11 +157,7 @@ export type NamespaceServerApplicatorMap<
 		NamespaceEvents<DomainEvent, Namespace>["type"]
 	>[1]]: ServerApplicator<DomainEvent, `${Namespace}.${EventName}`, E, R>;
 };
-export type NamespaceServerApplicatorTree<
-	DomainEvent extends UnknownEvent,
-	E,
-	R,
-> = {
+export type NamespaceServerApplicatorTree<DomainEvent extends UnknownEvent, E, R> = {
 	[Namespace in Namespaces<DomainEvent>]: NamespaceServerApplicatorMap<
 		DomainEvent,
 		Namespace,
@@ -206,11 +182,7 @@ export const serverApplicatorFactory = <DomainEvent extends UnknownEvent, E, R>(
 	};
 };
 
-export const serverApplicatorTreeFactory = <
-	DomainEvent extends UnknownEvent,
-	E,
-	R,
->(
+export const serverApplicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 	applicatorTree: Partial<NamespaceServerApplicatorTree<DomainEvent, E, R>>,
 ) => {
 	const getEventTopics = <T extends DomainEvent["type"]>(

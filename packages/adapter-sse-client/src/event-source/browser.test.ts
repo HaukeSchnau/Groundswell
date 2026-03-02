@@ -35,27 +35,17 @@ describe("NodeEventSourceService", () => {
 							}),
 					}),
 					Effect.tap((chunk) =>
-						Effect.log(
-							`[Test] Received ${Chunk.size(chunk)} messages: ${JSON.stringify(
-								chunk,
-							)}`,
-						),
+						Effect.log(`[Test] Received ${Chunk.size(chunk)} messages: ${JSON.stringify(chunk)}`),
 					),
-					Effect.tapError((error) =>
-						Effect.logError(`[Test] Stream failed with error:`, error),
-					),
+					Effect.tapError((error) => Effect.logError(`[Test] Stream failed with error:`, error)),
 				);
 
 				// --- Assertions ---
 				expect(Chunk.size(collectedMessages)).toEqual(3); // Expect a reasonable number of messages
-				expect(
-					Chunk.every(collectedMessages, (msg) => typeof msg.data === "string"),
-				).toBe(true);
+				expect(Chunk.every(collectedMessages, (msg) => typeof msg.data === "string")).toBe(true);
 
 				// Check for messages known to be sent by sse.dev/test
-				const firstMessage = Chunk.head(collectedMessages).pipe(
-					Option.getOrNull,
-				);
+				const firstMessage = Chunk.head(collectedMessages).pipe(Option.getOrNull);
 				expect(firstMessage?.data).toContain(
 					`{"testing":true,"sse_dev":"is great","msg":"It works!",`,
 				);
@@ -81,9 +71,7 @@ describe("NodeEventSourceService", () => {
 
 			// --- Assertions for error handling ---
 			expect(outcome._tag).toBe("EventSourceError"); // Expect the Effect to result in a failure
-			if (outcome._tag === "EventSourceError") {
-				expect(outcome.reason).toBe("NetworkError");
-			}
+			expect(outcome.reason).toBe("NetworkError");
 		}).pipe(
 			Effect.provide(BrowserEventSourceServiceLive), // Provide the Node.js implementation
 		),

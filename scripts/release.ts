@@ -35,17 +35,14 @@ function die(msg: string, code = 1): never {
 	process.exit(code);
 }
 
-function run(cmd: string[], cwd: string): void {
-	const pretty = cmd
-		.map((c) => (c.includes(" ") ? JSON.stringify(c) : c))
-		.join(" ");
+function run(cmd: [string, ...string[]], cwd: string): void {
+	const pretty = cmd.map((c) => (c.includes(" ") ? JSON.stringify(c) : c)).join(" ");
 	console.log(`\n$ (cd ${cwd}) ${pretty}`);
 
-	const r = Bun.spawnSync({
-		cmd,
+	const r = Bun.spawnSync([...cmd], {
 		cwd,
 		env: process.env,
-		stdin: "inherit",
+		stdin: "ignore",
 		stdout: "inherit",
 		stderr: "inherit",
 	});
@@ -65,7 +62,7 @@ function listPublishablePackages(): {
 	const entries = readdirSync(packagesDir, { withFileTypes: true })
 		.filter((e) => e.isDirectory())
 		.map((e) => e.name)
-		.sort();
+		.toSorted();
 
 	const out: { dir: string; name: string; version: string }[] = [];
 	for (const entry of entries) {
@@ -76,10 +73,7 @@ function listPublishablePackages(): {
 			if (pkg == null || typeof pkg !== "object") continue;
 			const packageJson = pkg as Record<string, unknown>;
 			if (packageJson.private) continue;
-			if (
-				typeof packageJson.name !== "string" ||
-				typeof packageJson.version !== "string"
-			) {
+			if (typeof packageJson.name !== "string" || typeof packageJson.version !== "string") {
 				continue;
 			}
 			out.push({
@@ -172,9 +166,7 @@ if (pkgs.length === 0) die("No publishable packages found under ./packages/*");
 console.log("Release plan:");
 console.log(`- Registry: ${flags.registry}`);
 console.log(`- Bump: ${flags.skipBump ? "(skipped)" : bump}`);
-console.log(
-	`- Packages: ${pkgs.map((p) => `${p.name}@${p.version}`).join(", ")}`,
-);
+console.log(`- Packages: ${pkgs.map((p) => `${p.name}@${p.version}`).join(", ")}`);
 console.log(
 	`- Steps: ${[
 		flags.skipTests ? null : "tests",
@@ -214,7 +206,7 @@ if (!flags.skipBuild) {
 
 if (!flags.skipPublish) {
 	for (const p of pkgs) {
-		const cmd = ["npm", "publish", "--registry", flags.registry];
+		const cmd: [string, ...string[]] = ["npm", "publish", "--registry", flags.registry];
 		if (flags.dryRun) cmd.push("--dry-run");
 		run(cmd, p.dir);
 	}

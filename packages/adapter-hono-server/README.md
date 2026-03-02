@@ -10,10 +10,10 @@ Hono adapter that attaches sync ingest/stream endpoints to a Hono app.
 
 ```ts
 type HonoServerConfig<TEvent> = {
-  ingestEngine: IngestEngine<TEvent>;
-  broadcast: Broadcast<TEvent>;
-  getUserId: (c: Context) => Promise<string | null>;
-  eventSchema: z.Schema<TEvent>;
+	ingestEngine: IngestEngine<TEvent>;
+	broadcast: Broadcast<TEvent>;
+	getUserId: (c: Context) => Promise<string | null>;
+	eventSchema: z.Schema<TEvent>;
 };
 ```
 
@@ -33,6 +33,7 @@ type HonoServerConfig<TEvent> = {
 5. Call `ingestEngine.ingest(event, { initiatorId })`
 
 Response patterns:
+
 - `200` `{ success: true }`
 - `400` invalid event
 - `401` unauthorized
@@ -46,6 +47,7 @@ Response patterns:
 3. Stream `broadcast.subscribe(userId, { offset })` via SSE
 
 Response patterns:
+
 - `401` unauthorized
 - `200` SSE stream on success
 
@@ -53,10 +55,10 @@ Response patterns:
 
 ```ts
 attachSyncServer(app, {
-  ingestEngine,
-  broadcast,
-  getUserId: async (c) => c.get("userId") ?? null,
-  eventSchema: DomainEvent,
+	ingestEngine,
+	broadcast,
+	getUserId: async (c) => c.get("userId") ?? null,
+	eventSchema: DomainEvent,
 });
 ```
 

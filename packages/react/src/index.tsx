@@ -1,18 +1,6 @@
 import type { SyncEngine } from "@groundswell/core";
-import {
-	type Context,
-	Effect,
-	Fiber,
-	type ManagedRuntime,
-	Stream,
-} from "effect";
-import {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useState,
-} from "react";
+import { type Context, Effect, Fiber, type ManagedRuntime, Stream } from "effect";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 // --- Context Setup ---
 
@@ -39,9 +27,7 @@ export const syncEngineFactory = <TEvent, TEngineTag, TContextTag, TContext>(
 	function useIngest() {
 		const runtime = useContext(SyncEngineContext);
 		if (!runtime) {
-			throw new Error(
-				"useIngest hooks must be used within a SyncEngineProvider.",
-			);
+			throw new Error("useIngest hooks must be used within a SyncEngineProvider.");
 		}
 
 		return useCallback(
@@ -51,7 +37,7 @@ export const syncEngineFactory = <TEvent, TEngineTag, TContextTag, TContext>(
 					Effect.andThen(syncEngineTag, (engine) => engine.ingest(event)),
 				);
 			},
-			[runtime, syncEngineTag],
+			[runtime],
 		);
 	}
 
@@ -66,9 +52,7 @@ export const syncEngineFactory = <TEvent, TEngineTag, TContextTag, TContext>(
 	function useSyncStatus() {
 		const runtime = useContext(SyncEngineContext);
 		if (!runtime) {
-			throw new Error(
-				"useSyncStatus hooks must be used within a SyncEngineProvider.",
-			);
+			throw new Error("useSyncStatus hooks must be used within a SyncEngineProvider.");
 		}
 		const [status, setStatus] = useState({ queueSize: 0 });
 
@@ -84,7 +68,7 @@ export const syncEngineFactory = <TEvent, TEngineTag, TContextTag, TContext>(
 			return () => {
 				runtime.runFork(Fiber.interrupt(fiber));
 			};
-		}, [runtime, syncEngineTag]);
+		}, [runtime]);
 
 		return status;
 	}

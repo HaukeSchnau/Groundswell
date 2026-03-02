@@ -20,6 +20,7 @@ This directory contains architecture, reference, and contributor documentation f
 ## Package Docs
 
 Package-specific docs are maintained in package `README.md` files:
+
 - [`packages/core`](../packages/core/README.md)
 - [`packages/core-server`](../packages/core-server/README.md)
 - [`packages/adapter-sse-client`](../packages/adapter-sse-client/README.md)

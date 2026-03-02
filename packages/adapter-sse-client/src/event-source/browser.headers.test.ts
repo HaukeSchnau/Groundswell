@@ -14,11 +14,7 @@ vi.stubGlobal("fetch", fetchMock);
 vi.mock("eventsource", () => {
 	class MockEventSource {
 		onopen?: () => void;
-		onmessage?: (event: {
-			data: string;
-			lastEventId?: string;
-			type?: string;
-		}) => void;
+		onmessage?: (event: { data: string; lastEventId?: string; type?: string }) => void;
 		onerror?: (error: unknown) => void;
 
 		constructor(

@@ -1,0 +1,9 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"ignorePatterns": ["docs/archive/**", "**/dist/**"],
+	"singleQuote": false,
+	"jsxSingleQuote": false,
+	"semi": true,
+	"trailingComma": "all",
+	"useTabs": true
+}

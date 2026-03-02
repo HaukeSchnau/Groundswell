@@ -3,6 +3,7 @@
 Groundswell is a TypeScript monorepo for building event-driven, eventually-consistent synchronization between local clients and a canonical server.
 
 It is organized as small, composable packages:
+
 - Core runtime contracts and orchestration
 - Server-side ingest and broadcast orchestration
 - Transport and framework adapters
@@ -12,17 +13,17 @@ It is organized as small, composable packages:
 
 ## Package Matrix
 
-| Package | Purpose |
-| --- | --- |
-| [`@groundswell/core`](./packages/core/README.md) | Client sync engine (`SyncEngine`) and applicator helpers |
-| [`@groundswell/core-server`](./packages/core-server/README.md) | Server ingest engine (`IngestEngine`) contracts and runtime |
-| [`@groundswell/adapter-sse-client`](./packages/adapter-sse-client/README.md) | Client transport using HTTP + SSE |
-| [`@groundswell/adapter-hono-server`](./packages/adapter-hono-server/README.md) | Hono server endpoints for sync ingest/stream |
-| [`@groundswell/adapter-bun-server`](./packages/adapter-bun-server/README.md) | Bun route handlers for sync ingest/stream |
-| [`@groundswell/adapter-drizzle-sqlite`](./packages/adapter-drizzle-sqlite/README.md) | SQLite storage adapters (client + canonical) |
-| [`@groundswell/adapter-drizzle-postgres`](./packages/adapter-drizzle-postgres/README.md) | PostgreSQL canonical storage adapter |
-| [`@groundswell/react`](./packages/react/README.md) | React provider/hooks for running a sync engine |
-| [`@groundswell/zod-helpers`](./packages/zod-helpers/README.md) | Zod helpers for domain-event schema definitions |
+| Package                                                                                  | Purpose                                                     |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`@groundswell/core`](./packages/core/README.md)                                         | Client sync engine (`SyncEngine`) and applicator helpers    |
+| [`@groundswell/core-server`](./packages/core-server/README.md)                           | Server ingest engine (`IngestEngine`) contracts and runtime |
+| [`@groundswell/adapter-sse-client`](./packages/adapter-sse-client/README.md)             | Client transport using HTTP + SSE                           |
+| [`@groundswell/adapter-hono-server`](./packages/adapter-hono-server/README.md)           | Hono server endpoints for sync ingest/stream                |
+| [`@groundswell/adapter-bun-server`](./packages/adapter-bun-server/README.md)             | Bun route handlers for sync ingest/stream                   |
+| [`@groundswell/adapter-drizzle-sqlite`](./packages/adapter-drizzle-sqlite/README.md)     | SQLite storage adapters (client + canonical)                |
+| [`@groundswell/adapter-drizzle-postgres`](./packages/adapter-drizzle-postgres/README.md) | PostgreSQL canonical storage adapter                        |
+| [`@groundswell/react`](./packages/react/README.md)                                       | React provider/hooks for running a sync engine              |
+| [`@groundswell/zod-helpers`](./packages/zod-helpers/README.md)                           | Zod helpers for domain-event schema definitions             |
 
 ## Architecture At A Glance
 
@@ -47,6 +48,7 @@ flowchart LR
 ```
 
 Detailed architecture docs:
+
 - [Architecture Overview](./docs/architecture/overview.md)
 - [Event Lifecycle](./docs/architecture/event-lifecycle.md)
 - [HTTP + SSE Contract](./docs/reference/http-and-sse-contract.md)
@@ -54,6 +56,7 @@ Detailed architecture docs:
 ## Quick Start
 
 ### Prerequisites
+
 - [Bun](https://bun.sh)
 - TypeScript-compatible toolchain (workspace uses TypeScript and Effect)
 
@@ -67,17 +70,20 @@ bun install
 
 ```bash
 bun run build
+bun run checks:fmt:ci
+bun run checks:lint
 bun run test
 bun run typecheck
-bun run lint
 ```
 
 ## Example App
 
 A runnable end-to-end integration lives in:
+
 - [`examples/basic-react-app`](./examples/basic-react-app/README.md)
 
 It wires:
+
 - `@groundswell/core` + `@groundswell/react`
 - `@groundswell/core-server`
 - `@groundswell/adapter-bun-server`
@@ -95,11 +101,13 @@ It wires:
 ## Documentation Map
 
 Start here for docs navigation:
+
 - [`docs/README.md`](./docs/README.md)
 
 ## Assumptions and Current Boundaries
 
 Current docs describe behavior as implemented in this repository today. Notable boundaries:
+
 - Serialization in adapters is currently based on `superjson`.
 - Server adapters expose `POST /events` and `GET /events` contracts.
 - Core retry behavior is defined in `@groundswell/core` transport publish flow.

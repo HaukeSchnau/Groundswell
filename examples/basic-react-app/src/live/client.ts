@@ -1,23 +1,14 @@
 import { ClientStorage } from "@groundswell/adapter-drizzle-sqlite";
 import { createSseTransportLayer } from "@groundswell/adapter-sse-client";
 import { BrowserEventSourceServiceLive } from "@groundswell/adapter-sse-client/browser";
-import {
-	ApplicatorError,
-	syncEngineLive,
-	ValidationError,
-} from "@groundswell/core";
+import { ApplicatorError, syncEngineLive, ValidationError } from "@groundswell/core";
 import { makeService } from "@schnau/effect-drizzle/libsql-wasm";
 import { Effect, Layer, Redacted } from "effect";
-import {
-	DomainApplicator,
-	DomainStorage,
-	DomainSyncEngine,
-	DomainTransport,
-} from "@/boilerplate";
-import { applicator } from "@/domain/applicators";
-import { Database } from "@/domain/db/contract";
-import * as Schema from "@/domain/db/schema";
-import { DomainEvent } from "@/domain/events";
+import { DomainApplicator, DomainStorage, DomainSyncEngine, DomainTransport } from "../boilerplate";
+import { applicator } from "../domain/applicators";
+import { Database } from "../domain/db/contract";
+import * as Schema from "../domain/db/schema";
+import { DomainEvent } from "../domain/events";
 
 const clientApplicatorsLive = Layer.effect(
 	DomainApplicator,
@@ -33,13 +24,9 @@ const clientApplicatorsLive = Layer.effect(
 						Effect.provideService(Database, db),
 						Effect.catchTags({
 							DatabaseError: (error) =>
-								Effect.fail(
-									new ValidationError({ cause: error, reason: "INVALID" }),
-								),
+								Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
 							UnknownException: (error) =>
-								Effect.fail(
-									new ValidationError({ cause: error, reason: "UNKNOWN" }),
-								),
+								Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
 						}),
 					),
 			apply: (event: DomainEvent) =>
@@ -50,10 +37,8 @@ const clientApplicatorsLive = Layer.effect(
 					.pipe(
 						Effect.provideService(Database, db),
 						Effect.catchTags({
-							DatabaseError: (error) =>
-								Effect.fail(new ApplicatorError({ cause: error })),
-							UnknownException: (error) =>
-								Effect.fail(new ApplicatorError({ cause: error })),
+							DatabaseError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
+							UnknownException: (error) => Effect.fail(new ApplicatorError({ cause: error })),
 						}),
 					),
 		});
@@ -62,7 +47,7 @@ const clientApplicatorsLive = Layer.effect(
 
 export const WasmDatabaseLive = Layer.scoped(
 	Database,
-	// @ts-ignore -- weird: only on cli
+	// @ts-expect-error -- weird: only on cli
 	makeService(
 		{
 			url: Redacted.make("file:./db.sqlite"),

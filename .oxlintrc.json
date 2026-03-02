@@ -1,0 +1,195 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"ignorePatterns": ["docs/archive/**", "**/dist/**", "**/bun-env.d.ts"],
+	"plugins": [
+		"eslint",
+		"react",
+		"unicorn",
+		"typescript",
+		"oxc",
+		"import",
+		"jsdoc",
+		"jest",
+		"vitest",
+		"jsx-a11y",
+		"nextjs",
+		"react-perf",
+		"promise",
+		"node",
+		"vue"
+	],
+	"categories": {
+		"correctness": "error",
+		"nursery": "error",
+		"pedantic": "error",
+		"perf": "error",
+		"restriction": "error",
+		"style": "error",
+		"suspicious": "error"
+	},
+	"rules": {
+		"react/react-in-jsx-scope": "off", // React 17+ JSX transform does not require React in scope.
+		"react/jsx-max-depth": "off", // Nested Effect and JSX composition makes arbitrary depth limits noisy.
+		"react/jsx-filename-extension": "off", // TS/TSX usage already constrains where JSX lives.
+		"react/jsx-curly-brace-presence": "off", // Explicit braces are sometimes clearer in examples and docs.
+		"react/jsx-props-no-spreading": "off", // Prop spreading is a normal composition pattern in this repo.
+		"react/jsx-boolean-value": "off", // Explicit booleans are fine when they improve clarity.
+		"react/style-prop-object": "off", // `style` can be a userland prop, not only inline style objects.
+
+		"react-perf/jsx-no-new-function-as-prop": "off", // React handlers are not memoized pervasively in this codebase.
+		"react-perf/jsx-no-new-object-as-prop": "off", // React handlers are not memoized pervasively in this codebase.
+		"react-perf/jsx-no-new-array-as-prop": "off", // React handlers are not memoized pervasively in this codebase.
+		"react-perf/jsx-no-jsx-as-prop": "off", // Component composition via JSX props is intentional here.
+
+		"typescript/explicit-function-return-type": "off", // Type inference keeps library code readable without sacrificing safety.
+		"typescript/explicit-module-boundary-types": "off", // Public APIs are already strongly inferred from declarations.
+		"typescript/strict-boolean-expressions": "off", // Guard clauses intentionally use idiomatic truthiness checks.
+		"typescript/array-type": "off", // Both `T[]` and `Array<T>` are already used.
+		"typescript/no-confusing-void-expression": "off", // `void` is intentionally used for fire-and-forget test helpers.
+		"typescript/prefer-nullish-coalescing": "off", // Existing boolean logic is explicit and readable as written.
+		"typescript/promise-function-async": "off", // Promise-returning functions do not need `async` wrappers everywhere.
+		"typescript/consistent-type-definitions": "off", // `type` and `interface` both have legitimate uses here.
+		"typescript/no-misused-promises": "off", // Async callbacks are common in React handlers and Effect integrations.
+		"typescript/prefer-readonly-parameter-types": "off", // Effect services and framework callbacks make this impractical across the repo.
+		"typescript/no-unnecessary-type-parameters": "off", // Generic helper signatures intentionally favor explicitness.
+		"typescript/restrict-template-expressions": "off", // Debug and error strings intentionally interpolate rich values.
+		"typescript/no-deprecated": "off", // Dependency deprecations are tracked separately from repo lint health.
+		"typescript/consistent-type-exports": "off", // Inline and separate type exports are both used intentionally.
+		"typescript/no-unsafe-type-assertion": "off", // Narrowing helper code still relies on some explicit assertions.
+		"typescript/consistent-return": "off", // Effect generators do not map cleanly to this rule's return analysis.
+
+		"unicorn/no-null": "off", // `null` is part of the public API surface in multiple packages.
+		"unicorn/no-array-callback-reference": "off", // Predicate helpers like `filter(isDefined)` stay concise this way.
+		"unicorn/numeric-separators-style": "off", // Numeric separators are a style preference, not a correctness concern.
+		"unicorn/switch-case-braces": "off", // Guard-style switch statements are acceptable here.
+		"unicorn/prefer-global-this": "off", // `globalThis` would be more verbose without adding clarity.
+		"unicorn/no-useless-undefined": "off", // Explicit `undefined` values are used intentionally in APIs.
+		"unicorn/prevent-abbreviations": "off", // Domain and library abbreviations are normal throughout the repo.
+		"unicorn/no-array-method-this-argument": "off", // Effect/Chunk APIs trigger false positives from Array-specific heuristics.
+		"unicorn/no-nested-ternary": "off", // Nested ternaries are acceptable when they remain readable.
+		"unicorn/filename-case": "off", // The repo intentionally mixes kebab-case and component-style filenames.
+
+		"oxc/no-optional-chaining": "off", // Optional chaining is standard modern TypeScript.
+		"oxc/no-rest-spread-properties": "off", // Rest/spread syntax is standard modern TypeScript.
+		"oxc/no-async-await": "off", // Async/await is standard modern TypeScript.
+		"oxc/no-barrel-file": "off", // Package entrypoints intentionally re-export their public API surface.
+
+		"import/no-named-export": "off", // The packages prefer named exports over default exports.
+		"import/prefer-default-export": "off", // The packages prefer named exports over default exports.
+		"import/exports-last": "off", // Export placement is left to module readability, not a blanket rule.
+		"import/group-exports": "off", // Multiple export statements are acceptable for clarity.
+		"import/max-dependencies": "off", // There is no fixed dependency-count policy for modules.
+		"import/no-namespace": "off", // Effect modules are intentionally consumed through namespace imports.
+		"import/consistent-type-specifier-style": "off", // Inline type specifiers are fine when they keep imports compact.
+		"import/no-named-as-default-member": "off", // Effect and library namespaces trigger false positives here.
+		"import/no-unassigned-import": [
+			"error",
+			{
+				"allow": ["**/*.css"]
+			}
+		],
+
+		"eslint/sort-keys": "off", // Object key order is often semantic rather than alphabetical.
+		"eslint/sort-imports": "off", // Import ordering is handled by humans and formatter defaults.
+		"eslint/no-magic-numbers": "off", // Domain values are common enough that forced constants would add noise.
+		"eslint/id-length": "off", // Short names are common for type parameters and indices.
+		"eslint/no-ternary": "off", // Ternaries are used intentionally for concise expressions.
+		"eslint/no-nested-ternary": "off", // Nested ternaries are acceptable when they stay readable.
+		"eslint/capitalized-comments": "off", // Comment capitalization is stylistic rather than semantic.
+		"eslint/no-inline-comments": "off", // Inline comments are used sparingly for local clarifications.
+		"eslint/no-implicit-coercion": "off", // `!!value` is a deliberate readability choice in this repo.
+		"eslint/func-style": "off", // Function declarations and expressions are both used intentionally.
+		"eslint/curly": "off", // Single-line guard clauses are a deliberate style choice.
+		"eslint/max-lines-per-function": "off", // Arbitrary function length limits are not helpful in this repo.
+		"eslint/max-statements": "off", // Arbitrary statement limits are not helpful in this repo.
+		"eslint/max-lines": "off", // Arbitrary file length limits are not helpful in this repo.
+		"eslint/max-params": "off", // Some APIs legitimately take multiple parameters.
+		"eslint/no-undef": "off", // TypeScript handles globals and undefined symbols more accurately here.
+		"eslint/no-undefined": "off", // Explicit `undefined` is used intentionally for optional values.
+		"eslint/no-void": "off", // `void` is used intentionally to ignore Promises.
+		"eslint/no-negated-condition": "off", // Negated guard clauses are sometimes the clearest expression.
+		"eslint/new-cap": "off", // Framework factories do not always line up with constructor naming.
+		"eslint/arrow-body-style": "off", // Block bodies are used for clarity and early returns.
+		"eslint/prefer-destructuring": "off", // Destructuring is situational and should not be forced.
+		"eslint/prefer-template": "off", // String concatenation is occasionally clearer than template strings.
+		"eslint/no-continue": "off", // Early continuation is used intentionally in scripts and traversal logic.
+		"eslint/no-plusplus": "off", // Increment operators are acceptable in small iterative logic.
+		"eslint/func-names": "off", // Effect generators are often anonymous and read best that way.
+		"eslint/no-shadow": "off", // Callback-heavy code uses short, local names without causing confusion in practice.
+		"eslint/init-declarations": "off", // Deferred initialization is common in Effect workflows and argument parsing.
+		"eslint/no-eq-null": "off", // `== null` is used intentionally to match both `null` and `undefined`.
+		"eslint/eqeqeq": "off", // Paired with `no-eq-null` to preserve intentional `== null` checks.
+		"eslint/max-classes-per-file": "off", // `Context.Tag` and `TaggedError` patterns colocate small classes by design.
+
+		"jest/max-expects": "off", // Assertion count limits are too rigid for the existing test suites.
+		"vitest/prefer-to-be-truthy": "off", // Explicit matchers remain clearer in many tests.
+		"no-warning-comments": "off", // TODO-style comments are allowed while the library evolves.
+		"jest/require-hook": "off",
+		"jsdoc/require-param": "off", // Parameter-by-parameter JSDoc is too noisy for this TypeScript-first repo.
+		"jsdoc/require-param-type": "off", // TypeScript already documents parameter types.
+		"jsdoc/require-returns": "off", // Return docs are optional when the implementation is already clear.
+		"jsdoc/require-returns-type": "off", // TypeScript already documents return types.
+		"react/no-multi-comp": "off", // Small colocated components and tags are an accepted pattern here.
+		"promise/prefer-await-to-callbacks": "off", // Effect combinators intentionally use callback-based composition.
+		"promise/prefer-await-to-then": "off" // Promise wrappers are occasionally the clearest bridge to callback APIs.
+	},
+	"overrides": [
+		{
+			"files": ["**/*.test.ts", "**/*.test.tsx"],
+			"rules": {
+				"no-console": "off",
+				"typescript/no-floating-promises": "off",
+				"typescript/no-unsafe-assignment": "off",
+				"typescript/no-unsafe-call": "off",
+				"vitest/prefer-import-in-mock": "off",
+				"vitest/no-importing-vitest-globals": "off",
+				"jest/no-untyped-mock-factory": "off",
+				"eslint/no-empty-function": "off",
+				"eslint/class-methods-use-this": "off",
+				"eslint/require-await": "off",
+				"typescript/require-await": "off"
+			}
+		},
+		{
+			"files": ["vitest.config.ts", "packages/*/vitest.config.ts", "examples/*/drizzle.config.ts"],
+			"rules": {
+				"import/no-default-export": "off",
+				"node/no-process-env": "off"
+			}
+		},
+		{
+			"files": [
+				"packages/core/src/applicator.ts",
+				"packages/adapter-bun-server/src/index.ts",
+				"packages/adapter-sse-client/src/event-source/browser.ts",
+				"scripts/release.ts",
+				"examples/basic-react-app/src/App.tsx",
+				"examples/basic-react-app/src/live/server.ts"
+			],
+			"rules": {
+				"no-console": "off",
+				"unicorn/prefer-add-event-listener": "off"
+			}
+		},
+		{
+			"files": ["scripts/**/*.ts", "examples/basic-react-app/src/index.ts"],
+			"rules": {
+				"node/no-process-env": "off",
+				"import/no-nodejs-modules": "off",
+				"unicorn/no-process-exit": "off"
+			}
+		},
+		{
+			"files": ["examples/basic-react-app/src/migrate.ts"],
+			"rules": {
+				"import/no-relative-parent-imports": "off"
+			}
+		},
+		{
+			"files": ["examples/basic-react-app/src/**/*.ts", "examples/basic-react-app/src/**/*.tsx"],
+			"rules": {
+				"import/no-relative-parent-imports": "off"
+			}
+		}
+	]
+}

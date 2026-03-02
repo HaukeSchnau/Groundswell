@@ -18,9 +18,13 @@ export class EventSourceError extends Data.TaggedError("EventSourceError")<{
 	originalError?: unknown;
 }> {
 	override get message() {
-		switch (this.reason) {
-		}
-		return `EventSourceError: ${this.reason}. Cause: ${this.originalError}`;
+		const cause =
+			this.originalError === undefined
+				? ""
+				: this.originalError instanceof Error
+					? ` Cause: ${this.originalError.message}`
+					: ` Cause: ${JSON.stringify(this.originalError)}`;
+		return `EventSourceError: ${this.reason}.${cause}`;
 	}
 }
 

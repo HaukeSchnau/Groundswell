@@ -19,12 +19,7 @@ export class TransportError extends Data.TaggedError("TransportError")<{
 
 export class ValidationError extends Data.TaggedError("ValidationError")<{
 	readonly cause: unknown;
-	readonly reason:
-		| "DUPLICATE"
-		| "NOT_FOUND"
-		| "NOT_ALLOWED"
-		| "INVALID"
-		| "UNKNOWN";
+	readonly reason: "DUPLICATE" | "NOT_FOUND" | "NOT_ALLOWED" | "INVALID" | "UNKNOWN";
 }> {
 	override get message() {
 		return `ValidationError: ${this.reason}. Cause: ${this.cause}`;
@@ -39,9 +34,7 @@ export class ApplicatorError extends Data.TaggedError("ApplicatorError")<{
 	}
 }
 
-export class DuplicateEventError extends Data.TaggedError(
-	"DuplicateEventError",
-)<{
+export class DuplicateEventError extends Data.TaggedError("DuplicateEventError")<{
 	readonly eventId: string;
 }> {
 	override get message() {

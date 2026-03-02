@@ -66,14 +66,12 @@ export const syncServer = <TEvent>(config: HonoServerConfig<TEvent>) => ({
 		return new Response(
 			new ReadableStream({
 				async start(controller) {
-					const eventStream = config.broadcast
-						.subscribe(userId, { offset })
-						.pipe(
-							Stream.runForEach((event) => {
-								controller.enqueue(sseMessage(superjson.stringify(event)));
-								return Effect.void;
-							}),
-						);
+					const eventStream = config.broadcast.subscribe(userId, { offset }).pipe(
+						Stream.runForEach((event) => {
+							controller.enqueue(sseMessage(superjson.stringify(event)));
+							return Effect.void;
+						}),
+					);
 
 					await Effect.runPromise(eventStream);
 					controller.close();

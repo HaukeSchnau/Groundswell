@@ -13,10 +13,7 @@ interface HonoServerConfig<TEvent> {
 	eventSchema: z.Schema<TEvent>;
 }
 
-export const attachSyncServer = <TEvent>(
-	hono: Hono,
-	config: HonoServerConfig<TEvent>,
-) => {
+export const attachSyncServer = <TEvent>(hono: Hono, config: HonoServerConfig<TEvent>) => {
 	hono.post("/events", async (c) => {
 		const body = await c.req.text();
 		const event = superjson.parse(body);
@@ -61,7 +58,7 @@ export const attachSyncServer = <TEvent>(
 			}
 			const eventStream = config.broadcast.subscribe(userId, { offset }).pipe(
 				Stream.runForEach((event) => {
-					stream.writeSSE({
+					void stream.writeSSE({
 						data: superjson.stringify(event),
 					});
 					return Effect.void;

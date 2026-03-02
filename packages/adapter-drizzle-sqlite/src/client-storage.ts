@@ -1,5 +1,9 @@
-import type { LocalEventStatus, Storage } from "@groundswell/core";
-import { DuplicateEventError, StorageError } from "@groundswell/core";
+import {
+	DuplicateEventError,
+	type LocalEventStatus,
+	type Storage,
+	StorageError,
+} from "@groundswell/core";
 import type { UnknownEvent } from "@groundswell/zod-helpers";
 import type {
 	DatabaseError,
@@ -38,19 +42,12 @@ export interface DrizzleStorageConfig<TEvent, TSchema extends Schema, TagId> {
 	eventSchema: z.ZodSchema<TEvent>;
 }
 
-const getPendingEvents = <TSchema extends Schema>(
-	db: GenericDatabaseService<TSchema>,
-) =>
+const getPendingEvents = <TSchema extends Schema>(db: GenericDatabaseService<TSchema>) =>
 	db.execute((client) =>
 		client
 			.select()
 			.from(EventsTable)
-			.where(
-				or(
-					eq(EventsTable.localStatus, "pending"),
-					eq(EventsTable.remoteStatus, "pending"),
-				),
-			)
+			.where(or(eq(EventsTable.localStatus, "pending"), eq(EventsTable.remoteStatus, "pending")))
 			.orderBy(asc(EventsTable.timestamp)),
 	);
 

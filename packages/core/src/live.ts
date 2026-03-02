@@ -11,13 +11,7 @@ import {
 	Stream,
 } from "effect";
 import { StorageError } from "./errors.js";
-import type {
-	Applicator,
-	LocalEvent,
-	Storage,
-	SyncEngine,
-	Transport,
-} from "./interface.js";
+import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
 
 export class RandomUUID extends Context.Tag("RandomUUID")<
 	RandomUUID,
@@ -73,6 +67,7 @@ export const syncEngineLive = <
 
 			// 2. Create state management primitives
 			const queue = yield* Queue.unbounded<LocalEvent<TEvent>>();
+			const statusPubSub = yield* PubSub.unbounded<{ queueSize: number }>();
 			const enqueue = (event: LocalEvent<TEvent>) =>
 				Effect.gen(function* () {
 					yield* queue.offer(event);
@@ -84,44 +79,43 @@ export const syncEngineLive = <
 				return event;
 			});
 			const eventsPubSub = yield* PubSub.unbounded<LocalEvent<TEvent>>();
-			const statusPubSub = yield* PubSub.unbounded<{ queueSize: number }>();
 
-			const applyEventLocally = Effect.fn("SYNC/Client Apply Event Locally")(
-				function* (localEvent: LocalEvent<TEvent>) {
-					yield* applicator.verify(localEvent.event).pipe(
-						Effect.tapErrorTag("ValidationError", () =>
-							storage.updateEventStatus(localEvent.event.id, {
-								local: "error",
-							}),
-						),
-					);
+			const applyEventLocally = Effect.fn("SYNC/Client Apply Event Locally")(function* (
+				localEvent: LocalEvent<TEvent>,
+			) {
+				yield* applicator.verify(localEvent.event).pipe(
+					Effect.tapErrorTag("ValidationError", () =>
+						storage.updateEventStatus(localEvent.event.id, {
+							local: "error",
+						}),
+					),
+				);
 
-					// TODO: try to publish the event to the remote transport
-					// if it fails, we fail finally
-					// if it succeeds, we probably need to receive more events from the remote transport
-					// and then try to apply the event again
+				// TODO: try to publish the event to the remote transport
+				// if it fails, we fail finally
+				// if it succeeds, we probably need to receive more events from the remote transport
+				// and then try to apply the event again
 
-					yield* applicator.apply(localEvent.event);
-					yield* storage.updateEventStatus(localEvent.event.id, {
-						local: "success",
-					});
+				yield* applicator.apply(localEvent.event);
+				yield* storage.updateEventStatus(localEvent.event.id, {
+					local: "success",
+				});
 
-					const result = {
-						...localEvent,
-						status: {
-							...localEvent.status,
-							local: "success" as const,
-						},
-					};
+				const result = {
+					...localEvent,
+					status: {
+						...localEvent.status,
+						local: "success" as const,
+					},
+				};
 
-					yield* eventsPubSub.publish(result);
-					return result;
-				},
-			);
+				yield* eventsPubSub.publish(result);
+				return result;
+			});
 
-			const publishEventRemotely = Effect.fn(
-				"SYNC/Client Publish Event Remotely",
-			)(function* (localEvent: LocalEvent<TEvent>) {
+			const publishEventRemotely = Effect.fn("SYNC/Client Publish Event Remotely")(function* (
+				localEvent: LocalEvent<TEvent>,
+			) {
 				const published = yield* pipe(
 					transport.publish(localEvent.event),
 					// Retry on retryable network errors with a backoff schedule
@@ -167,12 +161,10 @@ export const syncEngineLive = <
 				yield* Effect.annotateCurrentSpan("status", localEvent.status);
 
 				// --- Step A: Local Application. Aborts if local application fails ---
-				if (localEvent.status.local === "pending")
-					yield* applyEventLocally(localEvent);
+				if (localEvent.status.local === "pending") yield* applyEventLocally(localEvent);
 
 				// --- Step B: Remote Publishing ---
-				if (localEvent.status.remote === "pending")
-					yield* publishEventRemotely(localEvent);
+				if (localEvent.status.remote === "pending") yield* publishEventRemotely(localEvent);
 			});
 
 			// 4. Fork all background fibers, their lifecycle is tied to the Layer's scope
@@ -181,9 +173,7 @@ export const syncEngineLive = <
 				dequeue,
 				Effect.flatMap((event) =>
 					processEvent(event).pipe(
-						Effect.catchAll((error) =>
-							Effect.logError("Error processing event", error),
-						),
+						Effect.catchAll((error) => Effect.logError("Error processing event", error)),
 					),
 				),
 				Effect.tap((event) => Effect.log("Processed event", event)),
@@ -207,9 +197,7 @@ export const syncEngineLive = <
 				transport.listen({ offset: options?.offset }),
 				Effect.andThen((stream) =>
 					stream.pipe(
-						Stream.tap((event) =>
-							Effect.log("Received event from server", event),
-						),
+						Stream.tap((event) => Effect.log("Received event from server", event)),
 						Stream.mapEffect((event) =>
 							Effect.succeed({
 								event,
@@ -219,9 +207,7 @@ export const syncEngineLive = <
 						Stream.mapEffect((localEvent) =>
 							storage.saveEvent(localEvent.event, localEvent.status).pipe(
 								Effect.as(localEvent),
-								Effect.catchTag("DuplicateEventError", () =>
-									Effect.succeed(null),
-								),
+								Effect.catchTag("DuplicateEventError", () => Effect.succeed(null)),
 							),
 						),
 						Stream.runForEach(

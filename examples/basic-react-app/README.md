@@ -20,6 +20,7 @@ End-to-end example showing Groundswell client/server sync in a single Bun applic
 - Client and server both use Effect layers and shared event schema.
 
 Key files:
+
 - Server entry: `src/index.ts`
 - Server composition: `src/live/server.ts`
 - Client composition: `src/live/client.ts`
@@ -38,6 +39,7 @@ bun run --filter basic-react-app dev
 ```
 
 Then open:
+
 - `http://localhost:3000`
 
 Production-style start:
@@ -57,6 +59,7 @@ bun run --filter basic-react-app start
 ## Data Model and Migrations
 
 This example uses a shared SQLite schema for:
+
 - Domain table: `notes`
 - Client event log table
 - Canonical server tables
@@ -66,6 +69,7 @@ Browser-side migrations run before render (`src/migrate.ts`).
 ## Known Simplifications
 
 This is a learning/integration example and intentionally keeps some shortcuts:
+
 - Hardcoded user identity (`"1"`) in client and server paths
 - Broadcast implementation uses in-memory pubsub and static topics
 - `todo.created` applicator is currently a no-op
@@ -74,6 +78,7 @@ This is a learning/integration example and intentionally keeps some shortcuts:
 ## Where To Go Next
 
 For productionizing this pattern:
+
 - Replace hardcoded user IDs with real auth/session integration
 - Replace in-memory broadcast with durable message transport
 - Add full topic routing strategy per tenant/user scope

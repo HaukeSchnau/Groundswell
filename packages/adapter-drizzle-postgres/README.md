@@ -8,6 +8,7 @@ PostgreSQL Drizzle adapter for canonical server storage.
 - Exported Postgres table definitions for schema composition
 
 Exports are namespaced under:
+
 - `CanonicalStorage.*`
 
 ## Table Definitions
@@ -17,6 +18,7 @@ Exports are namespaced under:
 - `CanonicalStorage.CanonicalEventsSentToUsersTable`
 
 Postgres-specific details include:
+
 - UUID columns for IDs/user references
 - Sent timestamp (`sent_at`) defaulting to `now`
 - Join-path indexes on topic/sent marker tables
@@ -25,14 +27,15 @@ Postgres-specific details include:
 
 ```ts
 CanonicalStorage.createDrizzleCanonicalStorageLayer(CanonicalStorageTag, {
-  db: DatabaseTag,
-  eventSchema: DomainEvent,
-})
+	db: DatabaseTag,
+	eventSchema: DomainEvent,
+});
 ```
 
 ## Canonical Storage Responsibilities
 
 Implements:
+
 - `isEventUnique(eventId)`
 - `saveEvent(event, metaWithTopics)`
 - `getMissingEventsForUser(userId, topics)`

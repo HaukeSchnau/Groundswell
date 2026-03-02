@@ -12,13 +12,7 @@ import {
 	TestClock,
 } from "effect";
 import { StorageError, TransportError, ValidationError } from "./errors.js";
-import type {
-	Applicator,
-	LocalEvent,
-	Storage,
-	SyncEngine,
-	Transport,
-} from "./interface.js";
+import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
 import { syncEngineLive } from "./live.js";
 
 // Define a simple event type for testing
@@ -34,15 +28,9 @@ class DomainApplicator extends Context.Tag("Applicator")<
 	Applicator<TestEvent>
 >() {}
 
-class DomainStorage extends Context.Tag("Storage")<
-	DomainStorage,
-	Storage<TestEvent>
->() {}
+class DomainStorage extends Context.Tag("Storage")<DomainStorage, Storage<TestEvent>>() {}
 
-class DomainTransport extends Context.Tag("Transport")<
-	DomainTransport,
-	Transport<TestEvent>
->() {}
+class DomainTransport extends Context.Tag("Transport")<DomainTransport, Transport<TestEvent>>() {}
 
 class DomainSyncEngine extends Context.Tag("SyncEngine")<
 	DomainSyncEngine,
@@ -99,10 +87,8 @@ describe("SyncEngine", () => {
 		mockApplicator = Layer.succeed(
 			DomainApplicator,
 			DomainApplicator.of({
-				verify: (event) =>
-					Ref.update(applicatorVerifyCalls, (calls) => [...calls, event]),
-				apply: (event) =>
-					Ref.update(applicatorApplyCalls, (calls) => [...calls, event]),
+				verify: (event) => Ref.update(applicatorVerifyCalls, (calls) => [...calls, event]),
+				apply: (event) => Ref.update(applicatorApplyCalls, (calls) => [...calls, event]),
 			}),
 		);
 
@@ -111,93 +97,74 @@ describe("SyncEngine", () => {
 			DomainStorage.of({
 				getPendingEvents: Stream.fromPubSub(pendingEventsPubSub),
 				saveEvent: (event, status) =>
-					Ref.update(storageSaveCalls, (calls) => [
-						...calls,
-						{ event, status },
-					]),
+					Ref.update(storageSaveCalls, (calls) => [...calls, { event, status }]),
 				updateEventStatus: (eventId, status) =>
-					Ref.update(storageUpdateCalls, (calls) => [
-						...calls,
-						{ id: eventId, status },
-					]),
+					Ref.update(storageUpdateCalls, (calls) => [...calls, { id: eventId, status }]),
 			}),
 		);
 
 		mockTransport = Layer.succeed(
 			DomainTransport,
 			DomainTransport.of({
-				publish: (event) =>
-					Ref.update(transportPublishCalls, (calls) => [...calls, event]),
+				publish: (event) => Ref.update(transportPublishCalls, (calls) => [...calls, event]),
 				listen: () => Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
 			}),
 		);
 
 		// Compose the final layer with the live engine and mock dependencies
-		engine = syncEngineLive(
-			DomainSyncEngine,
-			DomainApplicator,
-			DomainStorage,
-			DomainTransport,
-			{ offset: 0 },
-		);
-		testLayer = Layer.provide(
-			engine,
-			Layer.mergeAll(mockApplicator, mockStorage, mockTransport),
-		);
+		engine = syncEngineLive(DomainSyncEngine, DomainApplicator, DomainStorage, DomainTransport, {
+			offset: 0,
+		});
+		testLayer = Layer.provide(engine, Layer.mergeAll(mockApplicator, mockStorage, mockTransport));
 	});
 
-	it.effect(
-		"should process a successfully ingested event through the full lifecycle",
-		() =>
-			Effect.gen(function* () {
-				const engine = yield* DomainSyncEngine;
-				const eventSubscription = yield* engine.events.subscribe;
+	it.effect("should process a successfully ingested event through the full lifecycle", () =>
+		Effect.gen(function* () {
+			const engine = yield* DomainSyncEngine;
+			const eventSubscription = yield* engine.events.subscribe;
 
-				// Ingest a new event
-				yield* engine.ingest({ type: "test.event", data: { value: 1 } });
+			// Ingest a new event
+			yield* engine.ingest({ type: "test.event", data: { value: 1 } });
 
-				// Advance the virtual clock to allow the queue worker to run
-				yield* TestClock.adjust("2 seconds");
+			// Advance the virtual clock to allow the queue worker to run
+			yield* TestClock.adjust("2 seconds");
 
-				// --- Assertions ---
-				const saved = yield* Ref.get(storageSaveCalls);
-				expect(saved).toHaveLength(1);
-				expect(saved[0]?.event.data.value).toBe(1);
-				expect(saved[0]?.status).toEqual({
-					local: "pending",
-					remote: "pending",
-				});
+			// --- Assertions ---
+			const saved = yield* Ref.get(storageSaveCalls);
+			expect(saved).toHaveLength(1);
+			expect(saved[0]?.event.data.value).toBe(1);
+			expect(saved[0]?.status).toEqual({
+				local: "pending",
+				remote: "pending",
+			});
 
-				const verified = yield* Ref.get(applicatorVerifyCalls);
-				expect(verified).toHaveLength(1);
+			const verified = yield* Ref.get(applicatorVerifyCalls);
+			expect(verified).toHaveLength(1);
 
-				const applied = yield* Ref.get(applicatorApplyCalls);
-				expect(applied).toHaveLength(1);
+			const applied = yield* Ref.get(applicatorApplyCalls);
+			expect(applied).toHaveLength(1);
 
-				const published = yield* Ref.get(transportPublishCalls);
-				expect(published).toHaveLength(1);
+			const published = yield* Ref.get(transportPublishCalls);
+			expect(published).toHaveLength(1);
 
-				const updates = yield* Ref.get(storageUpdateCalls);
-				expect(updates).toHaveLength(2);
-				expect(updates[0]?.status).toEqual({ local: "success" });
-				expect(updates[1]?.status).toEqual({ remote: "success" });
+			const updates = yield* Ref.get(storageUpdateCalls);
+			expect(updates).toHaveLength(2);
+			expect(updates[0]?.status).toEqual({ local: "success" });
+			expect(updates[1]?.status).toEqual({ remote: "success" });
 
-				const events = yield* pipe(
-					eventSubscription.takeAll,
-					Effect.map(Chunk.toReadonlyArray),
-				);
+			const events = yield* pipe(eventSubscription.takeAll, Effect.map(Chunk.toReadonlyArray));
 
-				// Check the broadcasted events
-				expect(events).toHaveLength(2); // initial, local:success, remote:success
-				expect(events[0]?.status).toEqual({
-					local: "success",
-					remote: "pending",
-				});
-				expect(events[1]?.status).toEqual({
-					local: "success",
-					remote: "success",
-				});
-			}).pipe(Effect.scoped, Effect.provide(testLayer)),
+			// Check the broadcasted events
+			expect(events).toHaveLength(2); // initial, local:success, remote:success
+			expect(events[0]?.status).toEqual({
+				local: "success",
+				remote: "pending",
+			});
+			expect(events[1]?.status).toEqual({
+				local: "success",
+				remote: "success",
+			});
+		}).pipe(Effect.scoped, Effect.provide(testLayer)),
 	);
 
 	it.effect("should fail ingestion if verification fails", () => {
@@ -205,9 +172,7 @@ describe("SyncEngine", () => {
 			DomainApplicator,
 			DomainApplicator.of({
 				verify: () =>
-					Effect.fail(
-						new ValidationError({ cause: "Invalid value", reason: "INVALID" }),
-					),
+					Effect.fail(new ValidationError({ cause: "Invalid value", reason: "INVALID" })),
 				apply: () => Effect.succeed(undefined),
 			}),
 		);
@@ -289,11 +254,7 @@ describe("SyncEngine", () => {
 			const updates = yield* Ref.get(storageUpdateCalls);
 			expect(updates).toHaveLength(1);
 			expect(updates[0]?.status).toEqual({ local: "success" });
-		}).pipe(
-			Effect.provide(testLayer),
-			Effect.scoped,
-			Effect.provide(Logger.pretty),
-		);
+		}).pipe(Effect.provide(testLayer), Effect.scoped, Effect.provide(Logger.pretty));
 	});
 
 	it.effect("should retry publishing on a retryable transport error", () => {
@@ -341,65 +302,55 @@ describe("SyncEngine", () => {
 		}).pipe(Effect.scoped, Effect.provide(Logger.pretty));
 	});
 
-	it.effect(
-		"should handle duplicate events gracefully without processing them",
-		() => {
-			const mockStorageWithDuplicate = Layer.succeed(
-				DomainStorage,
-				DomainStorage.of({
-					getPendingEvents: Stream.fromPubSub(pendingEventsPubSub),
-					saveEvent: () =>
-						Effect.fail(
-							new StorageError({
-								cause: new Error("Duplicate event"),
-							}),
-						),
-					updateEventStatus: (eventId, status) =>
-						Ref.update(storageUpdateCalls, (calls) => [
-							...calls,
-							{ id: eventId, status },
-						]),
-				}),
-			);
+	it.effect("should handle duplicate events gracefully without processing them", () => {
+		const mockStorageWithDuplicate = Layer.succeed(
+			DomainStorage,
+			DomainStorage.of({
+				getPendingEvents: Stream.fromPubSub(pendingEventsPubSub),
+				saveEvent: () =>
+					Effect.fail(
+						new StorageError({
+							cause: new Error("Duplicate event"),
+						}),
+					),
+				updateEventStatus: (eventId, status) =>
+					Ref.update(storageUpdateCalls, (calls) => [...calls, { id: eventId, status }]),
+			}),
+		);
 
-			const testLayer = Layer.provide(
-				engine,
-				Layer.mergeAll(mockTransport, mockStorageWithDuplicate, mockApplicator),
-			);
+		const testLayer = Layer.provide(
+			engine,
+			Layer.mergeAll(mockTransport, mockStorageWithDuplicate, mockApplicator),
+		);
 
-			return Effect.gen(function* () {
-				const duplicateEvent: TestEvent = {
-					id: "duplicate-1",
-					timestamp: new Date(),
-					type: "test.event",
-					data: { value: 200 },
-				};
+		return Effect.gen(function* () {
+			const duplicateEvent: TestEvent = {
+				id: "duplicate-1",
+				timestamp: new Date(),
+				type: "test.event",
+				data: { value: 200 },
+			};
 
-				// Simulate a duplicate remote event arriving
-				yield* PubSub.publish(remoteEventsPubSub, duplicateEvent);
-				yield* TestClock.adjust("2 seconds");
+			// Simulate a duplicate remote event arriving
+			yield* PubSub.publish(remoteEventsPubSub, duplicateEvent);
+			yield* TestClock.adjust("2 seconds");
 
-				// --- Assertions ---
-				// Should NOT be applied (duplicate events should be ignored)
-				const applied = yield* Ref.get(applicatorApplyCalls);
-				expect(applied).toHaveLength(0);
+			// --- Assertions ---
+			// Should NOT be applied (duplicate events should be ignored)
+			const applied = yield* Ref.get(applicatorApplyCalls);
+			expect(applied).toHaveLength(0);
 
-				// Should NOT be verified (duplicate events should be ignored)
-				const verified = yield* Ref.get(applicatorVerifyCalls);
-				expect(verified).toHaveLength(0);
+			// Should NOT be verified (duplicate events should be ignored)
+			const verified = yield* Ref.get(applicatorVerifyCalls);
+			expect(verified).toHaveLength(0);
 
-				// Should NOT be published (duplicate events should be ignored)
-				const published = yield* Ref.get(transportPublishCalls);
-				expect(published).toHaveLength(0);
+			// Should NOT be published (duplicate events should be ignored)
+			const published = yield* Ref.get(transportPublishCalls);
+			expect(published).toHaveLength(0);
 
-				// Should NOT have any status updates (duplicate events should be ignored)
-				const updates = yield* Ref.get(storageUpdateCalls);
-				expect(updates).toHaveLength(0);
-			}).pipe(
-				Effect.provide(testLayer),
-				Effect.scoped,
-				Effect.provide(Logger.pretty),
-			);
-		},
-	);
+			// Should NOT have any status updates (duplicate events should be ignored)
+			const updates = yield* Ref.get(storageUpdateCalls);
+			expect(updates).toHaveLength(0);
+		}).pipe(Effect.provide(testLayer), Effect.scoped, Effect.provide(Logger.pretty));
+	});
 });

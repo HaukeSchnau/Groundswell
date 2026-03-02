@@ -1,16 +1,11 @@
-import type {
-	Applicator,
-	Storage,
-	SyncEngine,
-	Transport,
-} from "@groundswell/core";
-import type {
-	Broadcast,
-	CanonicalStorage,
-	IngestEngine,
-	ServerApplicator,
+import type { Applicator, Storage, SyncEngine, Transport } from "@groundswell/core";
+import {
+	ingestEngineLive,
+	type Broadcast,
+	type CanonicalStorage,
+	type IngestEngine,
+	type ServerApplicator,
 } from "@groundswell/core-server";
-import { ingestEngineLive } from "@groundswell/core-server";
 import { syncEngineFactory } from "@groundswell/react";
 import { Context } from "effect";
 import { Database } from "./domain/db/contract";
@@ -21,10 +16,7 @@ export class DomainApplicator extends Context.Tag("Applicator")<
 	Applicator<DomainEvent>
 >() {}
 
-export class DomainStorage extends Context.Tag("Storage")<
-	DomainStorage,
-	Storage<DomainEvent>
->() {}
+export class DomainStorage extends Context.Tag("Storage")<DomainStorage, Storage<DomainEvent>>() {}
 
 export class DomainCanonicalStorage extends Context.Tag("CanonicalStorage")<
 	DomainCanonicalStorage,

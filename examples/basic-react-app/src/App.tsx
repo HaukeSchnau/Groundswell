@@ -1,11 +1,6 @@
-import {
-	QueryClientProvider,
-	type QueryKey,
-	useQuery,
-} from "@tanstack/react-query";
+import { QueryClientProvider, type QueryKey, useQuery } from "@tanstack/react-query";
 import { type Effect, Layer, ManagedRuntime } from "effect";
-import type React from "react";
-import { use, useState } from "react";
+import { type FormEvent, use, useState } from "react";
 import { clientSyncEngine, type DomainSyncEngine } from "./boilerplate";
 import type { Database } from "./domain/db/contract";
 import { getNotes } from "./domain/queries";
@@ -13,8 +8,7 @@ import { SyncEngineLive, WasmDatabaseLive } from "./live/client";
 import { runMigrations } from "./migrate";
 import { queryClient } from "./query-client";
 
-const { SyncEngineProvider, useIngest, useSyncStatus, useRuntime } =
-	clientSyncEngine;
+const { SyncEngineProvider, useIngest, useSyncStatus, useRuntime } = clientSyncEngine;
 
 const StatusBar = () => {
 	const { queueSize } = useSyncStatus();
@@ -46,7 +40,7 @@ const NoteInput = () => {
 	const [content, setContent] = useState("");
 	const ingest = useIngest();
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
 		if (!content) return;
 		const result = await ingest({
@@ -63,7 +57,9 @@ const NoteInput = () => {
 
 	return (
 		<form
-			onSubmit={handleSubmit}
+			onSubmit={(event) => {
+				void handleSubmit(event);
+			}}
 			className="flex gap-3 p-3 border-b border-gray-200"
 		>
 			<input
@@ -123,7 +119,9 @@ const AllNotes = () => {
 							<p className="text-gray-800 flex-1">{note.content}</p>
 							<button
 								type="button"
-								onClick={() => handleArchive(note.id)}
+								onClick={() => {
+									void handleArchive(note.id);
+								}}
 								className="ml-3 bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
 							>
 								Archive
@@ -153,11 +151,10 @@ const MainScreen = () => {
 
 const migrationPromise = runMigrations();
 
-const RuntimeLive: Layer.Layer<DomainSyncEngine | Database, never, never> =
-	SyncEngineLive.pipe(
-		Layer.provideMerge(WasmDatabaseLive),
-		Layer.orDie,
-	) as Layer.Layer<DomainSyncEngine | Database, never, never>;
+const RuntimeLive: Layer.Layer<DomainSyncEngine | Database> = SyncEngineLive.pipe(
+	Layer.provideMerge(WasmDatabaseLive),
+	Layer.orDie,
+) as Layer.Layer<DomainSyncEngine | Database>;
 
 const runtime = ManagedRuntime.make(RuntimeLive);
 

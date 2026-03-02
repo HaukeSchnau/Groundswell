@@ -1,5 +1,4 @@
-import type { Transport } from "@groundswell/core";
-import { DuplicateEventError, TransportError } from "@groundswell/core";
+import { DuplicateEventError, type Transport, TransportError } from "@groundswell/core";
 import { type Context, Effect, Layer, Stream } from "effect";
 import superjson from "superjson";
 import type z from "zod";
@@ -73,7 +72,7 @@ export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
 					),
 
 				listen: (options?: { offset?: number }) =>
-					Effect.gen(function* () {
+					Effect.sync(() => {
 						const url = new URL(`${config.baseUrl}/events`);
 						if (options?.offset != null) {
 							url.searchParams.set("offset", String(options.offset));
@@ -89,19 +88,14 @@ export const createSseTransportLayer = <TEvent extends { id: string }, TagId>(
 										const parsedData = superjson.parse(message.data);
 										return config.eventSchema.parse(parsedData);
 									},
-									catch: (cause) =>
-										new TransportError({ cause, isRetryable: false }),
+									catch: (cause) => new TransportError({ cause, isRetryable: false }),
 								}),
 							),
 							Stream.catchTag("EventSourceError", (error) => {
 								if (error.reason === "NetworkError") {
-									return Stream.fail(
-										new TransportError({ cause: error, isRetryable: true }),
-									);
+									return Stream.fail(new TransportError({ cause: error, isRetryable: true }));
 								}
-								return Stream.fail(
-									new TransportError({ cause: error, isRetryable: false }),
-								);
+								return Stream.fail(new TransportError({ cause: error, isRetryable: false }));
 							}),
 						);
 					}),

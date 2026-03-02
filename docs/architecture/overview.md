@@ -62,6 +62,7 @@ Client events are tracked as:
 - `remote`: `pending` | `success` | `error`
 
 This model allows:
+
 - Local-first UX while remote sync is still pending
 - Explicit retry/error signaling for network problems
 - Deterministic startup replay of unfinished work

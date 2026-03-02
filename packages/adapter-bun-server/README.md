@@ -10,16 +10,17 @@ Bun adapter that returns route handlers for sync ingest/stream endpoints.
 
 ```ts
 type Config<TEvent> = {
-  ingestEngine: IngestEngine<TEvent>;
-  broadcast: Broadcast<TEvent>;
-  getUserId: (request: Request) => Promise<string | null>;
-  eventSchema: z.Schema<TEvent>;
+	ingestEngine: IngestEngine<TEvent>;
+	broadcast: Broadcast<TEvent>;
+	getUserId: (request: Request) => Promise<string | null>;
+	eventSchema: z.Schema<TEvent>;
 };
 ```
 
 ## Return Shape
 
 `syncServer(config)` returns:
+
 - `POST(request)` handler
 - `GET(request)` handler
 
@@ -35,6 +36,7 @@ Mount these in Bun routes (example: `/api/events`).
 - Calls `ingestEngine.ingest`
 
 Typical statuses:
+
 - `200` event ingested
 - `400` invalid event
 - `401` unauthorized

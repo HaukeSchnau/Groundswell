@@ -1,8 +1,6 @@
 import { Data } from "effect";
 
-export class CanonicalStorageError extends Data.TaggedError(
-	"CanonicalStorageError",
-)<{
+export class CanonicalStorageError extends Data.TaggedError("CanonicalStorageError")<{
 	readonly cause: unknown;
 }> {
 	override get message() {

@@ -9,6 +9,7 @@ SQLite Drizzle adapters for Groundswell storage contracts.
 - Exported table definitions for schema composition
 
 Exports are namespaced:
+
 - `ClientStorage.*`
 - `CanonicalStorage.*`
 
@@ -36,18 +37,18 @@ Exports are namespaced:
 
 ```ts
 ClientStorage.createDrizzleStorageLayer(StorageTag, {
-  db: DatabaseTag,
-  eventSchema: DomainEvent,
-})
+	db: DatabaseTag,
+	eventSchema: DomainEvent,
+});
 ```
 
 ### Canonical storage layer
 
 ```ts
 CanonicalStorage.createDrizzleCanonicalStorageLayer(CanonicalStorageTag, {
-  db: DatabaseTag,
-  eventSchema: DomainEvent,
-})
+	db: DatabaseTag,
+	eventSchema: DomainEvent,
+});
 ```
 
 ## Schema Wiring Pattern

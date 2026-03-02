@@ -36,10 +36,7 @@ export const BaseEventSchema = z.object({
  * @param {TDataSchema} dataSchema - A Zod schema defining the structure of the event's data.
  * @returns A Zod schema for the specific domain event.
  */
-export const createDomainEvent = <
-	TName extends string,
-	TDataShape extends z.ZodRawShape,
->(
+export const createDomainEvent = <TName extends string, TDataShape extends z.ZodRawShape>(
 	name: TName,
 	dataShape: TDataShape,
 ) => {

@@ -9,6 +9,7 @@ It replaces older ad-hoc root-level notes and keeps the architecture details mai
 Groundswell treats domain events as the source of synchronization instead of directly syncing mutable records.
 
 Benefits:
+
 - Append-only history and clear causality
 - Deterministic replay of pending work
 - Separation of domain logic from transport/storage implementations
@@ -18,11 +19,13 @@ Benefits:
 ### Client Local Event
 
 A client event is represented as:
+
 - `event`: the domain event payload
 - `status.local`: local apply state
 - `status.remote`: remote publish state
 
 `status` values:
+
 - `pending`
 - `success`
 - `error`
@@ -30,9 +33,11 @@ A client event is represented as:
 ### Canonical Event Metadata
 
 Server ingest receives `EventMeta`:
+
 - `initiatorId`
 
 Canonical storage tracks:
+
 - event payload
 - topic mappings
 - sent markers (per user)
@@ -40,6 +45,7 @@ Canonical storage tracks:
 ## Client Engine Responsibilities
 
 `@groundswell/core` runtime (`syncEngineLive`) manages:
+
 - In-memory queue for processing
 - Startup replay from storage pending events
 - Remote listener ingestion
@@ -51,6 +57,7 @@ Canonical storage tracks:
 Remote publish retry applies only to retryable `TransportError` values.
 
 Retry behavior:
+
 - Exponential backoff
 - Delay cap
 - Jitter
@@ -60,6 +67,7 @@ Duplicate remote events are treated as successful remote completion.
 ## Server Engine Responsibilities
 
 `@groundswell/core-server` runtime (`ingestEngineLive`) manages:
+
 - Duplicate detection
 - Server-side validation
 - Canonical persistence
@@ -69,6 +77,7 @@ Duplicate remote events are treated as successful remote completion.
 ## Separation of Concerns
 
 Groundswell does not hardcode:
+
 - Domain rules
 - Concrete database clients
 - Network frameworks
@@ -96,6 +105,7 @@ These are injected via service contracts and adapters.
 ## Known Non-Goals (Current State)
 
 Not currently built into core contracts:
+
 - Built-in conflict resolution beyond validation/duplicate semantics
 - Multiple serializer strategies in adapters (current adapters use `superjson`)
 - Heartbeat/event-id/replay token semantics in SSE transport contracts
@@ -105,6 +115,7 @@ Not currently built into core contracts:
 Current repository tests cover core runtime behavior and portions of adapter behavior, but coverage instrumentation is not configured globally.
 
 Recommended checks for future updates:
+
 - End-to-end client/server integration tests
 - Failure-path tests for each adapter
 - Contract tests for HTTP + SSE compatibility between server and client adapters

@@ -3,13 +3,10 @@ import {
 	type NamespaceApplicatorMap,
 	type NamespaceApplicatorTree,
 } from "@groundswell/core";
-import type {
-	DatabaseError,
-	GenericSqliteError,
-} from "@schnau/effect-drizzle/generic-sqlite";
+import type { DatabaseError, GenericSqliteError } from "@schnau/effect-drizzle/generic-sqlite";
 import { eq } from "drizzle-orm";
 import { type Cause, Effect, pipe } from "effect";
-import { queryClient } from "@/query-client";
+import { queryClient } from "../query-client";
 import { Database } from "./db/contract";
 import * as t from "./db/schema";
 import type { DomainEvent } from "./events";
@@ -32,9 +29,7 @@ const note: NamespaceApplicatorMap<
 							.onConflictDoNothing(),
 					),
 				),
-				Effect.tap(() =>
-					queryClient.invalidateQueries({ queryKey: ["notes"] }),
-				),
+				Effect.tap(() => queryClient.invalidateQueries({ queryKey: ["notes"] })),
 			);
 		},
 		verify: () => Effect.void,
@@ -51,9 +46,7 @@ const note: NamespaceApplicatorMap<
 							.where(eq(t.notes.id, event.data.noteId)),
 					),
 				),
-				Effect.tap(() =>
-					queryClient.invalidateQueries({ queryKey: ["notes"] }),
-				),
+				Effect.tap(() => queryClient.invalidateQueries({ queryKey: ["notes"] })),
 			);
 		},
 		verify: () => Effect.void,

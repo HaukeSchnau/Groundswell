@@ -13,10 +13,7 @@ export const noteArchivedEvent = createDomainEvent("note.archived", {
 });
 
 // Combine them into a single union type using the new helper
-export const DomainEvent = createEventUnion([
-	noteCreatedEvent,
-	noteArchivedEvent,
-]);
+export const DomainEvent = createEventUnion([noteCreatedEvent, noteArchivedEvent]);
 
 // Infer the TypeScript types directly from the schemas.
 export type NoteCreatedEvent = z.infer<typeof noteCreatedEvent>;

@@ -1,37 +1,19 @@
-import type {
-	ApplicatorError,
-	DuplicateEventError,
-	ValidationError,
-} from "@groundswell/core";
+import type { ApplicatorError, DuplicateEventError, ValidationError } from "@groundswell/core";
 import type { EventMeta } from "@groundswell/zod-helpers";
 import type { Effect, Stream } from "effect";
-import type {
-	BroadcastError,
-	CanonicalStorageError,
-	UserNotFoundError,
-} from "./errors.js";
+import type { BroadcastError, CanonicalStorageError, UserNotFoundError } from "./errors.js";
 
 // --- Service Interfaces (Tags) ---
 
 export interface ServerApplicator<TEvent> {
-	readonly verify: (
-		event: TEvent,
-		meta: EventMeta,
-	) => Effect.Effect<void, ValidationError>;
-	readonly apply: (
-		event: TEvent,
-		meta: EventMeta,
-	) => Effect.Effect<void, ApplicatorError>;
-	readonly getEventTopics: (event: TEvent) => Effect.Effect<string[], never>;
-	readonly getUserTopics: (
-		userId: string,
-	) => Effect.Effect<string[], UserNotFoundError>;
+	readonly verify: (event: TEvent, meta: EventMeta) => Effect.Effect<void, ValidationError>;
+	readonly apply: (event: TEvent, meta: EventMeta) => Effect.Effect<void, ApplicatorError>;
+	readonly getEventTopics: (event: TEvent) => Effect.Effect<string[]>;
+	readonly getUserTopics: (userId: string) => Effect.Effect<string[], UserNotFoundError>;
 }
 
 export interface CanonicalStorage<TEvent> {
-	readonly isEventUnique: (
-		eventId: string,
-	) => Effect.Effect<boolean, CanonicalStorageError>;
+	readonly isEventUnique: (eventId: string) => Effect.Effect<boolean, CanonicalStorageError>;
 	readonly saveEvent: (
 		event: TEvent,
 		meta: EventMeta & { topics: string[] },
@@ -40,9 +22,7 @@ export interface CanonicalStorage<TEvent> {
 		userId: string,
 		topics: string[],
 	) => Effect.Effect<TEvent[], CanonicalStorageError>;
-	readonly getEventsSentToUser: (
-		userId: string,
-	) => Effect.Effect<TEvent[], CanonicalStorageError>;
+	readonly getEventsSentToUser: (userId: string) => Effect.Effect<TEvent[], CanonicalStorageError>;
 	readonly markEventAsSentToUser: (
 		eventId: string,
 		userId: string,
@@ -50,10 +30,7 @@ export interface CanonicalStorage<TEvent> {
 }
 
 export interface Broadcast<TEvent> {
-	readonly publishToUser: (
-		userId: string,
-		events: TEvent[],
-	) => Effect.Effect<void, BroadcastError>;
+	readonly publishToUser: (userId: string, events: TEvent[]) => Effect.Effect<void, BroadcastError>;
 	readonly subscribe: (
 		userId: string,
 		options?: { offset?: number },

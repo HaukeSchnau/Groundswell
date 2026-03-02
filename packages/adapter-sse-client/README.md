@@ -24,9 +24,9 @@ Payload format uses `superjson` for both publish and listen.
 
 ```ts
 type HonoTransportConfig<TEvent> = {
-  baseUrl: string;
-  eventSchema: z.Schema<TEvent>;
-  headers?: () => Record<string, string>;
+	baseUrl: string;
+	eventSchema: z.Schema<TEvent>;
+	headers?: () => Record<string, string>;
 };
 ```
 
@@ -37,19 +37,21 @@ import { createSseTransportLayer } from "@groundswell/adapter-sse-client";
 import { BrowserEventSourceServiceLive } from "@groundswell/adapter-sse-client/browser";
 
 const TransportLive = createSseTransportLayer(DomainTransport, {
-  baseUrl: "http://localhost:3000/api",
-  eventSchema: DomainEvent,
+	baseUrl: "http://localhost:3000/api",
+	eventSchema: DomainEvent,
 }).pipe(Layer.provide(BrowserEventSourceServiceLive));
 ```
 
 ## Error Mapping
 
 `publish`:
+
 - `409` -> `DuplicateEventError`
 - Other non-OK statuses -> `TransportError`
 - Retryability inferred from status (`>=500` retryable)
 
 `listen`:
+
 - SSE/network/parsing/schema errors -> `TransportError`
 
 ## Platform Notes

@@ -7,11 +7,8 @@ export const sqliteEnum =
 	<TName extends string>(name: TName) =>
 		text(name, { enum: values });
 
-export const boolean = <TName extends string>(name: TName) =>
-	int(name, { mode: "boolean" });
+export const boolean = <TName extends string>(name: TName) => int(name, { mode: "boolean" });
 
-export const jsonb = <TName extends string>(name: TName) =>
-	text(name, { mode: "json" });
+export const jsonb = <TName extends string>(name: TName) => text(name, { mode: "json" });
 
-export const timestamp = <TName extends string>(name: TName) =>
-	int(name, { mode: "timestamp_ms" });
+export const timestamp = <TName extends string>(name: TName) => int(name, { mode: "timestamp_ms" });

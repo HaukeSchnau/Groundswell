@@ -9,11 +9,7 @@ import { Database } from "./domain/db/contract";
 import * as Schema from "./domain/db/schema";
 import { DomainEvent } from "./domain/events";
 import index from "./index.html";
-import {
-	appServerLayer,
-	canonicalStorageLive,
-	memoryBroadcastLive,
-} from "./live/server";
+import { appServerLayer, canonicalStorageLive, memoryBroadcastLive } from "./live/server";
 
 const BunDatabaseLive = Layer.scoped(
 	Database,

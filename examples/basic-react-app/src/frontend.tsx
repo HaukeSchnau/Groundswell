@@ -9,7 +9,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 
 function start() {
-	const rootElement = document.getElementById("root");
+	const rootElement = document.querySelector<HTMLDivElement>("#root");
 	if (rootElement == null) {
 		throw new Error("Missing root element");
 	}

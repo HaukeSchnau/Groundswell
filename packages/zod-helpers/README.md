@@ -14,6 +14,7 @@ Helpers for defining strongly-typed domain-event schemas with Zod.
 ## Event Shape Convention
 
 All events are expected to include:
+
 - `id: string` (UUID)
 - `timestamp: Date`
 - `type: string` (event discriminator)
@@ -28,12 +29,12 @@ import { createDomainEvent, createEventUnion } from "@groundswell/zod-helpers";
 import { z } from "zod";
 
 const noteCreated = createDomainEvent("note.created", {
-  id: z.string().uuid(),
-  content: z.string().min(1),
+	id: z.string().uuid(),
+	content: z.string().min(1),
 });
 
 const noteArchived = createDomainEvent("note.archived", {
-  noteId: z.string().uuid(),
+	noteId: z.string().uuid(),
 });
 
 export const DomainEvent = createEventUnion([noteCreated, noteArchived]);
@@ -47,7 +48,7 @@ export type DomainEvent = z.infer<typeof DomainEvent>;
 Correct:
 
 ```ts
-createDomainEvent("x.y", { value: z.string() })
+createDomainEvent("x.y", { value: z.string() });
 ```
 
 ## Where It Is Used

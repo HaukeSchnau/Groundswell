@@ -1,7 +1,4 @@
-import {
-	type CanonicalStorage,
-	CanonicalStorageError,
-} from "@groundswell/core-server";
+import { type CanonicalStorage, CanonicalStorageError } from "@groundswell/core-server";
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import type {
 	DatabaseError,
@@ -58,11 +55,7 @@ type Schema = {
 	canonicalEventsSentToUsers: CanonicalEventsSentToUsersTable;
 };
 
-export interface DrizzleCanonicalStorageConfig<
-	TEvent,
-	TSchema extends Schema,
-	TagId,
-> {
+export interface DrizzleCanonicalStorageConfig<TEvent, TSchema extends Schema, TagId> {
 	db: Context.Tag<TagId, GenericDatabaseService<TSchema>>;
 	eventSchema: z.ZodSchema<TEvent>;
 }
@@ -125,8 +118,7 @@ const getMissingEventsForUser = <TSchema extends Schema>(
 		data: string;
 		initiator: string;
 	}[],
-	DatabaseError<GenericSqliteError>,
-	never
+	DatabaseError<GenericSqliteError>
 > =>
 	db.execute((db) =>
 		db
@@ -165,8 +157,7 @@ const getEventsSentToUser = <TSchema extends Schema>(
 		data: string;
 		initiator: string;
 	}[],
-	DatabaseError<GenericSqliteError>,
-	never
+	DatabaseError<GenericSqliteError>
 > =>
 	db.execute((db) =>
 		db
@@ -203,9 +194,7 @@ const markEventAsSentToUser = <TSchema extends Schema>(
 	userId: string,
 ): Effect.Effect<void, DatabaseError<GenericSqliteError>> =>
 	db.execute((db) =>
-		db
-			.insert(CanonicalEventsSentToUsersTable)
-			.values({ event: eventId, user: userId }),
+		db.insert(CanonicalEventsSentToUsersTable).values({ event: eventId, user: userId }),
 	);
 
 export const createDrizzleCanonicalStorageLayer = <
@@ -243,9 +232,7 @@ export const createDrizzleCanonicalStorageLayer = <
 					pipe(
 						getMissingEventsForUser(db, userId, topics),
 						Effect.andThen((rows) =>
-							Effect.allSuccesses(
-								rows.map((row) => parseCanonicalEvent(row, config.eventSchema)),
-							),
+							Effect.allSuccesses(rows.map((row) => parseCanonicalEvent(row, config.eventSchema))),
 						),
 						Effect.catchTag("DatabaseError", (error) =>
 							Effect.fail(new CanonicalStorageError({ cause: error })),
@@ -256,9 +243,7 @@ export const createDrizzleCanonicalStorageLayer = <
 					pipe(
 						getEventsSentToUser(db, userId),
 						Effect.andThen((rows) =>
-							Effect.allSuccesses(
-								rows.map((row) => parseCanonicalEvent(row, config.eventSchema)),
-							),
+							Effect.allSuccesses(rows.map((row) => parseCanonicalEvent(row, config.eventSchema))),
 						),
 						Effect.catchTag("DatabaseError", (error) =>
 							Effect.fail(new CanonicalStorageError({ cause: error })),

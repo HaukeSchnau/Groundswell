@@ -19,12 +19,7 @@ Server-side synchronization ingest runtime and contracts.
 ## Main Runtime API
 
 ```ts
-ingestEngineLive(
-  ingestEngineTag,
-  serverApplicatorTag,
-  canonicalStorageTag,
-  broadcastTag
-)
+ingestEngineLive(ingestEngineTag, serverApplicatorTag, canonicalStorageTag, broadcastTag);
 ```
 
 The returned layer provides `IngestEngine.ingest(event, { initiatorId })`.
@@ -66,6 +61,7 @@ The returned layer provides `IngestEngine.ingest(event, { initiatorId })`.
 ## Integration Targets
 
 Use this package with:
+
 - `@groundswell/adapter-hono-server`
 - `@groundswell/adapter-bun-server`
 - canonical storage adapters (`adapter-drizzle-*`)

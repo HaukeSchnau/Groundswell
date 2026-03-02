@@ -13,17 +13,13 @@ export const ReactNativeEventSourceServiceLive = Layer.succeed(
 	EventSourceService.of({
 		connect: (url, options) =>
 			Stream.asyncEffect((emit) =>
-				Effect.gen(function* () {
+				Effect.sync(() => {
 					const es = new EventSource(url, {
 						headers: options?.headers(),
 					});
 
-					es.addEventListener("open", () => {
-						// Connection opened, no data to emit for this event
-					});
-
 					es.addEventListener("message", (event) => {
-						emit.single({
+						void emit.single({
 							data: event.data ?? "",
 							id: Option.fromNullable(event.lastEventId),
 							event: Option.fromNullable(event.type),
@@ -33,7 +29,7 @@ export const ReactNativeEventSourceServiceLive = Layer.succeed(
 
 					es.addEventListener("error", (errorEvent) => {
 						// Emit an error, which will terminate the stream
-						emit.fail(
+						void emit.fail(
 							new EventSourceError({
 								reason: "NetworkError",
 								originalError: errorEvent,
