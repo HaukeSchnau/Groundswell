@@ -8,8 +8,7 @@
 	"scripts": {
 		"dev": "bun --hot src/index.ts",
 		"start": "NODE_ENV=production bun src/index.ts",
-		"bump": "bunx npm version",
-		"typecheck": "tsgo --noEmit"
+		"bump": "bunx npm version"
 	},
 	"dependencies": {
 		"@effect/platform-bun": "^0.72.3",

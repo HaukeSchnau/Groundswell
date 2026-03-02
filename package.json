@@ -18,8 +18,7 @@
 		"pub": "bun run --filter '*' pub",
 		"release": "bun scripts/release.ts",
 		"test": "vitest run",
-		"test:dev": "vitest",
-		"typecheck": "bun run --filter '*' typecheck"
+		"test:dev": "vitest"
 	},
 	"devDependencies": {
 		"@effect/language-service": "^0.23.5",

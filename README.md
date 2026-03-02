@@ -75,7 +75,6 @@ bun run build
 bun run checks:fmt:ci
 bun run checks:lint
 bun run test
-bun run typecheck
 ```
 
 Helpful local shortcuts:

@@ -23,7 +23,6 @@ direnv allow
 ```bash
 bun run checks:fmt:ci
 bun run checks:lint
-bun run typecheck
 bun run test
 bun run build
 ```
@@ -46,12 +45,11 @@ just qa
 
 ## Working On Packages
 
-Each package has its own `package.json` scripts for build/typecheck/publish semantics.
+Each package has its own `package.json` scripts for build/test/publish semantics.
 
 Common pattern:
 
 - Build package: `bun run --filter '<package-name>' build`
-- Typecheck package: `bun run --filter '<package-name>' typecheck`
 
 ## Testing Strategy
 
