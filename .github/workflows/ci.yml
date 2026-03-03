@@ -51,7 +51,6 @@ jobs:
       timeout-minutes: 10
       working-directory: "."
       require-npm-token: true
-      install-node: true
       pre-command: |
         bun scripts/check-toolchain.ts
 
@@ -160,7 +159,6 @@ jobs:
       timeout-minutes: 10
       working-directory: "."
       require-npm-token: true
-      install-node: true
       install-playwright: true
       playwright-browser: chromium
       pre-command: |
