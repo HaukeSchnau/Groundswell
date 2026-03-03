@@ -84,21 +84,17 @@ describe("SyncEngine", () => {
 		// --- Mock Service Implementations ---
 		mockApplicator = Layer.succeed(
 			DomainApplicator,
-				DomainApplicator.of({
-					verify: (event) =>
-						Ref.update(applicatorVerifyCalls, (calls) => [...calls, event]).pipe(
-							Effect.andThen(
-								Ref.update(operationTrace, (trace) => [...trace, `verify:${event.id}`]),
-							),
-						),
-					apply: (event) =>
-						Ref.update(applicatorApplyCalls, (calls) => [...calls, event]).pipe(
-							Effect.andThen(
-								Ref.update(operationTrace, (trace) => [...trace, `apply:${event.id}`]),
-							),
-						),
-				}),
-			);
+			DomainApplicator.of({
+				verify: (event) =>
+					Ref.update(applicatorVerifyCalls, (calls) => [...calls, event]).pipe(
+						Effect.andThen(Ref.update(operationTrace, (trace) => [...trace, `verify:${event.id}`])),
+					),
+				apply: (event) =>
+					Ref.update(applicatorApplyCalls, (calls) => [...calls, event]).pipe(
+						Effect.andThen(Ref.update(operationTrace, (trace) => [...trace, `apply:${event.id}`])),
+					),
+			}),
+		);
 
 		mockStorage = Layer.succeed(
 			DomainStorage,
@@ -113,16 +109,16 @@ describe("SyncEngine", () => {
 
 		mockTransport = Layer.succeed(
 			DomainTransport,
-				DomainTransport.of({
-					publish: (event) =>
-						Ref.update(transportPublishCalls, (calls) => [...calls, event]).pipe(
-							Effect.andThen(
-								Ref.update(operationTrace, (trace) => [...trace, `publish:${event.id}`]),
-							),
+			DomainTransport.of({
+				publish: (event) =>
+					Ref.update(transportPublishCalls, (calls) => [...calls, event]).pipe(
+						Effect.andThen(
+							Ref.update(operationTrace, (trace) => [...trace, `publish:${event.id}`]),
 						),
-					listen: () => Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
-				}),
-			);
+					),
+				listen: () => Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
+			}),
+		);
 
 		// Compose the final layer with the live engine and mock dependencies
 		engine = syncEngineLive(DomainSyncEngine, DomainApplicator, DomainStorage, DomainTransport, {

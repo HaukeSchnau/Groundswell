@@ -1,5 +1,5 @@
 import type { EventMeta } from "@groundswell/zod-helpers";
-import { Effect } from "effect";
+import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import {
 	applicatorFactory,
@@ -30,6 +30,17 @@ const createdEvent: Extract<DomainEvent, { type: "note.created" }> = {
 	timestamp: new Date(),
 	type: "note.created",
 	data: { content: "hello" },
+};
+
+const failureError = <A, E>(exit: Exit.Exit<A, E>) => {
+	if (Exit.isSuccess(exit)) {
+		throw new Error("Expected effect to fail");
+	}
+	const failure = Cause.findErrorOption(exit.cause);
+	if (Option.isNone(failure)) {
+		throw new Error("Expected a typed error cause");
+	}
+	return failure.value;
 };
 
 describe("applicator factories", () => {
@@ -68,14 +79,22 @@ describe("applicator factories", () => {
 			data: { id: "x" },
 		};
 
-		await Effect.runPromise(treeApplicator.apply(createdEvent, meta));
-		await Effect.runPromise(treeApplicator.verify(createdEvent, meta));
+		await Effect.runPromise(treeApplicator.apply(createdEvent, meta) as Effect.Effect<void>);
+		await Effect.runPromise(treeApplicator.verify(createdEvent, meta) as Effect.Effect<void>);
 
-		const applyErr = await Effect.runPromise(Effect.flip(treeApplicator.apply(missingEvent, meta)));
-		const verifyErr = await Effect.runPromise(Effect.flip(treeApplicator.verify(missingEvent, meta)));
+		const applyResult = await Effect.runPromiseExit(
+			treeApplicator.apply(missingEvent, meta) as Effect.Effect<void, ApplicatorError>,
+		);
+		const verifyResult = await Effect.runPromiseExit(
+			treeApplicator.verify(missingEvent, meta) as Effect.Effect<void, ApplicatorError>,
+		);
+		const applyErr = failureError(applyResult);
+		const verifyErr = failureError(verifyResult);
 
 		expect(apply).toHaveBeenCalledTimes(1);
 		expect(verify).toHaveBeenCalledTimes(1);
+		expect(applyResult._tag).toBe("Failure");
+		expect(verifyResult._tag).toBe("Failure");
 		expect(applyErr).toBeInstanceOf(ApplicatorError);
 		expect(verifyErr).toBeInstanceOf(ApplicatorError);
 		expect(applyErr.cause).toBe("no applicator found for todo.done");
@@ -114,16 +133,16 @@ describe("applicator factories", () => {
 		const treeTopics = await Effect.runPromise(tree.getEventTopics(createdEvent));
 		expect(treeTopics).toStrictEqual(["topic-tree"]);
 
-		const missingTopicsErr = await Effect.runPromise(
-			Effect.flip(
-				tree.getEventTopics({
-					id: crypto.randomUUID(),
-					timestamp: new Date(),
-					type: "todo.done",
-					data: { id: "x" },
-				}),
-			),
+		const missingTopicsResult = await Effect.runPromiseExit(
+			tree.getEventTopics({
+				id: crypto.randomUUID(),
+				timestamp: new Date(),
+				type: "todo.done",
+				data: { id: "x" },
+			}) as Effect.Effect<string[], ApplicatorError>,
 		);
+		const missingTopicsErr = failureError(missingTopicsResult);
+		expect(missingTopicsResult._tag).toBe("Failure");
 		expect(missingTopicsErr).toBeInstanceOf(ApplicatorError);
 		expect(missingTopicsErr.cause).toBe("no applicator found for todo.done");
 	});

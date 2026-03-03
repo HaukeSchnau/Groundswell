@@ -92,15 +92,15 @@ export const syncEngineLive = <
 						local: "error",
 					});
 
-				yield* applicator.verify(localEvent.event).pipe(
-					Effect.tapErrorTag("ValidationError", markLocalError),
-				);
+				yield* applicator
+					.verify(localEvent.event)
+					.pipe(Effect.tapErrorTag("ValidationError", markLocalError));
 
 				// Local processing is authoritative: only after verify/apply succeeds
 				// do we move on to remote publishing in the queue worker.
-				yield* applicator.apply(localEvent.event).pipe(
-					Effect.tapErrorTag("ApplicatorError", markLocalError),
-				);
+				yield* applicator
+					.apply(localEvent.event)
+					.pipe(Effect.tapErrorTag("ApplicatorError", markLocalError));
 				yield* storage.updateEventStatus(localEvent.event.id, {
 					local: "success",
 				});

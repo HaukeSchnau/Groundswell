@@ -143,9 +143,7 @@ const makeEvent = (id: string, timestampMs: number, value: number): TestEvent =>
 const countCanonicalEvents = (db: DatabaseService<typeof Schema>) =>
 	db
 		.execute((client) =>
-			client
-				.select({ count: sql<number>`count(*)`.mapWith(Number) })
-				.from(CanonicalEventsTable),
+			client.select({ count: sql<number>`count(*)`.mapWith(Number) }).from(CanonicalEventsTable),
 		)
 		.pipe(Effect.map((rows) => rows[0]?.count ?? 0));
 
