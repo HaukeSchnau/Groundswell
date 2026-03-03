@@ -51,6 +51,7 @@ jobs:
       timeout-minutes: 10
       working-directory: "."
       require-npm-token: true
+      install-node: true
       pre-command: |
         bun scripts/check-toolchain.ts
 
@@ -63,7 +64,7 @@ jobs:
         bun run --filter '@groundswell/adapter-bun-server' build
         bun run --filter '@groundswell/adapter-drizzle-sqlite' build
         bun run --filter '@groundswell/adapter-drizzle-postgres' build
-      command: bun run test:coverage
+      command: node ./node_modules/vitest/vitest.mjs run --coverage
       artifact1_name: coverage-report
       artifact1_path: |
         coverage/**
@@ -156,6 +157,7 @@ jobs:
       timeout-minutes: 10
       working-directory: "."
       require-npm-token: true
+      install-node: true
       install-playwright: true
       playwright-browser: chromium
       pre-command: |
@@ -177,7 +179,7 @@ jobs:
           exit 1
         fi
         echo "GROUNDSWELL_E2E_PORT=${E2E_PORT}" >> "$GITHUB_ENV"
-      command: GROUNDSWELL_E2E_PORT="${GROUNDSWELL_E2E_PORT}" bun run test:e2e
+      command: GROUNDSWELL_E2E_PORT="${GROUNDSWELL_E2E_PORT}" node ./node_modules/playwright/cli.js test
       artifact1_name: playwright-report
       artifact1_path: playwright-report
       artifact2_name: playwright-test-results
