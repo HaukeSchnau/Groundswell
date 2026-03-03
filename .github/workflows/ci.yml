@@ -297,7 +297,13 @@ jobs:
 
       - name: Select E2E port
         run: |
-          E2E_PORT="$(( 30000 + (GITHUB_RUN_ID % 10000) ))"
+          E2E_PORT="$(
+            node -e "const net = require('node:net'); const server = net.createServer(); server.listen(0, '127.0.0.1', () => { const address = server.address(); console.log(typeof address === 'object' ? address.port : ''); server.close(); });"
+          )"
+          if [ -z "${E2E_PORT}" ]; then
+            echo "::error::Could not determine a free E2E port."
+            exit 1
+          fi
           echo "GROUNDSWELL_E2E_PORT=${E2E_PORT}" >> "$GITHUB_ENV"
 
       - name: Select E2E Bun binary
