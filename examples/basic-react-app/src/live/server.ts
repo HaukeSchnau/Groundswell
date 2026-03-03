@@ -12,33 +12,37 @@ import { applicator } from "../domain/applicators";
 import { Database } from "../domain/db/contract";
 import { DomainEvent } from "../domain/events";
 
+const isDatabaseError = (error: unknown): boolean =>
+	typeof error === "object" && error !== null && "_tag" in error && error._tag === "DatabaseError";
+
 const serverApplicatorLive = Layer.effect(
 	DomainServerApplicator,
 	Effect.gen(function* () {
 		const db = yield* Database;
 		return DomainServerApplicator.of({
 			verify: (event, meta) =>
-				pipe(
-					applicator.verify(event, meta),
-					Effect.provideService(Database, db),
-					Effect.catchTags({
-						DatabaseError: (error) =>
-							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
-						ValidationError: (error) =>
-							Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
-						UnknownError: (error) =>
-							Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
+				Effect.provideService(
+					Effect.mapError(applicator.verify(event, meta), (error) => {
+						if (error instanceof ValidationError) {
+							return error;
+						}
+						const cause = error instanceof ApplicatorError ? error.cause : error;
+						return new ValidationError({
+							cause,
+							reason: isDatabaseError(cause) ? "INVALID" : "UNKNOWN",
+						});
 					}),
-				),
+					Database,
+					db,
+				) as Effect.Effect<void, ValidationError>,
 			apply: (event, meta) =>
-				pipe(
-					applicator.apply(event, meta),
-					Effect.provideService(Database, db),
-					Effect.catchTags({
-						DatabaseError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
-						UnknownError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
-					}),
-				),
+				Effect.provideService(
+					Effect.mapError(applicator.apply(event, meta), (error) =>
+						error instanceof ApplicatorError ? error : new ApplicatorError({ cause: error }),
+					),
+					Database,
+					db,
+				) as Effect.Effect<void, ApplicatorError>,
 			getEventTopics: () => Effect.succeed(["all_notes"]), // Static topic
 			getUserTopics: () => Effect.succeed(["all_notes"]), // Static topic
 		});

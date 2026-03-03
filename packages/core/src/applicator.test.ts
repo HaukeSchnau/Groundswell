@@ -139,7 +139,7 @@ describe("applicator factories", () => {
 				timestamp: new Date(),
 				type: "todo.done",
 				data: { id: "x" },
-			}) as Effect.Effect<string[], ApplicatorError>,
+			}),
 		);
 		const missingTopicsErr = failureError(missingTopicsResult);
 		expect(missingTopicsResult._tag).toBe("Failure");

@@ -85,8 +85,12 @@ const getApplicator = (
 	return applicatorTree[namespace]?.[eventName];
 };
 
-const failMissingApplicator = (event: UnknownEvent) =>
-	Effect.fail(new ApplicatorError({ cause: `no applicator found for ${event.type}` }));
+const failMissingApplicator = <A, E, R>(
+	event: UnknownEvent,
+): Effect.Effect<A, E | ApplicatorError, R> =>
+	Effect.fail(
+		new ApplicatorError({ cause: `no applicator found for ${event.type}` }),
+	) as Effect.Effect<A, E | ApplicatorError, R>;
 
 export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 	applicatorTree: Partial<NamespaceApplicatorTree<DomainEvent, E, R>>,
@@ -188,7 +192,7 @@ export const serverApplicatorTreeFactory = <DomainEvent extends UnknownEvent, E,
 ) => {
 	const getEventTopics = <T extends DomainEvent["type"]>(
 		event: Extract<DomainEvent, { type: T }>,
-	) => {
+	): Effect.Effect<string[], E | ApplicatorError, R> => {
 		const applicator = getApplicator(event, applicatorTree) as
 			| ServerApplicator<Extract<DomainEvent, { type: T }>, T, E, R>
 			| undefined;

@@ -10,37 +10,46 @@ import { Database } from "../domain/db/contract";
 import * as Schema from "../domain/db/schema";
 import { DomainEvent } from "../domain/events";
 
+const isDatabaseError = (error: unknown): boolean =>
+	typeof error === "object" && error !== null && "_tag" in error && error._tag === "DatabaseError";
+
 const clientApplicatorsLive = Layer.effect(
 	DomainApplicator,
 	Effect.gen(function* () {
 		const db = yield* Database;
 		return DomainApplicator.of({
 			verify: (event: DomainEvent) =>
-				applicator
-					.verify(event, {
-						initiatorId: "1",
-					})
-					.pipe(
-						Effect.provideService(Database, db),
-						Effect.catchTags({
-							DatabaseError: (error) =>
-								Effect.fail(new ValidationError({ cause: error, reason: "INVALID" })),
-							UnknownError: (error) =>
-								Effect.fail(new ValidationError({ cause: error, reason: "UNKNOWN" })),
+				Effect.provideService(
+					Effect.mapError(
+						applicator.verify(event, {
+							initiatorId: "1",
 						}),
+						(error) => {
+							if (error instanceof ValidationError) {
+								return error;
+							}
+							const cause = error instanceof ApplicatorError ? error.cause : error;
+							return new ValidationError({
+								cause,
+								reason: isDatabaseError(cause) ? "INVALID" : "UNKNOWN",
+							});
+						},
 					),
+					Database,
+					db,
+				) as Effect.Effect<void, ValidationError>,
 			apply: (event: DomainEvent) =>
-				applicator
-					.apply(event, {
-						initiatorId: "1",
-					})
-					.pipe(
-						Effect.provideService(Database, db),
-						Effect.catchTags({
-							DatabaseError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
-							UnknownError: (error) => Effect.fail(new ApplicatorError({ cause: error })),
+				Effect.provideService(
+					Effect.mapError(
+						applicator.apply(event, {
+							initiatorId: "1",
 						}),
+						(error) =>
+							error instanceof ApplicatorError ? error : new ApplicatorError({ cause: error }),
 					),
+					Database,
+					db,
+				) as Effect.Effect<void, ApplicatorError>,
 		});
 	}),
 );
