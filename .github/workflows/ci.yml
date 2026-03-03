@@ -23,10 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
+      - name: Setup Bun (Nix)
+        run: |
+          nix profile install --accept-flake-config nixpkgs#bun
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
 
       - name: Verify private registry auth
         run: |
@@ -63,10 +63,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
+      - name: Setup Bun (Nix)
+        run: |
+          nix profile install --accept-flake-config nixpkgs#bun
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
 
       - name: Verify toolchain
         run: bun run check:toolchain
@@ -119,10 +119,10 @@ jobs:
           echo "::error::Postgres container failed to become healthy in time."
           exit 1
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
+      - name: Setup Bun (Nix)
+        run: |
+          nix profile install --accept-flake-config nixpkgs#bun
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
 
       - name: Verify toolchain
         run: bun run check:toolchain
@@ -149,10 +149,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
+      - name: Setup Bun (Nix)
+        run: |
+          nix profile install --accept-flake-config nixpkgs#bun
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
 
       - name: Verify toolchain
         run: bun run check:toolchain
