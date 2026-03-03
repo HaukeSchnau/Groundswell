@@ -306,18 +306,9 @@ jobs:
           fi
           echo "GROUNDSWELL_E2E_PORT=${E2E_PORT}" >> "$GITHUB_ENV"
 
-      - name: Select E2E Bun binary
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          echo "GROUNDSWELL_BUN_BIN=${BUN}" >> "$GITHUB_ENV"
-
       - name: Run E2E suite
         env:
           GROUNDSWELL_E2E_PORT: ${{ env.GROUNDSWELL_E2E_PORT }}
-          GROUNDSWELL_BUN_BIN: ${{ env.GROUNDSWELL_BUN_BIN }}
         run: node ./node_modules/playwright/cli.js test
 
       - name: Upload Playwright report
