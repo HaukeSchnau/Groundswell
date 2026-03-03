@@ -52,12 +52,12 @@ jobs:
             bun run checks:fmt:ci
           fi
 
+      - name: Build
+        run: bun run build
+
       - name: Lint
         run: |
           bun run checks:lint:ci
-
-      - name: Build
-        run: bun run build
 
   test-unit-integration:
     name: Unit + Integration (Coverage)
