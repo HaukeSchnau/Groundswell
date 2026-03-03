@@ -23,8 +23,7 @@ export default defineConfig({
 		screenshot: "only-on-failure",
 	},
 	webServer: {
-		command:
-			`rm -f ${dbPath} && GROUNDSWELL_SERVER_DB_PATH=${dbPath} GROUNDSWELL_SERVER_PORT=${E2E_PORT} bun run --filter basic-react-app dev`,
+		command: `rm -f ${dbPath} && GROUNDSWELL_SERVER_DB_PATH=${dbPath} GROUNDSWELL_SERVER_PORT=${E2E_PORT} bun run --filter basic-react-app dev`,
 		url: BASE_URL,
 		timeout: 180_000,
 		reuseExistingServer: !isCi,
