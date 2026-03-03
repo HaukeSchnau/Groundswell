@@ -16,313 +16,169 @@ env:
 jobs:
   quality:
     name: Quality (Toolchain, Hygiene, Format, Lint, Build)
-    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
-    timeout-minutes: 8
+    uses: schnau-dev/.github/.github/workflows/reusable-bun-ci.yml@main
+    with:
+      runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
+      timeout-minutes: 8
+      working-directory: "."
+      require-npm-token: true
+      pre-command: bun scripts/check-toolchain.ts
+      command: |
+        bun scripts/check-hygiene.ts
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        if [ "${RUNNER_ARCH}" = "ARM64" ]; then
+          nix run nixpkgs#oxfmt -- --check .
+        else
+          bun run checks:fmt:ci
+        fi
 
-      - name: Setup Bun (Nix)
-        run: |
-          nix profile install --accept-flake-config nixpkgs#bun
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
+        bun run --filter '@groundswell/zod-helpers' build
+        bun run --filter '@groundswell/core' build
+        bun run --filter '@groundswell/core-server' build
+        bun run --filter '@groundswell/react' build
+        bun run --filter '@groundswell/adapter-sse-client' build
+        bun run --filter '@groundswell/adapter-hono-server' build
+        bun run --filter '@groundswell/adapter-bun-server' build
+        bun run --filter '@groundswell/adapter-drizzle-sqlite' build
+        bun run --filter '@groundswell/adapter-drizzle-postgres' build
 
-      - name: Verify private registry auth
-        run: |
-          if [ -z "${npm_token}" ]; then
-            echo "::error::Missing required repository secret NPM_TOKEN (used as npm_token for bunfig.toml)."
-            exit 1
-          fi
-
-      - name: Verify toolchain
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" scripts/check-toolchain.ts
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Hygiene checks
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" scripts/check-hygiene.ts
-
-      - name: Check formatting
-        run: |
-          if [ "${RUNNER_ARCH}" = "ARM64" ]; then
-            nix run nixpkgs#oxfmt -- --check .
-          else
-            bun run checks:fmt:ci
-          fi
-
-      - name: Build
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" run --filter '@groundswell/zod-helpers' build
-          "$BUN" run --filter '@groundswell/core' build
-          "$BUN" run --filter '@groundswell/core-server' build
-          "$BUN" run --filter '@groundswell/react' build
-          "$BUN" run --filter '@groundswell/adapter-sse-client' build
-          "$BUN" run --filter '@groundswell/adapter-hono-server' build
-          "$BUN" run --filter '@groundswell/adapter-bun-server' build
-          "$BUN" run --filter '@groundswell/adapter-drizzle-sqlite' build
-          "$BUN" run --filter '@groundswell/adapter-drizzle-postgres' build
-
-      - name: Lint
-        run: |
-          bun run checks:lint:ci
+        bun run checks:lint:ci
+    secrets: inherit
 
   test-unit-integration:
     name: Unit + Integration (Coverage)
-    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
-    timeout-minutes: 10
     needs: quality
+    uses: schnau-dev/.github/.github/workflows/reusable-bun-ci.yml@main
+    with:
+      runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
+      timeout-minutes: 10
+      working-directory: "."
+      pre-command: |
+        bun scripts/check-toolchain.ts
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun (Nix)
-        run: |
-          nix profile install --accept-flake-config nixpkgs#bun
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
-
-      - name: Setup Node (Nix)
-        run: |
-          nix profile install --accept-flake-config nixpkgs#nodejs_22
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
-
-      - name: Verify toolchain
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" scripts/check-toolchain.ts
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Build workspace packages for Node-based test resolution
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" run --filter '@groundswell/zod-helpers' build
-          "$BUN" run --filter '@groundswell/core' build
-          "$BUN" run --filter '@groundswell/core-server' build
-          "$BUN" run --filter '@groundswell/react' build
-          "$BUN" run --filter '@groundswell/adapter-sse-client' build
-          "$BUN" run --filter '@groundswell/adapter-hono-server' build
-          "$BUN" run --filter '@groundswell/adapter-bun-server' build
-          "$BUN" run --filter '@groundswell/adapter-drizzle-sqlite' build
-          "$BUN" run --filter '@groundswell/adapter-drizzle-postgres' build
-
-      - name: Run tests with coverage
-        run: node ./node_modules/vitest/vitest.mjs run --coverage
-
-      - name: Upload coverage artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: |
-            coverage/**
-            ./**/coverage/**
-          if-no-files-found: ignore
+        bun run --filter '@groundswell/zod-helpers' build
+        bun run --filter '@groundswell/core' build
+        bun run --filter '@groundswell/core-server' build
+        bun run --filter '@groundswell/react' build
+        bun run --filter '@groundswell/adapter-sse-client' build
+        bun run --filter '@groundswell/adapter-hono-server' build
+        bun run --filter '@groundswell/adapter-bun-server' build
+        bun run --filter '@groundswell/adapter-drizzle-sqlite' build
+        bun run --filter '@groundswell/adapter-drizzle-postgres' build
+      command: bun run test:coverage
+      artifact1_name: coverage-report
+      artifact1_path: |
+        coverage/**
+        ./**/coverage/**
+    secrets: inherit
 
   test-postgres-integration:
     name: Postgres Integration (adapter-drizzle-postgres)
-    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
-    timeout-minutes: 10
     needs: quality
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Select container runtime
-        run: |
-          if command -v docker >/dev/null 2>&1; then
-            echo "CONTAINER_RUNTIME=docker" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
+    uses: schnau-dev/.github/.github/workflows/reusable-bun-ci.yml@main
+    with:
+      runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
+      timeout-minutes: 10
+      working-directory: "."
+      pre-command: |
+        if command -v docker >/dev/null 2>&1; then
+          CONTAINER_RUNTIME="docker"
+          echo "CONTAINER_RUNTIME=docker" >> "$GITHUB_ENV"
+        else
           if ! command -v podman >/dev/null 2>&1; then
             nix profile install --accept-flake-config nixpkgs#podman
             echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
           fi
 
           if command -v podman >/dev/null 2>&1; then
+            CONTAINER_RUNTIME="podman"
             echo "CONTAINER_RUNTIME=podman" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          echo "::error::No supported container runtime found (docker or podman)."
-          exit 1
-
-      - name: Start Postgres test container
-        run: |
-          CONTAINER_NAME="groundswell-postgres-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          echo "POSTGRES_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
-          "${CONTAINER_RUNTIME}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
-          "${CONTAINER_RUNTIME}" run -d \
-            --name "${CONTAINER_NAME}" \
-            -e POSTGRES_USER=groundswell \
-            -e POSTGRES_PASSWORD=groundswell \
-            -e POSTGRES_DB=groundswell_test \
-            -p 127.0.0.1::5432 \
-            postgres:16-alpine
-
-          POSTGRES_HOST_PORT="$(
-            "${CONTAINER_RUNTIME}" port "${CONTAINER_NAME}" 5432/tcp \
-              | sed -E 's/.*:([0-9]+)$/\1/' \
-              | head -n 1
-          )"
-          if [ -z "${POSTGRES_HOST_PORT}" ]; then
-            "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
-            echo "::error::Could not determine mapped host port for postgres container."
+          else
+            echo "::error::No supported container runtime found (docker or podman)."
             exit 1
           fi
-          echo "POSTGRES_HOST_PORT=${POSTGRES_HOST_PORT}" >> "$GITHUB_ENV"
+        fi
 
-          for _ in $(seq 1 30); do
-            if "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
-              exit 0
-            fi
-            sleep 2
-          done
+        CONTAINER_NAME="groundswell-postgres-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        echo "POSTGRES_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
+        "${CONTAINER_RUNTIME}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+        "${CONTAINER_RUNTIME}" run -d \
+          --name "${CONTAINER_NAME}" \
+          -e POSTGRES_USER=groundswell \
+          -e POSTGRES_PASSWORD=groundswell \
+          -e POSTGRES_DB=groundswell_test \
+          -p 127.0.0.1::5432 \
+          postgres:16-alpine
 
-          "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}"
+        POSTGRES_HOST_PORT="$(
+          "${CONTAINER_RUNTIME}" port "${CONTAINER_NAME}" 5432/tcp \
+            | sed -E 's/.*:([0-9]+)$/\1/' \
+            | head -n 1
+        )"
+        if [ -z "${POSTGRES_HOST_PORT}" ]; then
+          "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
+          echo "::error::Could not determine mapped host port for postgres container."
+          exit 1
+        fi
+        echo "POSTGRES_HOST_PORT=${POSTGRES_HOST_PORT}" >> "$GITHUB_ENV"
+
+        for _ in $(seq 1 30); do
+          if "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
+            break
+          fi
+          sleep 2
+        done
+
+        if ! "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
+          "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
           echo "::error::Postgres container failed to become healthy in time."
           exit 1
+        fi
 
-      - name: Setup Bun (Nix)
-        run: |
-          nix profile install --accept-flake-config nixpkgs#bun
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
+        bun scripts/check-toolchain.ts
 
-      - name: Verify toolchain
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" scripts/check-toolchain.ts
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Build workspace packages for Postgres integration resolution
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" run --filter '@groundswell/zod-helpers' build
-          "$BUN" run --filter '@groundswell/core' build
-          "$BUN" run --filter '@groundswell/core-server' build
-          "$BUN" run --filter '@groundswell/adapter-drizzle-postgres' build
-
-      - name: Run Postgres integration suite
-        env:
-          GROUNDSWELL_TEST_POSTGRES_URL: postgres://groundswell:groundswell@127.0.0.1:${{ env.POSTGRES_HOST_PORT }}/groundswell_test
-        run: bun run test:postgres:integration
-
-      - name: Stop Postgres test container
-        if: always()
-        run: |
-          if [ -n "${CONTAINER_RUNTIME}" ] && [ -n "${POSTGRES_CONTAINER_NAME}" ]; then
-            "${CONTAINER_RUNTIME}" rm -f "${POSTGRES_CONTAINER_NAME}" >/dev/null 2>&1 || true
-          fi
+        bun run --filter '@groundswell/zod-helpers' build
+        bun run --filter '@groundswell/core' build
+        bun run --filter '@groundswell/core-server' build
+        bun run --filter '@groundswell/adapter-drizzle-postgres' build
+      command: GROUNDSWELL_TEST_POSTGRES_URL="postgres://groundswell:groundswell@127.0.0.1:${POSTGRES_HOST_PORT}/groundswell_test" bun run test:postgres:integration
+      post-command: |
+        if [ -n "${CONTAINER_RUNTIME}" ] && [ -n "${POSTGRES_CONTAINER_NAME}" ]; then
+          "${CONTAINER_RUNTIME}" rm -f "${POSTGRES_CONTAINER_NAME}" >/dev/null 2>&1 || true
+        fi
+    secrets: inherit
 
   test-e2e:
     name: E2E (Playwright)
-    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
-    timeout-minutes: 10
     needs: quality
+    uses: schnau-dev/.github/.github/workflows/reusable-bun-ci.yml@main
+    with:
+      runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
+      timeout-minutes: 10
+      working-directory: "."
+      install-playwright: true
+      pre-command: |
+        bun scripts/check-toolchain.ts
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        bun run --filter '@groundswell/zod-helpers' build
+        bun run --filter '@groundswell/core' build
+        bun run --filter '@groundswell/core-server' build
+        bun run --filter '@groundswell/react' build
+        bun run --filter '@groundswell/adapter-sse-client' build
+        bun run --filter '@groundswell/adapter-bun-server' build
+        bun run --filter '@groundswell/adapter-drizzle-sqlite' build
 
-      - name: Setup Bun (Nix)
-        run: |
-          nix profile install --accept-flake-config nixpkgs#bun
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
-
-      - name: Setup Node (Nix)
-        run: |
-          nix profile install --accept-flake-config nixpkgs#nodejs_22
-          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
-
-      - name: Verify toolchain
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" scripts/check-toolchain.ts
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Build workspace packages for E2E runtime resolution
-        run: |
-          BUN="$HOME/.nix-profile/bin/bun"
-          if [ ! -x "$BUN" ]; then
-            BUN="$(command -v bun)"
-          fi
-          "$BUN" run --filter '@groundswell/zod-helpers' build
-          "$BUN" run --filter '@groundswell/core' build
-          "$BUN" run --filter '@groundswell/core-server' build
-          "$BUN" run --filter '@groundswell/react' build
-          "$BUN" run --filter '@groundswell/adapter-sse-client' build
-          "$BUN" run --filter '@groundswell/adapter-bun-server' build
-          "$BUN" run --filter '@groundswell/adapter-drizzle-sqlite' build
-
-      - name: Install Playwright browser
-        run: node ./node_modules/playwright/cli.js install chromium
-
-      - name: Select E2E port
-        run: |
-          E2E_PORT="$(
-            node -e "const net = require('node:net'); const server = net.createServer(); server.listen(0, '127.0.0.1', () => { const address = server.address(); console.log(typeof address === 'object' ? address.port : ''); server.close(); });"
-          )"
-          if [ -z "${E2E_PORT}" ]; then
-            echo "::error::Could not determine a free E2E port."
-            exit 1
-          fi
-          echo "GROUNDSWELL_E2E_PORT=${E2E_PORT}" >> "$GITHUB_ENV"
-
-      - name: Run E2E suite
-        env:
-          GROUNDSWELL_E2E_PORT: ${{ env.GROUNDSWELL_E2E_PORT }}
-        run: node ./node_modules/playwright/cli.js test
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report
-          if-no-files-found: ignore
-
-      - name: Upload Playwright traces/videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results
-          path: test-results/playwright
-          if-no-files-found: ignore
+        E2E_PORT="$(
+          node -e "const net = require('node:net'); const server = net.createServer(); server.listen(0, '127.0.0.1', () => { const address = server.address(); console.log(typeof address === 'object' ? address.port : ''); server.close(); });"
+        )"
+        if [ -z "${E2E_PORT}" ]; then
+          echo "::error::Could not determine a free E2E port."
+          exit 1
+        fi
+        echo "GROUNDSWELL_E2E_PORT=${E2E_PORT}" >> "$GITHUB_ENV"
+      command: GROUNDSWELL_E2E_PORT="${GROUNDSWELL_E2E_PORT}" bun run test:e2e
+      artifact1_name: playwright-report
+      artifact1_path: playwright-report
+      artifact2_name: playwright-test-results
+      artifact2_path: test-results/playwright
+    secrets: inherit
