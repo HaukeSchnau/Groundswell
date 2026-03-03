@@ -53,7 +53,20 @@ jobs:
           fi
 
       - name: Build
-        run: bun run build
+        run: |
+          BUN="$HOME/.nix-profile/bin/bun"
+          if [ ! -x "$BUN" ]; then
+            BUN="$(command -v bun)"
+          fi
+          "$BUN" run --filter '@groundswell/zod-helpers' build
+          "$BUN" run --filter '@groundswell/core' build
+          "$BUN" run --filter '@groundswell/core-server' build
+          "$BUN" run --filter '@groundswell/react' build
+          "$BUN" run --filter '@groundswell/adapter-sse-client' build
+          "$BUN" run --filter '@groundswell/adapter-hono-server' build
+          "$BUN" run --filter '@groundswell/adapter-bun-server' build
+          "$BUN" run --filter '@groundswell/adapter-drizzle-sqlite' build
+          "$BUN" run --filter '@groundswell/adapter-drizzle-postgres' build
 
       - name: Lint
         run: |
