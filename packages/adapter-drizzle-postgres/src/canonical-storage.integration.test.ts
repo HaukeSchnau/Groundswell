@@ -140,6 +140,33 @@ const makeEvent = (id: string, timestampMs: number, value: number): TestEvent =>
 	data: { value },
 });
 
+const countCanonicalEvents = (db: DatabaseService<typeof Schema>) =>
+	db
+		.execute((client) =>
+			client
+				.select({ count: sql<number>`count(*)`.mapWith(Number) })
+				.from(CanonicalEventsTable),
+		)
+		.pipe(Effect.map((rows) => rows[0]?.count ?? 0));
+
+const countCanonicalEventTopics = (db: DatabaseService<typeof Schema>) =>
+	db
+		.execute((client) =>
+			client
+				.select({ count: sql<number>`count(*)`.mapWith(Number) })
+				.from(CanonicalEventTopicsTable),
+		)
+		.pipe(Effect.map((rows) => rows[0]?.count ?? 0));
+
+const countCanonicalEventsSentToUsers = (db: DatabaseService<typeof Schema>) =>
+	db
+		.execute((client) =>
+			client
+				.select({ count: sql<number>`count(*)`.mapWith(Number) })
+				.from(CanonicalEventsSentToUsersTable),
+		)
+		.pipe(Effect.map((rows) => rows[0]?.count ?? 0));
+
 describePostgres("postgres canonical storage integration", () => {
 	it.effect("persists events, preserves ordering, and tracks sent markers", () =>
 		runWithLivePostgres(
@@ -206,6 +233,84 @@ describePostgres("postgres canonical storage integration", () => {
 
 				const parseError = yield* Effect.flip(storage.getEventsSentToUser(userId));
 				expect(parseError).toBeInstanceOf(CanonicalStorageError);
+			}),
+		),
+	);
+
+	it.effect("maps duplicate save attempts and preserves canonical rows", () =>
+		runWithLivePostgres(
+			Effect.gen(function* () {
+				yield* migrateAndReset;
+				const db = yield* Database;
+				const storage = yield* DomainCanonicalStorage;
+				const userId = "33333333-3333-4333-8333-333333333333";
+				const event = makeEvent("12121212-1212-4212-8212-121212121212", 6_000, 6);
+
+				yield* storage.saveEvent(event, { initiatorId: userId, topics: ["topic-a"] });
+
+				const duplicateError = yield* Effect.flip(
+					storage.saveEvent(event, { initiatorId: userId, topics: ["topic-a"] }),
+				);
+				expect(duplicateError).toBeInstanceOf(CanonicalStorageError);
+				expect(yield* countCanonicalEvents(db)).toBe(1);
+				expect(yield* countCanonicalEventTopics(db)).toBe(1);
+			}),
+		),
+	);
+
+	it.effect("maps markEventAsSentToUser foreign-key failures", () =>
+		runWithLivePostgres(
+			Effect.gen(function* () {
+				yield* migrateAndReset;
+				const db = yield* Database;
+				const storage = yield* DomainCanonicalStorage;
+				const userId = "44444444-4444-4444-8444-444444444444";
+
+				const markError = yield* Effect.flip(
+					storage.markEventAsSentToUser("99999999-9999-4999-8999-999999999999", userId),
+				);
+				expect(markError).toBeInstanceOf(CanonicalStorageError);
+				expect(yield* countCanonicalEventsSentToUsers(db)).toBe(0);
+			}),
+		),
+	);
+
+	it.effect("keeps one sent marker under concurrent duplicate mark requests", () =>
+		runWithLivePostgres(
+			Effect.gen(function* () {
+				yield* migrateAndReset;
+				const db = yield* Database;
+				const storage = yield* DomainCanonicalStorage;
+				const userId = "55555555-5555-4555-8555-555555555555";
+				const event = makeEvent("34343434-3434-4434-8434-343434343434", 7_000, 7);
+
+				yield* storage.saveEvent(event, { initiatorId: userId, topics: ["topic-a"] });
+
+				const results = yield* Effect.all(
+					[
+						Effect.result(storage.markEventAsSentToUser(event.id, userId)),
+						Effect.result(storage.markEventAsSentToUser(event.id, userId)),
+					],
+					{ concurrency: "unbounded" },
+				);
+
+				let successCount = 0;
+				let failureCount = 0;
+				for (const result of results) {
+					if (result._tag === "Success") {
+						successCount += 1;
+					} else {
+						failureCount += 1;
+						expect(result.failure).toBeInstanceOf(CanonicalStorageError);
+					}
+				}
+
+				expect(successCount).toBe(1);
+				expect(failureCount).toBe(1);
+				expect(yield* countCanonicalEventsSentToUsers(db)).toBe(1);
+
+				const sent = yield* storage.getEventsSentToUser(userId);
+				expect(sent.map((storedEvent) => storedEvent.id)).toStrictEqual([event.id]);
 			}),
 		),
 	);

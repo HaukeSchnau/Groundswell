@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, PubSub, pipe, Ref, ServiceMap, Stream } from "effect";
 import { TestClock } from "effect/testing";
-import { DuplicateEventError, StorageError, TransportError, ValidationError } from "./errors.js";
+import {
+	ApplicatorError,
+	DuplicateEventError,
+	StorageError,
+	TransportError,
+	ValidationError,
+} from "./errors.js";
 import type { Applicator, LocalEvent, Storage, SyncEngine, Transport } from "./interface.js";
 import { syncEngineLive } from "./live.js";
 
@@ -38,6 +44,7 @@ describe("SyncEngine", () => {
 		{ id: string; status: Partial<LocalEvent<TestEvent>["status"]> }[]
 	>;
 	let transportPublishCalls: Ref.Ref<TestEvent[]>;
+	let operationTrace: Ref.Ref<string[]>;
 
 	// PubSubs to control mock streams
 	let remoteEventsPubSub: PubSub.PubSub<TestEvent>;
@@ -67,6 +74,7 @@ describe("SyncEngine", () => {
 				{ id: string; status: Partial<LocalEvent<TestEvent>["status"]> }[]
 			>([]);
 			transportPublishCalls = yield* Ref.make<TestEvent[]>([]);
+			operationTrace = yield* Ref.make<string[]>([]);
 			remoteEventsPubSub = yield* PubSub.unbounded<TestEvent>();
 
 			pendingEventsPubSub = yield* PubSub.unbounded<LocalEvent<TestEvent>>();
@@ -76,11 +84,21 @@ describe("SyncEngine", () => {
 		// --- Mock Service Implementations ---
 		mockApplicator = Layer.succeed(
 			DomainApplicator,
-			DomainApplicator.of({
-				verify: (event) => Ref.update(applicatorVerifyCalls, (calls) => [...calls, event]),
-				apply: (event) => Ref.update(applicatorApplyCalls, (calls) => [...calls, event]),
-			}),
-		);
+				DomainApplicator.of({
+					verify: (event) =>
+						Ref.update(applicatorVerifyCalls, (calls) => [...calls, event]).pipe(
+							Effect.andThen(
+								Ref.update(operationTrace, (trace) => [...trace, `verify:${event.id}`]),
+							),
+						),
+					apply: (event) =>
+						Ref.update(applicatorApplyCalls, (calls) => [...calls, event]).pipe(
+							Effect.andThen(
+								Ref.update(operationTrace, (trace) => [...trace, `apply:${event.id}`]),
+							),
+						),
+				}),
+			);
 
 		mockStorage = Layer.succeed(
 			DomainStorage,
@@ -95,11 +113,16 @@ describe("SyncEngine", () => {
 
 		mockTransport = Layer.succeed(
 			DomainTransport,
-			DomainTransport.of({
-				publish: (event) => Ref.update(transportPublishCalls, (calls) => [...calls, event]),
-				listen: () => Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
-			}),
-		);
+				DomainTransport.of({
+					publish: (event) =>
+						Ref.update(transportPublishCalls, (calls) => [...calls, event]).pipe(
+							Effect.andThen(
+								Ref.update(operationTrace, (trace) => [...trace, `publish:${event.id}`]),
+							),
+						),
+					listen: () => Effect.succeed(Stream.fromPubSub(remoteEventsPubSub)),
+				}),
+			);
 
 		// Compose the final layer with the live engine and mock dependencies
 		engine = syncEngineLive(DomainSyncEngine, DomainApplicator, DomainStorage, DomainTransport, {
@@ -190,6 +213,50 @@ describe("SyncEngine", () => {
 
 			const saved = yield* Ref.get(storageSaveCalls);
 			expect(saved).toHaveLength(1); // Should still be saved even if it fails verification
+
+			const updates = yield* Ref.get(storageUpdateCalls);
+			expect(updates).toHaveLength(1);
+			expect(updates[0]?.id).toBe(saved[0]?.event.id);
+			expect(updates[0]?.status).toEqual({ local: "error" });
+
+			const published = yield* Ref.get(transportPublishCalls);
+			expect(published).toHaveLength(0);
+		}).pipe(Effect.scoped, Effect.provide(testLayer));
+	});
+
+	it.effect("should fail ingestion if apply fails and mark local status as error", () => {
+		const failingApplicator = Layer.succeed(
+			DomainApplicator,
+			DomainApplicator.of({
+				verify: () => Effect.succeed(undefined),
+				apply: () => Effect.fail(new ApplicatorError({ cause: "apply failed" })),
+			}),
+		);
+
+		const testLayer = Layer.provide(
+			engine,
+			Layer.mergeAll(failingApplicator, mockStorage, mockTransport),
+		);
+
+		return Effect.gen(function* () {
+			const engine = yield* DomainSyncEngine;
+			const err = yield* pipe(
+				engine.ingest({ type: "test.event", data: { value: 9 } }),
+				Effect.flip,
+			);
+
+			expect(err._tag).toBe("ApplicatorError");
+
+			const saved = yield* Ref.get(storageSaveCalls);
+			expect(saved).toHaveLength(1);
+
+			const updates = yield* Ref.get(storageUpdateCalls);
+			expect(updates).toHaveLength(1);
+			expect(updates[0]?.id).toBe(saved[0]?.event.id);
+			expect(updates[0]?.status).toEqual({ local: "error" });
+
+			const published = yield* Ref.get(transportPublishCalls);
+			expect(published).toHaveLength(0);
 		}).pipe(Effect.scoped, Effect.provide(testLayer));
 	});
 
@@ -409,10 +476,19 @@ describe("SyncEngine", () => {
 			yield* TestClock.adjust("2 seconds");
 
 			const applied = yield* Ref.get(applicatorApplyCalls);
-			expect(applied[0]?.id).toBe("pending-a");
+			expect(applied.map((event) => event.id)).toEqual(["pending-a", "pending-b"]);
 
 			const published = yield* Ref.get(transportPublishCalls);
 			expect(published.map((event) => event.id)).toEqual(["pending-a"]);
+
+			const trace = yield* Ref.get(operationTrace);
+			expect(trace).toEqual([
+				"verify:pending-a",
+				"apply:pending-a",
+				"publish:pending-a",
+				"verify:pending-b",
+				"apply:pending-b",
+			]);
 		}).pipe(Effect.provide(testLayer), Effect.scoped);
 	});
 

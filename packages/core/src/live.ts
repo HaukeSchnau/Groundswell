@@ -87,20 +87,20 @@ export const syncEngineLive = <
 			const applyEventLocally = Effect.fn("SYNC/Client Apply Event Locally")(function* (
 				localEvent: LocalEvent<TEvent>,
 			) {
+				const markLocalError = () =>
+					storage.updateEventStatus(localEvent.event.id, {
+						local: "error",
+					});
+
 				yield* applicator.verify(localEvent.event).pipe(
-					Effect.tapErrorTag("ValidationError", () =>
-						storage.updateEventStatus(localEvent.event.id, {
-							local: "error",
-						}),
-					),
+					Effect.tapErrorTag("ValidationError", markLocalError),
 				);
 
-				// TODO: try to publish the event to the remote transport
-				// if it fails, we fail finally
-				// if it succeeds, we probably need to receive more events from the remote transport
-				// and then try to apply the event again
-
-				yield* applicator.apply(localEvent.event);
+				// Local processing is authoritative: only after verify/apply succeeds
+				// do we move on to remote publishing in the queue worker.
+				yield* applicator.apply(localEvent.event).pipe(
+					Effect.tapErrorTag("ApplicatorError", markLocalError),
+				);
 				yield* storage.updateEventStatus(localEvent.event.id, {
 					local: "success",
 				});
