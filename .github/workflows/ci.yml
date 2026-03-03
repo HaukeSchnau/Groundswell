@@ -55,7 +55,8 @@ jobs:
       - name: Lint
         run: |
           if [ "${RUNNER_ARCH}" = "ARM64" ]; then
-            nix run nixpkgs#oxlint -- --type-aware --type-check --deny-warnings .
+            nix shell nixpkgs#oxlint nixpkgs#nodejs-slim --command \
+              oxlint --type-aware --type-check --deny-warnings .
           else
             bun run checks:lint:ci
           fi
