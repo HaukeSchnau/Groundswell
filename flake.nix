@@ -21,6 +21,7 @@
         devShells.default = pkgs.mkShellNoCC {
           buildInputs = with pkgs; [
             bun
+            nodejs_22
             just
             lefthook
             jq
