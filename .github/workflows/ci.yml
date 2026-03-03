@@ -16,7 +16,7 @@ env:
 jobs:
   quality:
     name: Quality (Toolchain, Hygiene, Format, Lint, Build)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
     timeout-minutes: 8
 
     steps:
@@ -55,7 +55,7 @@ jobs:
 
   test-unit-integration:
     name: Unit + Integration (Coverage)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
     timeout-minutes: 10
     needs: quality
 
@@ -89,27 +89,35 @@ jobs:
 
   test-postgres-integration:
     name: Postgres Integration (adapter-drizzle-postgres)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
     timeout-minutes: 10
     needs: quality
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: groundswell
-          POSTGRES_PASSWORD: groundswell
-          POSTGRES_DB: groundswell_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U groundswell -d groundswell_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Start Postgres test container
+        run: |
+          podman rm -f groundswell-postgres-test >/dev/null 2>&1 || true
+          podman run -d \
+            --name groundswell-postgres-test \
+            -e POSTGRES_USER=groundswell \
+            -e POSTGRES_PASSWORD=groundswell \
+            -e POSTGRES_DB=groundswell_test \
+            -p 5432:5432 \
+            postgres:16-alpine
+
+          for i in $(seq 1 30); do
+            if podman exec groundswell-postgres-test pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          podman logs groundswell-postgres-test
+          echo "::error::Postgres container failed to become healthy in time."
+          exit 1
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -127,9 +135,13 @@ jobs:
           GROUNDSWELL_TEST_POSTGRES_URL: postgres://groundswell:groundswell@127.0.0.1:5432/groundswell_test
         run: bun run test:postgres:integration
 
+      - name: Stop Postgres test container
+        if: always()
+        run: podman rm -f groundswell-postgres-test >/dev/null 2>&1 || true
+
   test-e2e:
     name: E2E (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64, nixos, vps]
     timeout-minutes: 10
     needs: quality
 
@@ -149,7 +161,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Playwright browser
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install chromium
 
       - name: Run E2E suite
         run: bun run test:e2e
