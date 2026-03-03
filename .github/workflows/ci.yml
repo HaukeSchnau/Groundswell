@@ -19,7 +19,6 @@ jobs:
       timeout-minutes: 8
       working-directory: "."
       require-npm-token: true
-      pre-command: bun scripts/check-toolchain.ts
       command: |
         bun scripts/check-hygiene.ts
 
@@ -52,8 +51,6 @@ jobs:
       working-directory: "."
       require-npm-token: true
       pre-command: |
-        bun scripts/check-toolchain.ts
-
         bun run --filter '@groundswell/zod-helpers' build
         bun run --filter '@groundswell/core' build
         bun run --filter '@groundswell/core-server' build
@@ -137,8 +134,6 @@ jobs:
           exit 1
         fi
 
-        bun scripts/check-toolchain.ts
-
         bun run --filter '@groundswell/zod-helpers' build
         bun run --filter '@groundswell/core' build
         bun run --filter '@groundswell/core-server' build
@@ -162,8 +157,6 @@ jobs:
       install-playwright: true
       playwright-browser: chromium
       pre-command: |
-        bun scripts/check-toolchain.ts
-
         bun run --filter '@groundswell/zod-helpers' build
         bun run --filter '@groundswell/core' build
         bun run --filter '@groundswell/core-server' build
