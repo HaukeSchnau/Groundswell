@@ -18,7 +18,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 8
       working-directory: "."
-      require-npm-token: true
       command: |
         bun scripts/check-hygiene.ts
 
@@ -49,7 +48,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
-      require-npm-token: true
       pre-command: |
         bun run --filter '@groundswell/zod-helpers' build
         bun run --filter '@groundswell/core' build
@@ -75,25 +73,13 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
-      require-npm-token: true
       pre-command: |
-        if command -v docker >/dev/null 2>&1; then
-          CONTAINER_RUNTIME="docker"
-          echo "CONTAINER_RUNTIME=docker" >> "$GITHUB_ENV"
-        else
-          if ! command -v podman >/dev/null 2>&1; then
-            nix profile install --accept-flake-config nixpkgs#podman
-            echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
-          fi
-
-          if command -v podman >/dev/null 2>&1; then
-            CONTAINER_RUNTIME="podman"
-            echo "CONTAINER_RUNTIME=podman" >> "$GITHUB_ENV"
-          else
-            echo "::error::No supported container runtime found (docker or podman)."
-            exit 1
-          fi
+        if ! command -v docker >/dev/null 2>&1; then
+          echo "::error::Docker is required for Postgres integration tests but was not found."
+          exit 1
         fi
+        CONTAINER_RUNTIME="docker"
+        echo "CONTAINER_RUNTIME=docker" >> "$GITHUB_ENV"
 
         CONTAINER_NAME="groundswell-postgres-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
         echo "POSTGRES_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
@@ -153,7 +139,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
-      require-npm-token: true
       install-playwright: true
       playwright-browser: chromium
       pre-command: |
