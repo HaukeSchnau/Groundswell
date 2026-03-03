@@ -7,6 +7,7 @@ import {
 	serverApplicatorFactory,
 	serverApplicatorTreeFactory,
 } from "./applicator.js";
+import { ApplicatorError } from "./errors.js";
 
 type DomainEvent =
 	| {
@@ -50,10 +51,9 @@ describe("applicator factories", () => {
 		expect(verify).toHaveBeenCalledWith(createdEvent, meta);
 	});
 
-	it("uses tree applicators and warns for missing handlers", async () => {
+	it("uses tree applicators and fails for missing handlers", async () => {
 		const apply = vi.fn(() => Effect.void);
 		const verify = vi.fn(() => Effect.void);
-		const warn = vi.spyOn(console, "warn").mockReturnValue(undefined);
 
 		const treeApplicator = applicatorTreeFactory<DomainEvent, never, never>({
 			note: {
@@ -61,24 +61,25 @@ describe("applicator factories", () => {
 			},
 		});
 
+		const missingEvent: Extract<DomainEvent, { type: "todo.done" }> = {
+			id: crypto.randomUUID(),
+			timestamp: new Date(),
+			type: "todo.done",
+			data: { id: "x" },
+		};
+
 		await Effect.runPromise(treeApplicator.apply(createdEvent, meta));
 		await Effect.runPromise(treeApplicator.verify(createdEvent, meta));
-		await Effect.runPromise(
-			treeApplicator.apply(
-				{
-					id: crypto.randomUUID(),
-					timestamp: new Date(),
-					type: "todo.done",
-					data: { id: "x" },
-				},
-				meta,
-			),
-		);
+
+		const applyErr = await Effect.runPromise(Effect.flip(treeApplicator.apply(missingEvent, meta)));
+		const verifyErr = await Effect.runPromise(Effect.flip(treeApplicator.verify(missingEvent, meta)));
 
 		expect(apply).toHaveBeenCalledTimes(1);
 		expect(verify).toHaveBeenCalledTimes(1);
-		expect(warn).toHaveBeenCalledWith("no applicator found for todo.done");
-		warn.mockRestore();
+		expect(applyErr).toBeInstanceOf(ApplicatorError);
+		expect(verifyErr).toBeInstanceOf(ApplicatorError);
+		expect(applyErr.cause).toBe("no applicator found for todo.done");
+		expect(verifyErr.cause).toBe("no applicator found for todo.done");
 	});
 
 	it("exposes server getEventTopics for map and tree forms", async () => {
@@ -100,7 +101,6 @@ describe("applicator factories", () => {
 		expect(topics).toStrictEqual(["topic-a"]);
 		expect(getTopics).toHaveBeenCalledWith(createdEvent);
 
-		const warn = vi.spyOn(console, "warn").mockReturnValue(undefined);
 		const tree = serverApplicatorTreeFactory<DomainEvent, never, never>({
 			note: {
 				created: {
@@ -114,16 +114,17 @@ describe("applicator factories", () => {
 		const treeTopics = await Effect.runPromise(tree.getEventTopics(createdEvent));
 		expect(treeTopics).toStrictEqual(["topic-tree"]);
 
-		const missingTopics = await Effect.runPromise(
-			tree.getEventTopics({
-				id: crypto.randomUUID(),
-				timestamp: new Date(),
-				type: "todo.done",
-				data: { id: "x" },
-			}),
+		const missingTopicsErr = await Effect.runPromise(
+			Effect.flip(
+				tree.getEventTopics({
+					id: crypto.randomUUID(),
+					timestamp: new Date(),
+					type: "todo.done",
+					data: { id: "x" },
+				}),
+			),
 		);
-		expect(missingTopics).toStrictEqual([]);
-		expect(warn).toHaveBeenCalledWith("no applicator found for todo.done");
-		warn.mockRestore();
+		expect(missingTopicsErr).toBeInstanceOf(ApplicatorError);
+		expect(missingTopicsErr.cause).toBe("no applicator found for todo.done");
 	});
 });

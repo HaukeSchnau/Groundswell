@@ -1,6 +1,6 @@
 import type { EventMeta, UnknownEvent } from "@groundswell/zod-helpers";
 import { Effect } from "effect";
-import type { ValidationError } from "./errors.js";
+import { ApplicatorError, type ValidationError } from "./errors.js";
 
 type SplitNamespace<T> = T extends `${infer Prefix}.${infer Suffix}` ? [Prefix, Suffix] : [T, ""];
 type NamespaceEvents<
@@ -85,6 +85,9 @@ const getApplicator = (
 	return applicatorTree[namespace]?.[eventName];
 };
 
+const failMissingApplicator = (event: UnknownEvent) =>
+	Effect.fail(new ApplicatorError({ cause: `no applicator found for ${event.type}` }));
+
 export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 	applicatorTree: Partial<NamespaceApplicatorTree<DomainEvent, E, R>>,
 ) => {
@@ -96,8 +99,7 @@ export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 			| Applicator<Extract<DomainEvent, { type: T }>, T, E, R>
 			| undefined;
 		if (!applicator) {
-			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
-			return Effect.void;
+			return failMissingApplicator(event);
 		}
 		return applicator.apply(event, meta).pipe(
 			Effect.withSpan("SYNC/Apply", {
@@ -116,8 +118,7 @@ export const applicatorTreeFactory = <DomainEvent extends UnknownEvent, E, R>(
 			| Applicator<Extract<DomainEvent, { type: T }>, T, E, R>
 			| undefined;
 		if (!applicator) {
-			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
-			return Effect.void;
+			return failMissingApplicator(event);
 		}
 		return applicator.verify(event, meta).pipe(
 			Effect.withSpan("SYNC/Verify", {
@@ -192,8 +193,7 @@ export const serverApplicatorTreeFactory = <DomainEvent extends UnknownEvent, E,
 			| ServerApplicator<Extract<DomainEvent, { type: T }>, T, E, R>
 			| undefined;
 		if (!applicator) {
-			console.warn(`no applicator found for ${event.type}`); // TODO: Effect.fail
-			return Effect.succeed([]);
+			return failMissingApplicator(event);
 		}
 		return applicator.getEventTopics(event);
 	};
