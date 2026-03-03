@@ -10,9 +10,6 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  npm_token: ${{ secrets.NPM_TOKEN }}
-
 jobs:
   quality:
     name: Quality (Toolchain, Hygiene, Format, Lint, Build)
@@ -53,6 +50,7 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
+      require-npm-token: true
       pre-command: |
         bun scripts/check-toolchain.ts
 
@@ -80,6 +78,7 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
+      require-npm-token: true
       pre-command: |
         if command -v docker >/dev/null 2>&1; then
           CONTAINER_RUNTIME="docker"
@@ -143,7 +142,7 @@ jobs:
         bun run --filter '@groundswell/adapter-drizzle-postgres' build
       command: GROUNDSWELL_TEST_POSTGRES_URL="postgres://groundswell:groundswell@127.0.0.1:${POSTGRES_HOST_PORT}/groundswell_test" bun run test:postgres:integration
       post-command: |
-        if [ -n "${CONTAINER_RUNTIME}" ] && [ -n "${POSTGRES_CONTAINER_NAME}" ]; then
+        if [ -n "${CONTAINER_RUNTIME:-}" ] && [ -n "${POSTGRES_CONTAINER_NAME:-}" ]; then
           "${CONTAINER_RUNTIME}" rm -f "${POSTGRES_CONTAINER_NAME}" >/dev/null 2>&1 || true
         fi
     secrets: inherit
@@ -156,7 +155,9 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
+      require-npm-token: true
       install-playwright: true
+      playwright-browser: chromium
       pre-command: |
         bun scripts/check-toolchain.ts
 
