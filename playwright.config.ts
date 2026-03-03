@@ -3,7 +3,6 @@ import { defineConfig, devices } from "@playwright/test";
 const E2E_PORT = Number(process.env.GROUNDSWELL_E2E_PORT ?? "3000");
 const BASE_URL = `http://127.0.0.1:${E2E_PORT}`;
 const isCi = process.env.CI !== undefined;
-const dbRelativePath = `test-results/groundswell-e2e-${E2E_PORT}.sqlite`;
 
 export default defineConfig({
 	testDir: "./e2e",
@@ -23,7 +22,7 @@ export default defineConfig({
 		screenshot: "only-on-failure",
 	},
 	webServer: {
-		command: `mkdir -p examples/basic-react-app/test-results && rm -f examples/basic-react-app/${dbRelativePath} && GROUNDSWELL_SERVER_DB_PATH=./${dbRelativePath} GROUNDSWELL_SERVER_PORT=${E2E_PORT} bun --cwd examples/basic-react-app --hot src/index.ts`,
+		command: `GROUNDSWELL_SERVER_DB_PATH=:memory: GROUNDSWELL_SERVER_PORT=${E2E_PORT} bun --cwd examples/basic-react-app --hot src/index.ts`,
 		url: BASE_URL,
 		timeout: 180_000,
 		reuseExistingServer: !isCi,
