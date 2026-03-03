@@ -62,7 +62,7 @@ const StorageLive = ClientStorage.createDrizzleStorageLayer(DomainStorage, {
 });
 
 const TransportLive = createSseTransportLayer(DomainTransport, {
-	baseUrl: "http://localhost:3000/api",
+	baseUrl: "/api",
 	eventSchema: DomainEvent,
 }).pipe(Layer.provide(BrowserEventSourceServiceLive));
 

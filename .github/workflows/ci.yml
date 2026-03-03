@@ -159,23 +159,37 @@ jobs:
 
       - name: Start Postgres test container
         run: |
-          "${CONTAINER_RUNTIME}" rm -f groundswell-postgres-test >/dev/null 2>&1 || true
+          CONTAINER_NAME="groundswell-postgres-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "POSTGRES_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
+          "${CONTAINER_RUNTIME}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
           "${CONTAINER_RUNTIME}" run -d \
-            --name groundswell-postgres-test \
+            --name "${CONTAINER_NAME}" \
             -e POSTGRES_USER=groundswell \
             -e POSTGRES_PASSWORD=groundswell \
             -e POSTGRES_DB=groundswell_test \
-            -p 5432:5432 \
+            -p 127.0.0.1::5432 \
             postgres:16-alpine
 
-          for i in $(seq 1 30); do
-            if "${CONTAINER_RUNTIME}" exec groundswell-postgres-test pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
+          POSTGRES_HOST_PORT="$(
+            "${CONTAINER_RUNTIME}" port "${CONTAINER_NAME}" 5432/tcp \
+              | sed -E 's/.*:([0-9]+)$/\1/' \
+              | head -n 1
+          )"
+          if [ -z "${POSTGRES_HOST_PORT}" ]; then
+            "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
+            echo "::error::Could not determine mapped host port for postgres container."
+            exit 1
+          fi
+          echo "POSTGRES_HOST_PORT=${POSTGRES_HOST_PORT}" >> "$GITHUB_ENV"
+
+          for _ in $(seq 1 30); do
+            if "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
               exit 0
             fi
             sleep 2
           done
 
-          "${CONTAINER_RUNTIME}" logs groundswell-postgres-test
+          "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}"
           echo "::error::Postgres container failed to become healthy in time."
           exit 1
 
@@ -192,14 +206,14 @@ jobs:
 
       - name: Run Postgres integration suite
         env:
-          GROUNDSWELL_TEST_POSTGRES_URL: postgres://groundswell:groundswell@127.0.0.1:5432/groundswell_test
+          GROUNDSWELL_TEST_POSTGRES_URL: postgres://groundswell:groundswell@127.0.0.1:${{ env.POSTGRES_HOST_PORT }}/groundswell_test
         run: bun run test:postgres:integration
 
       - name: Stop Postgres test container
         if: always()
         run: |
-          if [ -n "${CONTAINER_RUNTIME}" ]; then
-            "${CONTAINER_RUNTIME}" rm -f groundswell-postgres-test >/dev/null 2>&1 || true
+          if [ -n "${CONTAINER_RUNTIME}" ] && [ -n "${POSTGRES_CONTAINER_NAME}" ]; then
+            "${CONTAINER_RUNTIME}" rm -f "${POSTGRES_CONTAINER_NAME}" >/dev/null 2>&1 || true
           fi
 
   test-e2e:
@@ -231,7 +245,14 @@ jobs:
       - name: Install Playwright browser
         run: node ./node_modules/playwright/cli.js install chromium
 
+      - name: Select E2E port
+        run: |
+          E2E_PORT="$(( 30000 + (GITHUB_RUN_ID % 10000) ))"
+          echo "GROUNDSWELL_E2E_PORT=${E2E_PORT}" >> "$GITHUB_ENV"
+
       - name: Run E2E suite
+        env:
+          GROUNDSWELL_E2E_PORT: ${{ env.GROUNDSWELL_E2E_PORT }}
         run: node ./node_modules/playwright/cli.js test
 
       - name: Upload Playwright report

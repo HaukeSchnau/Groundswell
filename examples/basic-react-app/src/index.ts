@@ -69,9 +69,10 @@ const server = Effect.gen(function* () {
 	// 	}
 	// }).pipe(Effect.forkDaemon);
 
-	const server = serve({
-		idleTimeout: 255,
-		routes: {
+		const server = serve({
+			port: Number(process.env.GROUNDSWELL_SERVER_PORT ?? "3000"),
+			idleTimeout: 255,
+			routes: {
 			"/drizzle/meta/_journal.json": {
 				GET: () => new Response(Bun.file("./drizzle/meta/_journal.json")),
 			},
