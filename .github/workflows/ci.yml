@@ -45,10 +45,20 @@ jobs:
         run: bun run checks:hygiene
 
       - name: Check formatting
-        run: bun run checks:fmt:ci -- --threads=1
+        run: |
+          if [ "${RUNNER_ARCH}" = "ARM64" ]; then
+            nix run nixpkgs#oxfmt -- --check .
+          else
+            bun run checks:fmt:ci
+          fi
 
       - name: Lint
-        run: bun run checks:lint:ci -- --threads=1
+        run: |
+          if [ "${RUNNER_ARCH}" = "ARM64" ]; then
+            nix run nixpkgs#oxlint -- --type-aware --type-check --deny-warnings .
+          else
+            bun run checks:lint:ci
+          fi
 
       - name: Build
         run: bun run build
