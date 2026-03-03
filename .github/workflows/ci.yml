@@ -122,16 +122,19 @@ jobs:
         fi
         echo "POSTGRES_HOST_PORT=${POSTGRES_HOST_PORT}" >> "$GITHUB_ENV"
 
-        for _ in $(seq 1 30); do
-          if "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
+        POSTGRES_READY="false"
+        for _ in $(seq 1 45); do
+          if "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d postgres >/dev/null 2>&1 \
+            && "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" psql -U groundswell -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'groundswell_test';" | grep -q '^1$'; then
+            POSTGRES_READY="true"
             break
           fi
           sleep 2
         done
 
-        if ! "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d groundswell_test >/dev/null 2>&1; then
+        if [ "${POSTGRES_READY}" != "true" ]; then
           "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
-          echo "::error::Postgres container failed to become healthy in time."
+          echo "::error::Postgres container failed readiness checks (server unavailable or groundswell_test missing)."
           exit 1
         fi
 
