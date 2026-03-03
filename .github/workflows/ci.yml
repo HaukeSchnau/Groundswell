@@ -278,6 +278,20 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
+      - name: Build workspace packages for E2E runtime resolution
+        run: |
+          BUN="$HOME/.nix-profile/bin/bun"
+          if [ ! -x "$BUN" ]; then
+            BUN="$(command -v bun)"
+          fi
+          "$BUN" run --filter '@groundswell/zod-helpers' build
+          "$BUN" run --filter '@groundswell/core' build
+          "$BUN" run --filter '@groundswell/core-server' build
+          "$BUN" run --filter '@groundswell/react' build
+          "$BUN" run --filter '@groundswell/adapter-sse-client' build
+          "$BUN" run --filter '@groundswell/adapter-bun-server' build
+          "$BUN" run --filter '@groundswell/adapter-drizzle-sqlite' build
+
       - name: Install Playwright browser
         run: node ./node_modules/playwright/cli.js install chromium
 
