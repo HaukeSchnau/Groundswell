@@ -30,7 +30,7 @@
 		"@schnau/effect-drizzle": "^0.5.10",
 		"@types/pg": "^8.18.0",
 		"drizzle-orm": "^0.45.1",
-		"effect": "^4.0.0-beta.23",
+		"effect": "^4.0.0-beta.26",
 		"pg": "^8.19.0",
 		"superjson": "^2.2.6",
 		"zod": "^4.3.6"

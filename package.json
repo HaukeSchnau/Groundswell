@@ -32,14 +32,14 @@
 	"devDependencies": {
 		"@libsql/client": "^0.17.0",
 		"@playwright/test": "^1.56.1",
-		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-2984f70fa932.tgz",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.0",
 		"@testing-library/user-event": "^14.6.1",
 		"@typescript/native-preview": "^7.0.0-dev.20260302.1",
 		"@vitest/coverage-v8": "^4.0.18",
 		"drizzle-orm": "0.45.1",
-		"effect": "4.0.0-beta.23",
+		"effect": "4.0.0-beta.26",
 		"jsdom": "^26.1.0",
 		"lefthook": "^2.0.13",
 		"oxfmt": "^0.36.0",
@@ -53,9 +53,9 @@
 		"typescript": "^5.9.3"
 	},
 	"overrides": {
-		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
+		"@schnau/effect-drizzle": "file:./vendor/effect-drizzle-local-v0.5.10-2984f70fa932.tgz",
 		"drizzle-orm": "0.45.1",
-		"effect": "4.0.0-beta.23",
+		"effect": "4.0.0-beta.26",
 		"pg": "8.19.0"
 	},
 	"engines": {

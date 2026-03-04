@@ -1,10 +1,10 @@
 {
 	"packageName": "@schnau/effect-drizzle",
 	"packageVersion": "0.5.10",
-	"filename": "effect-drizzle-local-v0.5.10-ce57f60e98b3.tgz",
-	"sha256": "ce57f60e98b3cd8d0c5f1db3b69e5116fc17179581af2c1a44e4fcfaf7a2c5b0",
+	"filename": "effect-drizzle-local-v0.5.10-2984f70fa932.tgz",
+	"sha256": "2984f70fa932e1db7e5a07cb9f6a2a5aab84771306e4158508fae001addf33ac",
 	"sourceRepo": "/Users/haukeschnau/urbs/Libraries/effect-drizzle",
-	"sourceGitHead": "1ca2504694afba7dc8eab799e10ea8cb8d231b5b",
-	"sourceTimestamp": "2026-03-02T14:28:30+01:00",
-	"generatedAt": "2026-03-02T14:09:22.968Z"
+	"sourceGitHead": "81b146dc9e92ed12130589c3997a937a6d9ac239",
+	"sourceTimestamp": "2026-03-04T11:56:57+01:00",
+	"generatedAt": "2026-03-04T10:58:30.170Z"
 }

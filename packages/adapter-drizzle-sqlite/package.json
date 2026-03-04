@@ -31,7 +31,7 @@
 		"@groundswell/zod-helpers": "*",
 		"@schnau/effect-drizzle": "^0.5.10",
 		"drizzle-orm": "^0.45.1",
-		"effect": "^4.0.0-beta.23",
+		"effect": "^4.0.0-beta.26",
 		"superjson": "^2.2.6",
 		"zod": "^4.3.6"
 	}

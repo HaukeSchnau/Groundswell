@@ -23,14 +23,14 @@
 	},
 	"devDependencies": {
 		"@groundswell/core-server": "*",
-		"effect": "^4.0.0-beta.23",
+		"effect": "^4.0.0-beta.26",
 		"hono": "^4.12.3",
 		"superjson": "^2.2.6",
 		"zod": "^4.3.6"
 	},
 	"peerDependencies": {
 		"@groundswell/core-server": "*",
-		"effect": "^4.0.0-beta.23",
+		"effect": "^4.0.0-beta.26",
 		"hono": "^4.12.3",
 		"superjson": "^2.2.6",
 		"zod": "^4.3.6"
