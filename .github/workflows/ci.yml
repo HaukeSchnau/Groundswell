@@ -18,7 +18,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 8
       working-directory: "."
-      install-scripts: true
       command: |
         bun scripts/check-hygiene.ts
 
@@ -49,7 +48,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
-      install-scripts: true
       pre-command: |
         bun run --filter '@groundswell/zod-helpers' build
         bun run --filter '@groundswell/core' build
@@ -75,7 +73,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
-      install-scripts: true
       postgres-enabled: true
       postgres-db: groundswell_test
       postgres-image: postgres:16-alpine
@@ -99,7 +96,6 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
-      install-scripts: true
       install-playwright: true
       playwright-browser: chromium
       pre-command: |
