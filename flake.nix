@@ -19,17 +19,20 @@
       in
       {
         devShells.default = pkgs.mkShellNoCC {
-          buildInputs = with pkgs; [
+          packages = with pkgs; [
             bun
             nodejs_22
+            just
+            lefthook
+            jq
+          ];
+
+          nativeBuildInputs = with pkgs; [
             nodePackages.node-gyp
             python3
             gcc
             gnumake
             pkg-config
-            just
-            lefthook
-            jq
           ];
         };
       }
