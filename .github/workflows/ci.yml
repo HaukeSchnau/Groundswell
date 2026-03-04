@@ -73,62 +73,19 @@ jobs:
       runs-on: '["self-hosted","Linux","ARM64","nixos","vps"]'
       timeout-minutes: 10
       working-directory: "."
+      postgres-enabled: true
+      postgres-db: groundswell_test
+      postgres-image: postgres:16-alpine
+      postgres-password: groundswell
+      postgres-ready-timeout-seconds: 90
+      postgres-url-env: GROUNDSWELL_TEST_POSTGRES_URL
+      postgres-user: groundswell
       pre-command: |
-        if ! command -v docker >/dev/null 2>&1; then
-          echo "::error::Docker is required for Postgres integration tests but was not found."
-          exit 1
-        fi
-        CONTAINER_RUNTIME="docker"
-        echo "CONTAINER_RUNTIME=docker" >> "$GITHUB_ENV"
-
-        CONTAINER_NAME="groundswell-postgres-test-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-        echo "POSTGRES_CONTAINER_NAME=${CONTAINER_NAME}" >> "$GITHUB_ENV"
-        "${CONTAINER_RUNTIME}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
-        "${CONTAINER_RUNTIME}" run -d \
-          --name "${CONTAINER_NAME}" \
-          -e POSTGRES_USER=groundswell \
-          -e POSTGRES_PASSWORD=groundswell \
-          -e POSTGRES_DB=groundswell_test \
-          -p 127.0.0.1::5432 \
-          postgres:16-alpine
-
-        POSTGRES_HOST_PORT="$(
-          "${CONTAINER_RUNTIME}" port "${CONTAINER_NAME}" 5432/tcp \
-            | sed -E 's/.*:([0-9]+)$/\1/' \
-            | head -n 1
-        )"
-        if [ -z "${POSTGRES_HOST_PORT}" ]; then
-          "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
-          echo "::error::Could not determine mapped host port for postgres container."
-          exit 1
-        fi
-        echo "POSTGRES_HOST_PORT=${POSTGRES_HOST_PORT}" >> "$GITHUB_ENV"
-
-        POSTGRES_READY="false"
-        for _ in $(seq 1 45); do
-          if "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" pg_isready -U groundswell -d postgres >/dev/null 2>&1 \
-            && "${CONTAINER_RUNTIME}" exec "${CONTAINER_NAME}" psql -U groundswell -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'groundswell_test';" | grep -q '^1$'; then
-            POSTGRES_READY="true"
-            break
-          fi
-          sleep 2
-        done
-
-        if [ "${POSTGRES_READY}" != "true" ]; then
-          "${CONTAINER_RUNTIME}" logs "${CONTAINER_NAME}" || true
-          echo "::error::Postgres container failed readiness checks (server unavailable or groundswell_test missing)."
-          exit 1
-        fi
-
         bun run --filter '@groundswell/zod-helpers' build
         bun run --filter '@groundswell/core' build
         bun run --filter '@groundswell/core-server' build
         bun run --filter '@groundswell/adapter-drizzle-postgres' build
-      command: GROUNDSWELL_TEST_POSTGRES_URL="postgres://groundswell:groundswell@127.0.0.1:${POSTGRES_HOST_PORT}/groundswell_test" bun run test:postgres:integration
-      post-command: |
-        if [ -n "${CONTAINER_RUNTIME:-}" ] && [ -n "${POSTGRES_CONTAINER_NAME:-}" ]; then
-          "${CONTAINER_RUNTIME}" rm -f "${POSTGRES_CONTAINER_NAME}" >/dev/null 2>&1 || true
-        fi
+      command: GROUNDSWELL_TEST_POSTGRES_URL="${GROUNDSWELL_TEST_POSTGRES_URL}" bun run test:postgres:integration
     secrets: inherit
 
   test-e2e:

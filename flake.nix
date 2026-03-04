@@ -22,6 +22,11 @@
           buildInputs = with pkgs; [
             bun
             nodejs_22
+            nodePackages.node-gyp
+            python3
+            gcc
+            gnumake
+            pkg-config
             just
             lefthook
             jq
