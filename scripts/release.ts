@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
-const DEFAULT_REGISTRY = "https://npm.schnau.dev/";
+const DEFAULT_REGISTRY = "https://git.schnau.dev/api/packages/schnau/npm/";
 
 type Flags = {
 	dryRun: boolean;
@@ -20,7 +20,7 @@ function usage(): string {
 		"  bun run release <patch|minor|major|prepatch|preminor|premajor|prerelease|<semver>> [flags]",
 		"",
 		"Flags:",
-		"  --registry <url>   Registry to publish to (default: https://npm.schnau.dev/)",
+		"  --registry <url>   Registry to publish to (default: https://git.schnau.dev/api/packages/schnau/npm/)",
 		"  --dry-run          Use npm's --dry-run for publish (still runs bump/build unless skipped)",
 		"  --skip-bump        Do not change versions",
 		"  --skip-install     Do not run bun install (lockfile may not update)",
