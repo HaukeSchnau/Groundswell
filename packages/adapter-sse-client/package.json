@@ -28,7 +28,7 @@
 	"scripts": {
 		"build": "tsc --build",
 		"bump": "bunx npm version",
-		"pub": "bunx npm publish --registry https://npm.schnau.dev/ "
+		"pub": "bunx npm publish --registry https://git.schnau.dev/api/packages/schnau/npm/ "
 	},
 	"devDependencies": {
 		"eventsource": "^4.1.0",
