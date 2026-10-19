@@ -98,7 +98,7 @@ bun run local:effect-drizzle:verify
 bun run checks:hygiene
 ```
 
-If you are already in `/Users/haukeschnau/urbs/Libraries/effect-drizzle` and only want to repack:
+If you are already in your effect-drizzle checkout and only want to repack:
 
 ```bash
 bun run pack:local
